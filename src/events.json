@@ -1,0 +1,38 @@
+[
+{
+    "image": "https://images.unsplash.com/photo-1524368535928-5b5e00ddc76b?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+    "title": "Music Concert",
+    "description": "Enjoy an amazing music concert with live performances by top artists.",
+    "timing": "Feb 25, 2025 - 7:00 PM",
+    "pricing": "$50 - $150",
+    "organizer": "Live Music Inc.",
+    "location": "Madison Square Garden, New York"
+},
+{
+    "image": "https://images.unsplash.com/photo-1566954979172-eaba308acdf0?q=80&w=1931&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+    "title": "Art Exhibition",
+    "description": "Explore the latest art pieces from renowned artists.",
+    "timing": "March 10, 2025 - 5:00 PM",
+    "pricing": "Free Entry",
+    "organizer": "Art World",
+    "location": "Louvre Museum, Paris"
+},
+{
+    "image": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?q=80&w=2012&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+    "title": "Tech Conference",
+    "description": "Join us for the most anticipated tech conference of the year.",
+    "timing": "April 5, 2025 - 9:00 AM",
+    "pricing": "$200 - $500",
+    "organizer": "Tech Innovations",
+    "location": "Silicon Valley, California"
+},
+{
+    "image": "https://images.unsplash.com/photo-1532634922-8fe0b757fb13?q=80&w=2072&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+    "title": "Food Festival",
+    "description": "Indulge in delicious food from local and international cuisines.",
+    "timing": "May 15, 2025 - 11:00 AM",
+    "pricing": "$20 - $50",
+    "organizer": "Foodies United",
+    "location": "Central Park, New York"
+}
+]

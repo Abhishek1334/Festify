@@ -1,40 +1,36 @@
-import categoriesList from '../categories.json'
+import * as Fa from "react-icons/fa";
 
-import * as Fa from "react-icons/fa"
-
-const Categories = ({isDesktop,isTablet,isMobile}) => {
-
-    
-    const displayedCategories = isMobile ? categoriesList.slice(0, 6) : categoriesList;
-
+const Categories = () => {
     return (
-    
-        <section className="h-[80vh] p-5 grid grid-rows-[15%_50%] gap-4">
-            <h1 className="text-[2rem] font-bold text-gray-900 row-start-1 row-end-2   flex justify-center items-center text-center" >
-                Explore Events by Categories
-            </h1>
-            <div className="h-full flex flex-wrap justify-center space-x-4 gap-y-3">
-        {displayedCategories.map((category) => {
-          // Declare the IconComponent before the return statement
-            const IconComponent = Fa[category.icon];
-            return (
-                <div key={category.id} className="border-1 border-gray-300 size-25 rounded-[50%] flex justify-center flex-col h-25 relative hover:bg-gray-200 ">
-                <span className="flex justify-center items-center">
-                    {IconComponent ? (
-                    <IconComponent className="text-3xl " />
-                    ) : (
-                    <div className="text-4xl">{category.fallbackicon}</div>
-                    )}
-
-                </span>
-                <h3 className="absolute top-26 flex text-center text-sm text-gray-700">{category.name}</h3>
+        <div className="h-fit w-full px-4">
+        <section className="px-2">
+            <div className="grid grid-cols-4 gap-6 justify-center items-center w-full h-full border-b-4 border-blue-200 border-t-4  py-10 ">
+            {[
+                { name: 'Music', icon: <Fa.FaItunesNote /> },
+                { name: 'Nightlife', icon: <Fa.FaLaptop /> },
+                { name: 'Performing Arts', icon: <Fa.FaTheaterMasks /> },
+                { name: 'Holidays', icon: <Fa.FaTree /> },
+                { name: 'Dating', icon: <Fa.FaHeart /> },
+                { name: 'Hobbies', icon: <Fa.FaPaintBrush /> },
+                { name: 'Business', icon: <Fa.FaBriefcase /> },
+                { name: 'Food & Drink', icon: <Fa.FaCocktail /> }
+            ].map((category, index) => (
+                <div
+                key={index}
+                className="flex flex-col items-center gap-2 hover:text-blue-800 "
+                >
+                <div className="w-16 h-16 flex items-center justify-center rounded-full bg-white text-3xl text-[#627deb] border-2 border-indigo-200 hover:bg-blue-100 hover:text-2xl transition duration-200 ease-linear active:bg-blue-200 active:scale-115">
+                    {category.icon}
                 </div>
-            );
-            })}
+                <div className="text-sm text-blue-950 text-center max-w-[4.5rem] overflow-hidden text-ellipsis whitespace-nowrap">
+                    {category.name}
+                </div>
+                </div>
+            ))}
             </div>
-
         </section>
-    )
-}
+        </div>
+    );
+};
 
-export default Categories
+export default Categories;
