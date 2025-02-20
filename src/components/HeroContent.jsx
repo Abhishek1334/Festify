@@ -1,34 +1,102 @@
+import {Link} from 'react-router-dom'
 
-import { FaSearch } from 'react-icons/fa';
+import { FaSearch} from 'react-icons/fa';
+
+import { CiLocationOn } from "react-icons/ci";
+
+
+
+
+
 const HeroContent = () => {
 return (
     
-    <div className='flex flex-col space-y-7 '>
-        <h1 className=' lg:text-6xl max-md:text-5xl  font-bold text-blue-950 w-fit mx-auto shadow-md shadow-gray-900 p-3 hover:p-[13px] lg:shadow-none  sm:hover:shadow-lg sm:active:shadow-lg active:opacity-50 active:text-right lg:text-center border-r-25 border-blue-900 rounded-xl' >Discover Exciting Events Near You All in One Place!</h1>
-		<div className='text-2xl text-blue-950 text-right grid place-self-end font-semibold  w-[70%] '>
-					Stay updated on the <span className='italic font-normal bg-blue-950 w-fit text-white hover:text-blue-950 hover:bg-gray-100 animate-pulse '> festivals, workshops, concerts and more </span> in your city. Find, filter, and book events seamlessly.
+
+
+    <div className='flex max-md:flex-col max-md:space-y-4  h-full w-full 
+
+    min-md:grid min-md:grid-cols-2 min-md:grid-rows-2 
+    '>
+        
+        <h1 className={` 
+
+        /*Base Style*/
+        font-bold  w-fit mx-auto   p-3  transition-all transition-duration-1000 transition-timing-function ease-in-out         
+        text-blue-950
+
+        /*Desktop Style*/
+        min-md:text-7xl min-md:px-4 min-md:font-black min-md:text-gray-100 min-md:row-span-2 min-md:my-auto min-md:justify-self-start min-md:place-self-start min-md:pb-5 min-md:text-center min-wd:min-w-[30ch]
+        
+        /*Mobile Style*/
+        max-md:active:opacity-50 max-md:active:text-right max-md:border-[var(--vibrant-orange)] max-md:rounded-xl 
+        max-md:text-5xl max-md:shadow-sm max-md:text-[var(--vibrant-orange)] max-md:shadow-orange-400 max-md:hover:text-[var(--pale-apricot)] max-md:hover:bg-[var(--vibrant-orange)]  max-md:hover:shadow-lg max-md:active:shadow-lg max-md:border-r-22 max-md:hover:text-right max-md:hover:border-[var(--pale-apricot)] 
+        `} >
+            Discover Exciting Events Near You All in One Place
+            <CiLocationOn className='inline ml-1 pb-[4px] '/>
+        </h1>
+		
+        <div className={`
+
+        /*Desktop Style*/
+        min-md:text-4xl min-md:font-extrabold min-md:text-white  place-content-end  min-md:pl-12 min-md:max-w-[28ch] min-wd:min-w-fit min-md:pb-4
+
+        
+
+        /*Mobile Style*/
+        max-md:text-xl max-md:text-[var(--vibrant-orange)] max-md:text-right max-md:grid max-md:place-self-end max-md:font-semibold max-w-[17ch] `}>
+
+            Stay updated on the 
+            <span className={`
+
+            /*Desktop Style*/
+            min-md:text-goldenrod min-md:font-semibold min-md:animate-pulse
+            
+            /*Mobile Style*/
+            max-md:italic max-md:font-normal max-md:bg-[var(--vibrant-orange)] max-md:w-[17ch] max-md:flex max-md:justify-self-end max-md:text-gray-100   max-md:animate-pulse `} >  festivals, workshops, concerts and more </span> 
+            in your city. Find, filter, and book events seamlessly.
 		</div>
-            <div className='flex justify-center w-full'>
-            <button className='w-[60%] h-15 border-1 rounded-2xl font-semibold text-lg bg-gray-100 border-blue-200 shadow-md shadow-blue-200  text-blue-900 hover:bg-gray-200 hover:text-[1.2rem] hover:w-[62%] active:bg-gray-200 active:text-[1.1rem] hover:cursor-pointer '>Explore Events</button>
+        
+        <div className='
+        max-md:flex max-md:justify-center w-full
+        
+        min-md:place-content-start min-md:pt-10 min-md:w-full min-md:pl-50
+        '>
+            <Link to="/events" className=' max-md:flex max-md:justify-center '>
+                <button className={`max-md:p-4  h-15 bg-[var(--vibrant-orange)] cursor-pointer
+                
+                min-md:rounded-3xl min-md:w-50 min-md:h-15 min-md:font-semibold min-md:text-lg  min-md:border-[var(--vibrant-orange)] min-md:text-[var(--pale-apricot)] min-md:shadow-lg min-md:hover:opacity-80 min-md:active:scale-105
+                
+                /*Mobile Style*/
+                max-md:place-content-center
+                max-md:border-1 max-md:rounded-2xl max-md:font-semibold max-md:text-lg  max-md:border-[var(--vibrant-orange)] max-md:text-[var(--pale-apricot)] max-md:shadow-lg max-md:hover:opacity-80  max-md:active:scale-105`} style={{ boxShadow: `0px 4px 10px var(--vibrant-orange)` }} 
+                onMouseDown={(e) => e.currentTarget.style.boxShadow = "0px 2px 5px var(--vibrant-orange)"}
+                onMouseUp={(e) => e.currentTarget.style.boxShadow = "0px 4px 10px var(--vibrant-orange)"}>
+                    Explore Events
+                </button>
+            </Link>
+        </div>
+
+        <div className='grid grid-cols-auto w-full border-2 border-[var(--vibrant-orange)] rounded-2xl  bg-[#fdf0c4] text-[1.1rem] font-semibold 
+        
+        min-md:hidden'>
+
+            <div className='col-start-1 col-end-2 border-r-1 border-[var(--vibrant-orange)] text-[var(--vibrant-orange)]'>
+
+                <input type='text' placeholder='Search Events...' className='flex-1 px-4 py-3 pl-4 focus:outline-none  w-full border-b-1 border-[var(--vibrant-orange)] '  ></input>
+
+                <span className=''></span>
+
+                <input type='text' placeholder='Search by Location...' className='flex-1 px-4 py-3 pl-4 focus:outline-none  w-full'></input>
 
             </div>
-            <div className='grid grid-cols-auto w-full border-2 border-gray-300 rounded-2xl  bg-gradient-to-br from-blue-50 to-blue-100 text-[1.1rem] font-light '>
 
-                <div className='col-start-1 col-end-2 border-r-1 border-gray-600 '>
+            <button className='col-start-2 col-end-3 w-full  h-full p-4 cursor-pointer hover:text-lg border-r-3xl active:bg-gray-300 rounded-r-2xl active:text-[1.2rem] text-[#f0622e]'  >
+                <FaSearch/>
+            </button>
 
-                    <input type='text' placeholder='Search Events...' className='flex-1 px-4 py-3 pl-4 focus:outline-none  w-full border-b-1 border-gray-400  text-gray-950'  ></input>
-
-                    <span className=''></span>
-
-                    <input type='text' placeholder='Search by Location...' className='flex-1 px-4 py-3 pl-4 focus:outline-none text-gray-950 w-full'></input>
-
-                </div>
-
-                <button className='col-start-2 col-end-3 w-full  h-full p-4 cursor-pointer hover:text-lg border-r-3xl active:bg-gray-300 rounded-r-2xl active:text-[1.2rem] text-blue-950'  ><FaSearch/></button>
-
-			</div>	
+        </div>	
             
-        </div>
+    </div>
 
 )
 }

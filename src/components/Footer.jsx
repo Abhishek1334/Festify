@@ -4,7 +4,7 @@ import { FaFacebookF, FaTwitter, FaInstagram } from 'react-icons/fa';
 
 const Footer = () => {
     return (
-    <footer className="bg-blue-100 text-blue-950 py-6 px-2">
+    <footer className="bg-[var(--vibrant-orange)] text-[var(--pale-apricot)] py-3 px-2">
         <div className="container mx-auto flex flex-col items-center md:flex-row justify-between">
         {/* Logo Section */}
         <div className="flex items-center mb-4 md:mb-0">
@@ -13,7 +13,7 @@ const Footer = () => {
         </div>
 
         {/* Navigation Links */}
-        <div className="flex flex-wrap space-x-4 items-center justify-center mb-4 md:mb-0">
+        <div className="flex flex-wrap space-x-3 items-center justify-center mb-4 md:mb-0">
             <Link to="/about" className="hover:text-gray-400">About</Link>
             <Link to="/contact" className="hover:text-gray-400">Contact</Link>
             <Link to="/terms" className="hover:text-gray-400">Terms of Service</Link>
@@ -21,19 +21,19 @@ const Footer = () => {
         </div>
 
         {/* Social Media Icons */}
-        <div className="flex space-x-6">
-            <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" className="hover:text-gray-400 size-6 rounded-[50%] grid place-items-center">
+        <div className="flex space-x-6 text-black">
+            <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" className=" size-6 rounded-[50%] grid place-items-center">
             <FaFacebookF className='size-4'/>
             </a>
-            <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" className="hover:text-gray-400 size-6 rounded-[50%] grid place-items-center">
+            <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" className=" size-6 rounded-[50%] grid place-items-center">
             <FaTwitter className='size-4'/>
             </a>
-            <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="hover:text-gray-400 size-6 rounded-[50%] grid place-items-center">
+            <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className=" size-6 rounded-[50%] grid place-items-center">
             <FaInstagram className='size-4'/>
             </a>
         </div>
         </div>
-        <div className="text-center text-blue-500 mt-4">
+        <div className="text-center text-black mt-4">
         <p>&copy; {new Date().getFullYear()} Festify. All rights reserved.</p>
         </div>
     </footer>

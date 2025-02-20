@@ -13,9 +13,9 @@ const Homepage = () => {
 
 	const isDesktop = useMediaQuery({ minWidth: 1301 });
 
-	const isTablet = useMediaQuery({ minWidth: 701, maxWidth: 1300 });
+	const isTablet = useMediaQuery({ minWidth: 750, maxWidth: 1300 });
 
-	const isMobile = useMediaQuery({ maxWidth: 700 });
+	const isMobile = useMediaQuery({ maxWidth: 749 });
 	return (
 		<div className='scroll-smooth'>
 			<Navbar isDesktop={isDesktop}  isTablet={isTablet} isMobile={isMobile}/>
