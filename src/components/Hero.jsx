@@ -7,23 +7,23 @@ import HeroContent from './HeroContent';
 
 const Hero = () => {
 
-	const isDesktop = useMediaQuery({ minWidth: 701 });
+	const isMobile = useMediaQuery({ maxWidth: 768 });
 
 	return (
 
 		
 		<>
 
-			{isDesktop ? 
-			<div className="h-[80vh] bg-cover bg-center flex flex-col w-screen justify-center items-center  text-white relative " style={{ backgroundImage: `url(${BackgroundLg})`}}> 
+			{isMobile ? <div className='Hero bg-[var(--pale-apricot)] flex flex-col px-10  h-fit pb-10 pt-7 w-screen '>
+				<HeroContent/>
+			</div> 
+			
+			:
+			<div className="h-[80vh] bg-cover bg-center  w-screen px-20 text-overlay" style={{ backgroundImage: `url(${BackgroundLg})`}}> 
 				
 				<HeroContent />
 			</div>
-			:
-			<div className='Hero bg-gray-100 flex flex-col px-10  h-fit pb-10 pt-7 w-screen '>
-				<HeroContent/>
-			</div> }
-				
+				}
 		</>
 	)
 }

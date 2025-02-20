@@ -1,8 +1,20 @@
 @import "tailwindcss";
 
+@theme {
+	--pale-apricot: #ffecae;
+	--vibrant-orange: #f17141;
+}
+.text-overlay {
+	background: rgba(0, 0, 0, 0.6); /* Black with 60% opacity */
+	padding: 10px 20px;
+	border-radius: 8px;
+	display: inline-block;
+}
+
 @font-face {
 	font-family: "Raleway";
-	src: url("/src/assets/fonts/Raleway-VariableFont_wght.ttf") format("truetype");
+	src: url("/src/assets/font/Raleway/Raleway-VariableFont_wght.ttf")
+		format("truetype");
 	font-weight: 100 900;
 	font-style: normal;
 	font-display: swap;
@@ -10,19 +22,32 @@
 
 @font-face {
 	font-family: "Raleway";
-	src: url("/src/assets/fonts/Raleway-Italic-VariableFont_wght.ttf")
+	src: url("/src/assets/font/Raleway/Raleway-Italic-VariableFont_wght.ttf")
 		format("truetype");
 	font-weight: 100 900;
 	font-style: italic;
 	font-display: swap;
 }
 
+@font-face {
+	font-family: "Bebas Neue";
+	src: url("/src/assets/font/BebasNeue/BebasNeue-Regular.ttf")
+		format("truetype");
+	font-weight: 400;
+	font-style: normal;
+	font-display: swap;
+}
+
 :root {
 	/* Apply Raleway globally */
 	font-family: "Raleway", sans-serif;
-
+	font-size: 1rem;
 	/* Breakpoints as CSS variables */
 	--breakpoint-sm: 1px;
-	--breakpoint-md: 701px;
+	--breakpoint-md: 768px;
 	--breakpoint-lg: 1301px;
+	--font-size: 1rem;
+}
+.festifyLogo {
+	font-family: "Bebas Neue", sans-serif;
 }
