@@ -1,39 +1,31 @@
-import Homepage from "./pages/Homepage"
-import Events from "./pages/Events"
-import Login from "./pages/Login"
-import Signup from "./pages/Signup"
-
-import { createBrowserRouter, RouterProvider } from 'react-router-dom';
-
-const router = createBrowserRouter([
-  {
-    path: "/",
-    element: <Homepage />,
-  },
-  {
-    path: "/events",
-    element: <Events/>,
-  },
-  {
-    path: "/login",
-    element: <Login />,
-  },
-  {
-    path:"/signup",
-    element:<Signup/>
-  }
-]);
+import { Routes, Route } from 'react-router-dom';
+import Navbar from './components/Navbar';
+import Homepage from './pages/Homepage';
+import Events from './pages/Events';
+import EventDetails from './pages/EventDetails';
+import Login from './pages/Login';
+import Signup from './pages/Signup';
+import UserProfile from './pages/UserProfile';
+import Footer from './components/Footer';
+import ScrollToTop from './components/ScrollToTop';
 
 
-function App() {
-  
+export default function App() {
   return (
-    <>
-      
-        <RouterProvider router={router} />
-
-    </>
-  )
+    <div className="min-h-screen flex flex-col">
+      <Navbar />
+      <ScrollToTop />
+      <main className="flex-grow">
+        <Routes>
+          <Route path="/" element={<Homepage />} />
+          <Route path="/events" element={<Events />} />
+          <Route path="/events/:id" element={<EventDetails />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/signup" element={<Signup />} />
+          <Route path="/profile" element={<UserProfile />} />
+        </Routes>
+      </main>
+      <Footer />
+    </div>
+  );
 }
-
-export default App

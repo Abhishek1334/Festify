@@ -1,31 +1,16 @@
-/* eslint-disable no-unused-vars */
-import { useMediaQuery } from 'react-responsive'
-import React from 'react'
-
-import Navbar from '../components/Navbar'
-import Hero from '../components/Hero'
-import Categories from '../components/Categories'
-import EventsListing from '../components/EventsListing'
-import Footer from '../components/Footer'
+import Hero from '../components/Homepage/Hero';
+import Categories from '../components/Homepage/Categories';
+import EventListing from '../components/Homepage/EventListing';
+import GetStarted from '../components/Homepage/GetStarted';
 
 
-const Homepage = () => {
-
-	const isDesktop = useMediaQuery({ minWidth: 1301 });
-
-	const isTablet = useMediaQuery({ minWidth: 750, maxWidth: 1300 });
-
-	const isMobile = useMediaQuery({ maxWidth: 749 });
-	return (
-		<div className='scroll-smooth'>
-			<Navbar isDesktop={isDesktop}  isTablet={isTablet} isMobile={isMobile}/>
-			<Hero />
-			<Categories isDesktop={isDesktop}  isTablet={isTablet} isMobile={isMobile}/>
-
-			<EventsListing/>
-			<Footer/>
-		</div>
-	)
+export default function Homepage() {
+  return (
+    <div>
+      <Hero />
+      <Categories />
+      <EventListing  />
+      <GetStarted />
+    </div>
+  );
 }
-
-export default Homepage
