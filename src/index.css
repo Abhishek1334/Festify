@@ -26,40 +26,19 @@
 	--breakpoint-md: 768px;
 	--breakpoint-lg: 1301px;
 	--font-size: 1rem;
+
+	/* Colors as CSS variables */
+	--color-white: rgb(253, 252, 246);
 }
 
 .btn-primary {
-	@apply px-6 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-semibold rounded-lg 
-           hover:from-purple-700 hover:to-indigo-700 transform hover:-translate-y-0.5 
-           transition-all duration-200 shadow-md hover:shadow-lg focus:ring-2 focus:ring-purple-500 focus:ring-offset-2;
+	@apply px-6 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-semibold rounded-lg hover:from-purple-700 hover:to-indigo-700 transform hover:-translate-y-0.5 transition-all duration-200 shadow-md hover:shadow-lg focus:ring-2 focus:ring-purple-500 focus:ring-offset-2;
 }
 
 .btn-secondary {
-	@apply px-6 py-3 bg-white text-purple-600 font-semibold rounded-lg border border-purple-200 
-           hover:bg-purple-50 transform hover:-translate-y-0.5 transition-all duration-200 
-           shadow-sm hover:shadow-md focus:ring-2 focus:ring-purple-500 focus:ring-offset-2;
+	@apply px-6 py-3 bg-white text-purple-600 font-semibold rounded-lg border border-purple-200 hover:bg-purple-50 transform hover:-translate-y-0.5 transition-all duration-200 shadow-sm hover:shadow-md focus:ring-2 focus:ring-purple-500 focus:ring-offset-2;
 }
 
 .gradient-text {
 	@apply bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-indigo-600;
-}
-
-.custom-shape-divider-top-1740490861 {
-	position: absolute;
-	top: 0;
-	left: 0;
-	width: 100%;
-	overflow: hidden;
-	line-height: 0;
-}
-
-.custom-shape-divider-top-1740490861 svg {
-	position: relative;
-	display: block;
-	width: calc(214% + 1.3px);
-	height: 222px;
-}
-
-.custom-shape-divider-top-1740490861 .shape-fill {
-	fill: #ffffff;
 }

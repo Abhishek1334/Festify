@@ -1,0 +1,116 @@
+[
+    {
+        "name": "Music",
+        "category": "Music",
+        "icon": "Music",
+        "color": "bg-red-100 text-red-600 hover:bg-red-200"
+    },
+    {
+        "name": "Food & Drink",
+        "category": "Food",
+        "icon": "Utensils",
+        "color": "bg-green-100 text-green-600 hover:bg-green-200"
+    },
+    {
+        "name": "Tech",
+        "category": "Tech",
+        "icon": "Cpu",
+        "color": "bg-gray-100 text-gray-600 hover:bg-gray-200"
+    },
+    {
+        "name": "Sports",
+        "category": "Sports",
+        "icon": "Volleyball",
+        "color": "bg-blue-100 text-blue-600 hover:bg-blue-200"
+    },
+    {
+        "name": "Art",
+        "category": "Art",
+        "icon": "Palette",
+        "color": "bg-purple-100 text-purple-600 hover:bg-purple-200"
+    },
+    {
+        "name": "Business",
+        "category": "Business",
+        "icon": "Briefcase",
+        "color": "bg-yellow-100 text-yellow-600 hover:bg-yellow-200"
+    },
+    {
+        "name": "Entertainment",
+        "category": "Entertainment",
+        "icon": "Film",
+        "color": "bg-pink-100 text-pink-600 hover:bg-pink-200"
+    },
+    {
+        "name": "Health",
+        "category": "Health",
+        "icon": "HeartPulse",
+        "color": "bg-teal-100 text-teal-600 hover:bg-teal-200"
+    },
+    {
+        "name": "Education",
+        "category": "Education",
+        "icon": "BookOpen",
+        "color": "bg-indigo-100 text-indigo-600 hover:bg-indigo-200"
+    },
+    {
+        "name": "Fashion",
+        "category": "Fashion",
+        "icon": "Shirt",
+        "color": "bg-orange-100 text-orange-600 hover:bg-orange-200"
+    },
+    {
+        "name": "Film",
+        "category": "Film",
+        "icon": "Clapperboard",
+        "color": "bg-red-100 text-red-600 hover:bg-red-200"
+    },
+    {
+        "name": "Gaming",
+        "category": "Gaming",
+        "icon": "Gamepad",
+        "color": "bg-green-100 text-green-600 hover:bg-green-200"
+    },
+    {
+        "name": "Lifestyle",
+        "category": "Lifestyle",
+        "icon": "Leaf",
+        "color": "bg-blue-100 text-blue-600 hover:bg-blue-200"
+    },
+    {
+        "name": "Science",
+        "category": "Science",
+        "icon": "Atom",
+        "color": "bg-gray-100 text-gray-600 hover:bg-gray-200"
+    },
+    {
+        "name": "Automotive",
+        "category": "Automotive",
+        "icon": "Car",
+        "color": "bg-yellow-100 text-yellow-600 hover:bg-yellow-200"
+    },
+    {
+        "name": "Workshop",
+        "category": "Workshop",
+        "icon": "Users",
+        "color": "bg-orange-100 text-orange-600 hover:bg-orange-200"
+    },
+    {
+        "name": "Environment",
+        "category": "Environment",
+        "icon": "Tree",
+        "color": "bg-green-100 text-green-600 hover:bg-green-200"
+    },
+    {
+        "name": "Dance",
+        "category": "Dance",
+        "icon": "PersonStanding",
+        "color": "bg-pink-100 text-pink-600 hover:bg-pink-200"
+    },
+    {
+        "name": "Family",
+        "category": "Family",
+        "icon": "Users",
+        "color": "bg-teal-100 text-teal-600 hover:bg-teal-200"
+    }
+]
