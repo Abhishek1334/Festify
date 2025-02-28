@@ -8,6 +8,7 @@ import Signup from "./pages/Signup";
 import UserProfile from "./pages/UserProfile";
 import Footer from "./components/Footer";
 import ScrollToTop from "./components/ScrollToTop";
+import CreateEvents from "./pages/CreateEvents";
 
 export default function App() {
 	return (
@@ -20,6 +21,7 @@ export default function App() {
 					<Route path="/events" element={<Events />} />
 					<Route path="/events/category/:category" element={<Events />} />
 					<Route path="/events/:eventid" element={<EventPage />} />
+					<Route path="events/create-event" element={<CreateEvents />} />
 					<Route path="/login" element={<Login />} />
 					<Route path="/signup" element={<Signup />} />
 					<Route path="/profile" element={<UserProfile />} />

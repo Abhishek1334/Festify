@@ -7,7 +7,7 @@ export default function Homepage() {
 	return (
 		<div>
 			<Hero />
-			<Categories isHomepage={true}/>
+			<Categories/>
 
 			<EventListing isHomepage={true}/>
 			<GetStarted />

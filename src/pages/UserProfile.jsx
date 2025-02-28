@@ -1,43 +1,29 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
-import { MapPin, Settings } from "lucide-react";
-import EventListing from "../components/Homepage/EventListing";
+import { MapPin, Settings, User } from "lucide-react";
+import EventCard from "../components/EventCard";
+import eventsData from "../events.json"; // Import event data
+import { div } from "framer-motion/client";
 
 export default function UserProfile() {
 	const user = {
+		id: 1,
 		name: "John Doe",
-		avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80",
-		location: "New York, NY",
-		bio: "Event organizer and music enthusiast",
-		followers: 245,
-		following: 182,
-		events: [
-			{
-				id: 1,
-				title: "Summer Music Festival 2025",
-				description:
-					"Join us for three days of amazing music featuring top artists from around the world.",
-				date: "2025-07-15T18:00:00",
-				location: "Central Park, New York",
-				price: 149,
-				capacity: 5000,
-				imageUrl:
-					"https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?auto=format&fit=crop&q=80",
-			},
-		],
-		rsvps: [
-			{
-				id: 2,
-				title: "Food & Wine Exhibition",
-				description:
-					"Discover the finest cuisines and wines from renowned chefs and sommeliers.",
-				date: "2025-06-20T11:00:00",
-				location: "Convention Center, Miami",
-				price: 89,
-				capacity: 1000,
-				imageUrl:
-					"https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?auto=format&fit=crop&q=80",
-			},
-		],
+		avatar: "", // Empty or null avatar will show default user icon
+		location: "New York, USA",
+		bio: "I am a passionate event organizer.",
+		following: 42,
+		followers: 100,
+	};
+
+	// Filter events where the organizer matches the user's name
+	const myEvents = [...new Set(eventsData.filter(event => event.organizer === user.name))];
+
+	// Pagination logic
+	const [visibleEvents, setVisibleEvents] = useState(6);
+
+	const showMoreEvents = () => {
+		setVisibleEvents(prev => prev + 6);
 	};
 
 	return (
@@ -45,23 +31,20 @@ export default function UserProfile() {
 			{/* Profile Header */}
 			<div className="bg-white rounded-xl shadow-lg p-8 mb-8">
 				<div className="flex flex-col md:flex-row items-start md:items-center gap-8">
-					<img
-						src={user.avatar}
-						alt={user.name}
-						className="w-32 h-32 rounded-full object-cover"
-					/>
+					{user.avatar ? (
+						<img src={user.avatar} alt={user.name} className="w-32 h-32 rounded-full object-cover" />
+					) : (
+						<div className="w-32 h-32 rounded-full bg-gray-200 flex items-center justify-center">
+							<User className="h-16 w-16 text-gray-500" />
+						</div>
+					)}
 					<div className="flex-1">
 						<div className="flex items-center justify-between mb-4">
-							<h1 className="text-3xl font-bold text-gray-900">
-								{user.name}
-							</h1>
+							<h1 className="text-3xl font-bold text-gray-900">{user.name}</h1>
 							<div className="flex space-x-4">
-								<Link
-									to="/settings"
-									className="btn-secondary flex items-center"
-								>
+								<Link to="/ManageEvents" className="btn-secondary flex items-center">
 									<Settings className="h-5 w-5 mr-2" />
-									Settings
+									Manage My Events
 								</Link>
 							</div>
 						</div>
@@ -72,16 +55,10 @@ export default function UserProfile() {
 						<p className="text-gray-600 mb-6">{user.bio}</p>
 						<div className="flex space-x-8">
 							<div className="text-gray-600">
-								<span className="font-semibold text-gray-900">
-									{user.following}
-								</span>{" "}
-								Following
+								<span className="font-semibold text-gray-900">{user.following}</span> Following
 							</div>
 							<div className="text-gray-600">
-								<span className="font-semibold text-gray-900">
-									{user.followers}
-								</span>{" "}
-								Followers
+								<span className="font-semibold text-gray-900">{user.followers}</span> Followers
 							</div>
 						</div>
 					</div>
@@ -90,26 +67,46 @@ export default function UserProfile() {
 
 			{/* User's Events */}
 			<div className="mb-12">
-				<h2 className="text-2xl font-bold text-gray-900 mb-6">
-					My Events
-				</h2>
+				<h2 className="text-2xl font-bold text-gray-900 mb-6">My Events</h2>
 				<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-					{user.events.map((event) => (
-						<EventListing key={event.id} event={event} />
-					))}
+					{myEvents.length > 0 ? (
+						myEvents.slice(0, visibleEvents).map(event => <EventCard key={event.id} event={event} />)
+					) : (
+						<p className="text-gray-500">No events found.</p>
+					)}
 				</div>
+				{/* Show More Button */}
+				{myEvents.length > visibleEvents && (
+					<div className="flex justify-center">
+					<button
+						onClick={showMoreEvents}
+						className="mt-6  btn-primary "
+					>
+						Show More
+					</button>
+					</div>
+				)}
 			</div>
 
 			{/* User's RSVPs */}
 			<div>
-				<h2 className="text-2xl font-bold text-gray-900 mb-6">
-					My RSVPs
-				</h2>
+				<h2 className="text-2xl font-bold text-gray-900 mb-6">My RSVPs</h2>
 				<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-					{user.rsvps.map((event) => (
-						<EventListing key={event.id} event={event} />
-					))}
+					{myEvents.length > 0 ? (
+						myEvents.slice(0, visibleEvents).map(event => <EventCard key={event.id} event={event} />)
+					) : (
+						<p className="text-gray-500">No RSVPs found.</p>
+					)}
 				</div>
+				{/* Show More Button for RSVPs */}
+				{myEvents.length > visibleEvents && (
+					<button
+						onClick={showMoreEvents}
+						className="mt-6 px-6 py-3 btn-primary align-center"
+					>
+						Show More
+					</button>
+				)}
 			</div>
 		</div>
 	);

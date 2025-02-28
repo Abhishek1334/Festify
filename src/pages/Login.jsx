@@ -2,29 +2,14 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Mail, Lock } from "lucide-react";
 import logo from "../assets/images/logo.png";
-import { supabase } from "../supabase";
+
 
 export default function Login() {
 	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
-	const [error, setError] = useState(null);
-	const navigate = useNavigate();
+	
 
-	const handleLogin = async (e) => {
-		e.preventDefault();
-		setError(null); // Reset previous errors
-
-		const { error } = await supabase.auth.signInWithPassword({
-			email,
-			password,
-		});
-
-		if (error) {
-			setError(error.message);
-		} else {
-			navigate("/dashboard"); // Redirect to dashboard after successful login
-		}
-	};
+	
 
 	return (
 		<div className="min-h-screen bg-gradient-to-br from-purple-600 to-indigo-700 py-12 px-4 sm:px-6 lg:px-8 flex items-center">
@@ -53,11 +38,10 @@ export default function Login() {
 					</p>
 				</div>
 
-				{error && <p>{error}</p>}
+
 
 				<form
 					className="mt-8 space-y-6 bg-gradient-to"
-					onSubmit={handleLogin}
 				>
 					<div className="space-y-4">
 						<div>

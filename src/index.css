@@ -28,7 +28,7 @@
 	--font-size: 1rem;
 
 	/* Colors as CSS variables */
-	--color-white: rgb(253, 252, 246);
+	--color-white: #FFFFF0;
 }
 
 .btn-primary {
