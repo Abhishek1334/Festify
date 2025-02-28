@@ -5,7 +5,7 @@ export default function Navbar() {
 	const isLoggedIn = false;
 
 	return (
-		<section className="hidden-section sticky top-0 w-full border-b border-gray-100 z-50 bg-[rgb(250, 247, 2320.8)] backdrop-blur-xs hover:bg-[rgba(255,255,255,1)]  ">
+		<section className="hidden-section sticky top-0 w-full  z-50 bg-[rgb(250, 247, 232)] backdrop-blur-lg hover:bg-[rgba(255,255,255,1)]  ">
 			<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 				<div className="flex justify-between h-16 items-center">
 					<div className="flex items-center">
@@ -27,7 +27,7 @@ export default function Navbar() {
 								Events
 							</Link>
 							<Link
-								to="/create-event"
+								to="/events/create-event"
 								className="text-gray-700  transition duration-300"
 							>
 								Create Event

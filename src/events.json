@@ -1,7 +1,9 @@
-    [
+[
         {
         "id": 1,
-        "title": "Summer Music Festival 2025",
+        
+        "organizer":"John Doe",
+"title": "Summer Music Festival 2025",
         "description": "Join us for three days of amazing music featuring top artists from around the world.",
         "category": "Music",
         "date": "2025-07-15T18:00:00",
@@ -12,7 +14,8 @@
         },
         {
         "id": 2,
-        "title": "Classical Symphony Orchestra",
+        "organizer":"John Doe",
+"title": "Classical Symphony Orchestra",
         "description": "Experience the majesty of masterworks performed by a world-renowned orchestra.",
         "category": "Music",
         "date": "2025-11-12T19:30:00",
@@ -23,7 +26,8 @@
         },
         {
         "id": 3,
-        "title": "Jazz in the Park",
+        "organizer":"John Doe",
+"title": "Jazz in the Park",
         "description": "Relax under the stars with smooth jazz performances from acclaimed musicians.",
         "category": "Music",
         "date": "2025-08-05T19:00:00",
@@ -34,7 +38,8 @@
         },
         {
         "id": 4,
-        "title": "Food & Wine Exhibition",
+        "organizer":"John Doe",
+"title": "Food & Wine Exhibition",
         "description": "Discover the finest cuisines and wines from renowned chefs and sommeliers.",
         "category": "Food",
         "date": "2025-06-20T11:00:00",
@@ -45,18 +50,20 @@
         },
         {
         "id": 5,
-        "title": "Culinary Masterclass",
+        "organizer":"John Doe",
+"title": "Culinary Masterclass",
         "description": "Cook alongside celebrity chefs and learn to create gourmet dishes at home.",
         "category": "Food",
         "date": "2025-05-30T11:00:00",
         "location": "Culinary Institute, New Orleans",
         "price": 220,
         "capacity": 50,
-        "imageUrl": "https://images.unsplash.com/photo-1556910103-1c02745adc4b?auto=format&fit=crop&q=80"
+        "imageUrl": "https://plus.unsplash.com/premium_photo-1683707120428-8893fe258de8?q=80&w=2071&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
         },
         {
         "id": 6,
-        "title": "Street Food Festival",
+        "organizer":"John Doe",
+"title": "Street Food Festival",
         "description": "Sample diverse street foods from around the world in this vibrant culinary celebration.",
         "category": "Food",
         "date": "2025-09-15T12:00:00",
@@ -67,7 +74,8 @@
         },
         {
         "id": 7,
-        "title": "Tech Innovation Summit",
+        "organizer":"John Doe",
+"title": "Tech Innovation Summit",
         "description": "The biggest tech conference of the year featuring keynotes from industry leaders.",
         "category": "Tech",
         "date": "2025-09-10T09:00:00",
@@ -78,7 +86,8 @@
         },
         {
         "id": 8,
-        "title": "Developer Conference",
+        "organizer":"John Doe",
+"title": "Developer Conference",
         "description": "Connect with fellow developers and learn about the latest programming languages and frameworks.",
         "category": "Tech",
         "date": "2025-05-22T08:30:00",
@@ -89,7 +98,8 @@
         },
         {
         "id": 9,
-        "title": "AI and Machine Learning Workshop",
+        "organizer":"John Doe",
+"title": "AI and Machine Learning Workshop",
         "description": "Hands-on training in artificial intelligence and machine learning applications for businesses.",
         "category": "Tech",
         "date": "2025-10-15T09:00:00",
@@ -100,7 +110,8 @@
         },
         {
         "id": 10,
-        "title": "Marathon for Charity",
+        "organizer":"John Doe",
+"title": "Marathon for Charity",
         "description": "Run for a cause in our annual charity marathon supporting local healthcare initiatives.",
         "category": "Sports",
         "date": "2025-05-12T07:00:00",
@@ -111,7 +122,8 @@
         },
         {
         "id": 11,
-        "title": "National Basketball Tournament",
+        "organizer":"John Doe",
+"title": "National Basketball Tournament",
         "description": "Watch the country's top basketball teams compete in this thrilling tournament.",
         "category": "Sports",
         "date": "2025-03-20T13:00:00",
@@ -122,7 +134,8 @@
         },
         {
         "id": 12,
-        "title": "Extreme Sports Championship",
+        "organizer":"John Doe",
+"title": "Extreme Sports Championship",
         "description": "Witness heart-stopping performances from elite athletes in skateboarding, BMX, and more.",
         "category": "Sports",
         "date": "2025-07-25T10:00:00",
@@ -133,7 +146,8 @@
         },
         {
         "id": 13,
-        "title": "Art Gallery Opening Night",
+        "organizer":"John Doe",
+"title": "Art Gallery Opening Night",
         "description": "Exclusive preview of contemporary artworks from emerging international artists.",
         "category": "Art",
         "date": "2025-08-05T19:00:00",
@@ -144,7 +158,8 @@
         },
         {
         "id": 14,
-        "title": "Sculpture Exhibition",
+        "organizer":"John Doe",
+"title": "Sculpture Exhibition",
         "description": "Explore innovative three-dimensional artworks from renowned sculptors.",
         "category": "Art",
         "date": "2025-04-15T10:00:00",
@@ -155,7 +170,8 @@
         },
         {
         "id": 15,
-        "title": "Street Art Festival",
+        "organizer":"John Doe",
+"title": "Street Art Festival",
         "description": "Watch artists transform urban spaces with vibrant murals and installations.",
         "category": "Art",
         "date": "2025-06-12T11:00:00",
@@ -166,7 +182,8 @@
         },
         {
         "id": 16,
-        "title": "Business Leadership Conference",
+        "organizer":"John Doe",
+"title": "Business Leadership Conference",
         "description": "Network with industry leaders and learn strategies for business growth and innovation.",
         "category": "Business",
         "date": "2025-10-15T08:30:00",
@@ -177,7 +194,8 @@
         },
         {
         "id": 17,
-        "title": "Entrepreneurship Summit",
+        "organizer":"John Doe",
+"title": "Entrepreneurship Summit",
         "description": "Connect with successful entrepreneurs and venture capitalists to accelerate your startup.",
         "category": "Business",
         "date": "2025-09-05T09:00:00",
@@ -188,7 +206,8 @@
         },
         {
         "id": 18,
-        "title": "Global Finance Forum",
+        "organizer":"John Doe",
+"title": "Global Finance Forum",
         "description": "Explore the future of finance with insights from banking and investment leaders.",
         "category": "Business",
         "date": "2025-11-20T08:00:00",
@@ -199,7 +218,8 @@
         },
         {
         "id": 19,
-        "title": "Comedy Night Special",
+        "organizer":"John Doe",
+"title": "Comedy Night Special",
         "description": "Laugh out loud with performances from the country's top stand-up comedians.",
         "category": "Entertainment",
         "date": "2025-06-30T20:00:00",
@@ -210,7 +230,8 @@
         },
         {
         "id": 20,
-        "title": "Circus Spectacular",
+        "organizer":"John Doe",
+"title": "Circus Spectacular",
         "description": "Be amazed by breathtaking acrobatics, stunning performances, and magical illusions.",
         "category": "Entertainment",
         "date": "2025-07-10T19:00:00",
@@ -221,7 +242,8 @@
         },
         {
         "id": 21,
-        "title": "Broadway Musical Tour",
+        "organizer":"John Doe",
+"title": "Broadway Musical Tour",
         "description": "Experience the magic of Broadway with this award-winning musical production.",
         "category": "Entertainment",
         "date": "2025-09-25T19:30:00",
@@ -232,7 +254,8 @@
         },
         {
         "id": 22,
-        "title": "Wellness Retreat Weekend",
+        "organizer":"John Doe",
+"title": "Wellness Retreat Weekend",
         "description": "Rejuvenate your mind and body with yoga, meditation, and holistic health workshops.",
         "category": "Health",
         "date": "2025-04-25T14:00:00",
@@ -243,7 +266,8 @@
         },
         {
         "id": 23,
-        "title": "Mental Health Symposium",
+        "organizer":"John Doe",
+"title": "Mental Health Symposium",
         "description": "Join mental health professionals for discussions on the latest research and treatments.",
         "category": "Health",
         "date": "2025-05-10T09:00:00",
@@ -254,7 +278,8 @@
         },
         {
         "id": 24,
-        "title": "Fitness Expo",
+        "organizer":"John Doe",
+"title": "Fitness Expo",
         "description": "Discover new workout trends, nutrition advice, and fitness equipment from leading brands.",
         "category": "Health",
         "date": "2025-08-15T10:00:00",
@@ -265,7 +290,8 @@
         },
         {
         "id": 25,
-        "title": "Education Technology Expo",
+        "organizer":"John Doe",
+"title": "Education Technology Expo",
         "description": "Explore the latest innovations in educational technology from leading providers.",
         "category": "Education",
         "date": "2025-08-20T09:00:00",
@@ -276,7 +302,8 @@
         },
         {
         "id": 26,
-        "title": "International Education Conference",
+        "organizer":"John Doe",
+"title": "International Education Conference",
         "description": "Connect with educators from around the world to share best practices and innovative teaching methods.",
         "category": "Education",
         "date": "2025-10-12T08:30:00",
@@ -287,7 +314,8 @@
         },
         {
         "id": 27,
-        "title": "STEM Education Workshop",
+        "organizer":"John Doe",
+"title": "STEM Education Workshop",
         "description": "Hands-on workshop for educators focusing on engaging approaches to teaching science and math.",
         "category": "Education",
         "date": "2025-07-05T09:00:00",
@@ -298,7 +326,8 @@
         },
         {
         "id": 28,
-        "title": "Fashion Week Showcase",
+        "organizer":"John Doe",
+"title": "Fashion Week Showcase",
         "description": "Preview next season's collections from top designers and emerging talent.",
         "category": "Fashion",
         "date": "2025-09-05T17:00:00",
@@ -309,7 +338,8 @@
         },
         {
         "id": 29,
-        "title": "Sustainable Fashion Expo",
+        "organizer":"John Doe",
+"title": "Sustainable Fashion Expo",
         "description": "Discover eco-friendly fashion innovations and ethical clothing brands.",
         "category": "Fashion",
         "date": "2025-04-18T11:00:00",
@@ -320,7 +350,8 @@
         },
         {
         "id": 30,
-        "title": "Vintage Fashion Market",
+        "organizer":"John Doe",
+"title": "Vintage Fashion Market",
         "description": "Browse curated collections of vintage clothing, accessories, and textiles from different eras.",
         "category": "Fashion",
         "date": "2025-06-08T10:00:00",
@@ -331,7 +362,8 @@
         },
         {
         "id": 31,
-        "title": "Film Festival Premier",
+        "organizer":"John Doe",
+"title": "Film Festival Premier",
         "description": "Be among the first to see award-winning films from around the globe.",
         "category": "Film",
         "date": "2025-10-05T16:00:00",
@@ -342,7 +374,8 @@
         },
         {
         "id": 32,
-        "title": "Documentary Film Showcase",
+        "organizer":"John Doe",
+"title": "Documentary Film Showcase",
         "description": "Explore thought-provoking documentaries followed by Q&A sessions with filmmakers.",
         "category": "Film",
         "date": "2025-11-15T14:00:00",
@@ -353,7 +386,8 @@
         },
         {
         "id": 33,
-        "title": "Horror Film Marathon",
+        "organizer":"John Doe",
+"title": "Horror Film Marathon",
         "description": "Test your courage with back-to-back screenings of classic and new horror films.",
         "category": "Film",
         "date": "2025-10-30T19:00:00",
@@ -364,7 +398,8 @@
         },
         {
         "id": 34,
-        "title": "Gaming Convention",
+        "organizer":"John Doe",
+"title": "Gaming Convention",
         "description": "Experience the latest in gaming technology with demos, tournaments, and exclusive releases.",
         "category": "Gaming",
         "date": "2025-07-28T10:00:00",
@@ -375,7 +410,8 @@
         },
         {
         "id": 35,
-        "title": "ESports Championship",
+        "organizer":"John Doe",
+"title": "ESports Championship",
         "description": "Watch top gaming teams compete for the championship title and substantial prize pool.",
         "category": "Gaming",
         "date": "2025-09-15T11:00:00",
@@ -386,7 +422,8 @@
         },
         {
         "id": 36,
-        "title": "Retro Gaming Expo",
+        "organizer":"John Doe",
+"title": "Retro Gaming Expo",
         "description": "Celebrate classic video games with playable consoles, collector showcases, and tournaments.",
         "category": "Gaming",
         "date": "2025-06-10T10:00:00",
@@ -397,7 +434,8 @@
         },
         {
         "id": 37,
-        "title": "Home & Garden Show",
+        "organizer":"John Doe",
+"title": "Home & Garden Show",
         "description": "Discover innovative ideas for improving your living space from top designers and vendors.",
         "category": "Lifestyle",
         "date": "2025-05-18T09:30:00",
@@ -408,7 +446,8 @@
         },
         {
         "id": 38,
-        "title": "Luxury Living Expo",
+        "organizer":"John Doe",
+"title": "Luxury Living Expo",
         "description": "Explore premium home furnishings, decor, and lifestyle products from luxury brands.",
         "category": "Lifestyle",
         "date": "2025-10-10T10:00:00",
@@ -419,7 +458,8 @@
         },
         {
         "id": 39,
-        "title": "Minimalist Living Workshop",
+        "organizer":"John Doe",
+"title": "Minimalist Living Workshop",
         "description": "Learn practical strategies for decluttering your home and embracing a minimalist lifestyle.",
         "category": "Lifestyle",
         "date": "2025-04-28T13:00:00",
@@ -430,7 +470,8 @@
         },
         {
         "id": 40,
-        "title": "Science Fair for All Ages",
+        "organizer":"John Doe",
+"title": "Science Fair for All Ages",
         "description": "Engage with hands-on experiments and demonstrations that make science accessible and fun.",
         "category": "Science",
         "date": "2025-04-10T10:00:00",
@@ -441,7 +482,8 @@
         },
         {
         "id": 41,
-        "title": "Astronomy Night",
+        "organizer":"John Doe",
+"title": "Astronomy Night",
         "description": "Observe celestial bodies through high-powered telescopes with guidance from astronomers.",
         "category": "Science",
         "date": "2025-08-12T21:00:00",
@@ -452,7 +494,8 @@
         },
         {
         "id": 42,
-        "title": "Robotics Showcase",
+        "organizer":"John Doe",
+"title": "Robotics Showcase",
         "description": "Witness cutting-edge robotics technology and interactive demonstrations from research labs.",
         "category": "Science",
         "date": "2025-06-15T10:00:00",
@@ -463,7 +506,8 @@
         },
         {
         "id": 43,
-        "title": "Automotive Show",
+        "organizer":"John Doe",
+"title": "Automotive Show",
         "description": "See the latest models and concept cars from leading automotive manufacturers.",
         "category": "Automotive",
         "date": "2025-03-15T10:00:00",
@@ -474,7 +518,8 @@
         },
         {
         "id": 44,
-        "title": "Classic Car Exhibition",
+        "organizer":"John Doe",
+"title": "Classic Car Exhibition",
         "description": "Admire meticulously restored vintage automobiles from different eras and regions.",
         "category": "Automotive",
         "date": "2025-05-25T09:00:00",
@@ -485,7 +530,8 @@
         },
         {
         "id": 45,
-        "title": "Electric Vehicle Expo",
+        "organizer":"John Doe",
+"title": "Electric Vehicle Expo",
         "description": "Explore the future of transportation with test drives and demonstrations of the latest electric vehicles.",
         "category": "Automotive",
         "date": "2025-09-05T10:00:00",
@@ -496,7 +542,8 @@
         },
         {
         "id": 46,
-        "title": "Photography Workshop",
+        "organizer":"John Doe",
+"title": "Photography Workshop",
         "description": "Learn advanced techniques from professional photographers in this intensive workshop.",
         "category": "Workshop",
         "date": "2025-06-05T09:00:00",
@@ -507,7 +554,8 @@
         },
         {
         "id": 47,
-        "title": "Pottery Making Class",
+        "organizer":"John Doe",
+"title": "Pottery Making Class",
         "description": "Get your hands dirty and learn the art of creating beautiful ceramic pieces.",
         "category": "Workshop",
         "date": "2025-07-20T14:00:00",
@@ -518,7 +566,8 @@
         },
         {
         "id": 48,
-        "title": "Creative Writing Retreat",
+        "organizer":"John Doe",
+"title": "Creative Writing Retreat",
         "description": "Develop your writing skills through guided exercises and feedback in a peaceful setting.",
         "category": "Workshop",
         "date": "2025-10-18T09:00:00",
@@ -529,7 +578,8 @@
         },
         {
         "id": 49,
-        "title": "Environmental Conservation Summit",
+        "organizer":"John Doe",
+"title": "Environmental Conservation Summit",
         "description": "Join environmental leaders to discuss sustainable practices and conservation efforts.",
         "category": "Environment",
         "date": "2025-04-22T08:00:00",
@@ -540,7 +590,8 @@
         },
         {
         "id": 50,
-        "title": "Ocean Cleanup Volunteer Day",
+        "organizer":"John Doe",
+"title": "Ocean Cleanup Volunteer Day",
         "description": "Participate in a community effort to clean local beaches and learn about marine conservation.",
         "category": "Environment",
         "date": "2025-06-08T07:00:00",
@@ -551,7 +602,8 @@
         },
         {
         "id": 51,
-        "title": "Sustainable Living Expo",
+        "organizer":"John Doe",
+"title": "Sustainable Living Expo",
         "description": "Discover eco-friendly products and learn practical ways to reduce your environmental footprint.",
         "category": "Environment",
         "date": "2025-09-20T10:00:00",
@@ -562,7 +614,8 @@
         },
         {
         "id": 52,
-        "title": "Dance Performance Showcase",
+        "organizer":"John Doe",
+"title": "Dance Performance Showcase",
         "description": "Witness stunning performances across various dance styles from acclaimed dance troupes.",
         "category": "Dance",
         "date": "2025-08-15T19:00:00",
@@ -573,7 +626,8 @@
         },
         {
         "id": 53,
-        "title": "Ballet Gala",
+        "organizer":"John Doe",
+"title": "Ballet Gala",
         "description": "Experience an elegant evening of classical ballet performed by internationally renowned dancers.",
         "category": "Dance",
         "date": "2025-11-20T19:30:00",
@@ -584,7 +638,8 @@
         },
         {
         "id": 54,
-        "title": "Street Dance Competition",
+        "organizer":"John Doe",
+"title": "Street Dance Competition",
         "description": "Watch talented dancers battle it out in hip-hop, breakdancing, and other urban styles.",
         "category": "Dance",
         "date": "2025-07-05T14:00:00",
@@ -595,7 +650,8 @@
         },
         {
         "id": 55,
-        "title": "Parenting Conference",
+        "organizer":"John Doe",
+"title": "Parenting Conference",
         "description": "Gain insights from child development experts on effective parenting strategies.",
         "category": "Family",
         "date": "2025-07-10T09:00:00",
@@ -604,4 +660,4 @@
         "capacity": 500,
         "imageUrl": "https://images.unsplash.com/photo-1536640712-4d4c36ff0e4e?auto=format&fit=crop&q=80"
         }
-    ]
+]

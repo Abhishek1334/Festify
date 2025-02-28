@@ -4,7 +4,7 @@ import categories from "../categories.json";
 import * as LucideIcons from "lucide-react";
 import { useState } from "react";
 
-export default function Categories({ isHomepage }) {
+export default function Categories() {
 	const [isShowMore, setIsShowMore] = useState(false);
 
 	// Map categories with corresponding Lucide icons
@@ -17,7 +17,7 @@ export default function Categories({ isHomepage }) {
 	const displayedCategories = isShowMore ? categoriesWithIcons : categoriesWithIcons.slice(0, 8);
 
 	return (
-		<section className="py-8 hidden-section relative">
+		<section className="pt-4 pb-8 hidden-section relative">
 			<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
 				<h2 className="section-title text-center text-xl">Browse by Category</h2>
 
