@@ -93,7 +93,9 @@ router.post(
 				expiresIn: "1h",
 			});
 
+			console.log('✅ Login Successful');
 			res.json({
+				
 				token,
 				user: { id: user._id, name: user.name, email: user.email },
 			});

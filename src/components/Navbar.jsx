@@ -1,138 +1,75 @@
-import { useState } from "react";
 import { Link } from "react-router-dom";
-import { useAuth } from "../components/context/AuthContext";
-import { Menu, X } from "lucide-react"; // Icons for mobile menu
+import { User, LogOut } from "lucide-react";
 import logo from "../assets/images/logo.png";
+import { useAuth } from "../components/context/AuthContext";
 
 export default function Navbar() {
-	const { user, valid, logout } = useAuth();
-	const [isOpen, setIsOpen] = useState(false);
+	const { user, logout } = useAuth(); // Get user and logout function from AuthContext
+	const isLoggedIn = !!user; // Check if user exists
 
 	return (
-		<nav className="fixed top-0 left-0 w-full backdrop-blur-md bg-white/80 shadow-md z-50">
-			<div className="container mx-auto px-6 py-4 flex justify-between items-center">
-				{/* Logo */}
-				<Link to="/" className="flex items-center space-x-2">
-					<img src={logo} alt="Festify" className="h-10 w-auto" />
-					<span className="text-2xl font-bold text-gray-800">
-						Festify
-					</span>
-				</Link>
-
-				{/* Desktop Menu */}
-				<div className="hidden md:flex space-x-6">
-					<Link
-						to="/"
-						className="text-gray-600 hover:text-gray-800 transition"
-					>
-						Home
-					</Link>
-					<Link
-						to="/events"
-						className="text-gray-600 hover:text-gray-800 transition"
-					>
-						Events
-					</Link>
-					{valid ? (
-						<>
-							<Link
-								to="/profile"
-								className="text-gray-600 hover:text-gray-800 transition"
-							>
-								{user?.name}
-							</Link>
-							<button
-								onClick={logout}
-								className="text-red-600 hover:text-red-800 transition"
-							>
-								Logout
-							</button>
-						</>
-					) : (
-						<>
-							<Link
-								to="/login"
-								className="text-gray-600 hover:text-gray-800 transition"
-							>
-								Login
-							</Link>
-							<Link
-								to="/signup"
-								className="text-gray-600 hover:text-gray-800 transition"
-							>
-								Signup
-							</Link>
-						</>
-					)}
-				</div>
-
-				{/* Mobile Menu Button */}
-				<button
-					className="md:hidden text-gray-800"
-					onClick={() => setIsOpen(!isOpen)}
-				>
-					{isOpen ? <X size={28} /> : <Menu size={28} />}
-				</button>
-			</div>
-
-			{/* Mobile Menu */}
-			{isOpen && (
-				<div className="md:hidden bg-white/80 backdrop-blur-md absolute top-16 left-0 w-full py-4 shadow-md">
-					<div className="flex flex-col items-center space-y-4">
-						<Link
-							to="/"
-							className="text-gray-600 hover:text-gray-800 transition"
-							onClick={() => setIsOpen(false)}
-						>
-							Home
+		<section className="hidden-section sticky top-0 w-full z-50 bg-[rgb(250, 247, 232)] backdrop-blur-lg hover:bg-[rgba(255,255,255,1)]">
+			<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+				<div className="flex justify-between h-16 items-center">
+					<div className="flex items-center">
+						<Link to="/" className="flex items-center space-x-2">
+							<img
+								src={logo}
+								alt="Festify Logo"
+								className="h-8 w-8"
+							/>
+							<span className="text-xl font-semibold ml-2 text-gray-900">
+								Festify
+							</span>
 						</Link>
-						<Link
-							to="/events"
-							className="text-gray-600 hover:text-gray-800 transition"
-							onClick={() => setIsOpen(false)}
-						>
-							Events
-						</Link>
-						{valid ? (
+						<div className="hidden md:flex items-center space-x-8 ml-10">
+							<Link
+								to="/events"
+								className="text-gray-700 transform hover:-translate-y-0.5 transition-all duration-200"
+							>
+								Events
+							</Link>
+							<Link
+								to="/events/create-event"
+								className="text-gray-700 transform hover:-translate-y-0.5 transition-all duration-200"
+							>
+								Create Event
+							</Link>
+						</div>
+					</div>
+
+					{/* Show Profile & Logout if logged in, otherwise show Login & Signup */}
+					<div className="flex items-center space-x-4">
+						{isLoggedIn ? (
 							<>
 								<Link
 									to="/profile"
-									className="text-gray-600 hover:text-gray-800 transition"
-									onClick={() => setIsOpen(false)}
+									className="flex items-center space-x-2 nav-link"
 								>
-									{user?.name}
+									<User className="h-5 w-5" />
+									<span>Profile</span>
 								</Link>
 								<button
-									onClick={() => {
-										logout();
-										setIsOpen(false);
-									}}
-									className="text-red-600 hover:text-red-800 transition"
+									onClick={logout}
+									className="flex items-center space-x-2 nav-link"
 								>
-									Logout
+									<LogOut className="h-5 w-5" />
+									<span>Logout</span>
 								</button>
 							</>
 						) : (
 							<>
-								<Link
-									to="/login"
-									className="text-gray-600 hover:text-gray-800 transition"
-									onClick={() => setIsOpen(false)}
-								>
+								<Link to="/login" className="btn-secondary">
 									Login
 								</Link>
-								<Link
-									to="/signup"
-									className="text-gray-600 hover:text-gray-800 transition"
-									onClick={() => setIsOpen(false)}
-								>
-									Signup
+								<Link to="/signup" className="btn-primary">
+									Sign Up
 								</Link>
 							</>
 						)}
 					</div>
 				</div>
-			)}
-		</nav>
+			</div>
+		</section>
 	);
 }
