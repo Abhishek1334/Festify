@@ -22,13 +22,13 @@ export default function Navbar() {
 						<div className="hidden md:flex items-center space-x-8 ml-10">
 							<Link
 								to="/events"
-								className="text-gray-700  transition duration-300"
+								className="text-gray-700 transform hover:-translate-y-0.5 transition-all duration-200"
 							>
 								Events
 							</Link>
 							<Link
 								to="/events/create-event"
-								className="text-gray-700  transition duration-300"
+								className="text-gray-700 transform hover:-translate-y-0.5 transition-all duration-200"
 							>
 								Create Event
 							</Link>

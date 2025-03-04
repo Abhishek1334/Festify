@@ -3,13 +3,64 @@ import { Link, useNavigate } from "react-router-dom";
 import { Mail, Lock } from "lucide-react";
 import logo from "../assets/images/logo.png";
 
-
 export default function Login() {
 	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
-	
+	const [error, setError] = useState(""); // Handle login errors
+	const navigate = useNavigate();
 
-	
+	const handleSubmit = async (e) => {
+		e.preventDefault();
+		setError("");
+
+		try {
+			const response = await fetch(
+				"http://localhost:5000/api/auth/login",
+				{
+					method: "POST",
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify({ email, password }),
+				}
+			);
+
+			const data = await response.json();
+
+			if (!response.ok) {
+				throw new Error(data.message || "Login failed");
+			}
+
+			// ✅ Store Token & Fetch Profile
+			localStorage.setItem("token", data.token);
+
+			// ✅ Fetch User Profile
+			const profileResponse = await fetch(
+				"http://localhost:5000/api/users/profile",
+				{
+					method: "GET",
+					headers: {
+						"Content-Type": "application/json",
+						Authorization: `Bearer ${data.token}`, // Send token in headers
+					},
+				}
+			);
+			const profileData = await profileResponse.json();
+
+			if (!profileResponse.ok) {
+				throw new Error(
+					profileData.message || "Failed to fetch profile"
+				);
+			}
+
+			// ✅ Store User Data (for use in profile page)
+			localStorage.setItem("user", JSON.stringify(profileData));
+
+			// ✅ Redirect to Profile Page
+			navigate("/profile");
+		} catch (err) {
+			setError(err.message);
+		}
+	};
+
 
 	return (
 		<div className="min-h-screen bg-gradient-to-br from-purple-600 to-indigo-700 py-12 px-4 sm:px-6 lg:px-8 flex items-center">
@@ -28,7 +79,7 @@ export default function Login() {
 						Welcome back
 					</h2>
 					<p className="mt-2 text-sm text-gray-600">
-						Don&lsquo;t have an account?{" "}
+						Don’t have an account?{" "}
 						<Link
 							to="/signup"
 							className="font-medium text-purple-600 hover:text-[#ff8d64cc]"
@@ -38,12 +89,10 @@ export default function Login() {
 					</p>
 				</div>
 
-
-
-				<form
-					className="mt-8 space-y-6 bg-gradient-to"
-				>
+				<form onSubmit={handleSubmit} className="mt-8 space-y-6">
+					{error && <p className="text-red-500 text-sm">{error}</p>}
 					<div className="space-y-4">
+						{/* Email Input */}
 						<div>
 							<label htmlFor="email" className="sr-only">
 								Email address
@@ -57,7 +106,7 @@ export default function Login() {
 									name="email"
 									type="email"
 									required
-									className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-transparent pl-10"
+									className="w-full px-4 py-3 pl-10 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-600"
 									placeholder="Email address"
 									value={email}
 									onChange={(e) => setEmail(e.target.value)}
@@ -65,6 +114,7 @@ export default function Login() {
 							</div>
 						</div>
 
+						{/* Password Input */}
 						<div>
 							<label htmlFor="password" className="sr-only">
 								Password
@@ -78,7 +128,7 @@ export default function Login() {
 									name="password"
 									type="password"
 									required
-									className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-transparent pl-10"
+									className="w-full px-4 py-3 pl-10  border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-600"
 									placeholder="Password"
 									value={password}
 									onChange={(e) =>
@@ -89,37 +139,12 @@ export default function Login() {
 						</div>
 					</div>
 
-					<div className="flex items-center justify-between">
-						<div className="flex items-center">
-							<input
-								id="remember-me"
-								name="remember-me"
-								type="checkbox"
-								className="h-4 w-4  border-gray-300 rounded"
-							/>
-							<label
-								htmlFor="remember-me"
-								className="ml-2 block text-sm text-gray-900"
-							>
-								Remember me
-							</label>
-						</div>
-
-						<div className="text-sm">
-							<Link
-								to="/forgot-password"
-								className="font-medium text-purple-600 hover:text-[#ff8d64cc]"
-							>
-								Forgot your password?
-							</Link>
-						</div>
-					</div>
-
+					{/* Login Button */}
 					<button
 						type="submit"
-						className="w-full py-3 px-4 bg-purple-600 text-white font-bold rounded-lg hover:bg-purple-700 transition duration-300"
+						className="w-full  btn-primary"
 					>
-						Login in
+						Log in
 					</button>
 				</form>
 			</div>

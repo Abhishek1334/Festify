@@ -21,9 +21,9 @@ export default function Hero() {
 					<div className="flex flex-col justify-center space-y-7 ">
 						<h1 className="text-[3.4rem] md:text-6xl font-bold text-white leading-tight drop-shadow-md  ">
 							<motion.div
-								initial={{ y: -500 }}
-								animate={{ y: 0 }}
-								transition={{ duration: 1 }}>
+								initial={{ opacity:0}}
+								animate={{ opacity: 1 }}
+								transition={{ duration: 2 }}>
 								
 								Discover Amazing Events
 								<span className="block text-[4rem] text-purple-100">
@@ -44,9 +44,9 @@ export default function Hero() {
 							</motion.div>
 						</h1>
 						<motion.div
-							initial={{ y: -500 }}
-							animate={{ y: 0 }}
-							transition={{ duration: 0.8 }}
+							initial={{opacity: 0, y: 100 }}
+							animate={{opacity: 1, y: 0 }}
+							transition={{ duration: 1.5 }}
 						>
 							<p className="text-xl text-gray-100 leading-relaxed">
 								Find and book tickets for the best local events,
@@ -87,19 +87,13 @@ export default function Hero() {
 					{/* Right Section - Search Box */}
 					<motion.div
 						className="grid grid-cols-1 md:grid-cols-1"
-						initial={{ opacity: 0, y: 50 }}
-						animate={{ opacity: 1, y: 0 }}
-						transition={{ duration: 0.6, ease: "easeOut" }}
+						initial={{ opacity: 0, scale: 0 }}
+						animate={{ opacity: 1, scale: 1 }}
+						transition={{ duration: 1.5, ease: "easeOut" }}
 					>
 						<motion.div
 							className="bg-opacity-10 backdrop-blur-lg rounded-3xl p-6 bg-[#24157194] space-y-4 my-auto h-fit"
-							initial={{ scale: 0.9, opacity: 0 }}
-							animate={{ scale: 1, opacity: 1 }}
-							transition={{
-								duration: 0.5,
-								delay: 0.2,
-								ease: "easeOut",
-							}}
+							
 						>
 							{/* Search Input */}
 							<div className="relative">
@@ -134,7 +128,7 @@ export default function Hero() {
 							<motion.div className="mt-4">
 								<motion.div
 									whileHover={{ scale: 1.05 }}
-									whileTap={{ scale: 0.95 }}
+									whileTap={{ scale:0.95 }}
 									transition={{ duration: 0.2 }}
 								>
 									<Link

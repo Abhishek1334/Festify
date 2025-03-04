@@ -1,12 +1,20 @@
 import { Link } from "react-router-dom";
 import EventCard from "../EventCard";
-import events from "../../events.json";
 import PropTypes from "prop-types";
-
-
-const featuredEvents = events.slice(0, 3);
+import { useEffect, useState } from "react";
 
 const EventListing = ({isHomepage}) => {
+
+	const [events, setEvents] = useState([]);
+
+	useEffect(() => {
+		fetch("http://localhost:5000/api/events")
+			.then((res) => res.json())
+			.then((data) => setEvents(data))
+			.catch((err) => console.error("Error fetching events:", err));
+	}, []);
+
+	const featuredEvents = events.slice(0, 3);
 
 	const EventList = (isHomepage) ? featuredEvents : events;
 
@@ -21,10 +29,12 @@ const EventListing = ({isHomepage}) => {
 						Discover the most exciting upcoming events happening
 						near you
 					</p>
-				</div>
 
+				</div>				
 				<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+					
 					{EventList.map((event) => (
+
 						<EventCard key={event.id} event={event} />
 					))}
 				</div>
