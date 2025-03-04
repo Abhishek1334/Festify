@@ -26,33 +26,19 @@ export default function App() {
 							path="/events/category/:category"
 							element={<Events />}
 						/>
-						<Route
-							path="/events/:eventid"
-							element={
-								<ProtectedRoute>
-									<EventPage />
-								</ProtectedRoute>
-							}
-						/>
-						<Route
-							path="events/create-event"
-							element={
-								<ProtectedRoute>
-									<CreateEvents />
-								</ProtectedRoute>
-							}
-						/>
+						<Route element={<ProtectedRoute />}>
+							<Route
+								path="/events/:eventid"
+								element={<EventPage />}
+							/>
+							<Route
+								path="events/create-event"
+								element={<CreateEvents />}
+							/>
+							<Route path="/profile" element={<UserProfile />} />
+						</Route>
 						<Route path="/login" element={<Login />} />
 						<Route path="/signup" element={<Signup />} />
-
-						<Route
-							path="/profile"
-							element={
-								<ProtectedRoute>
-									<UserProfile />
-								</ProtectedRoute>
-							}
-						/>
 					</Routes>
 				</main>
 				<Footer />

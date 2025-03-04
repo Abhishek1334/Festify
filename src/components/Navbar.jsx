@@ -1,68 +1,138 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
-import { User, LogOut } from "lucide-react";
+import { useAuth } from "../components/context/AuthContext";
+import { Menu, X } from "lucide-react"; // Icons for mobile menu
 import logo from "../assets/images/logo.png";
+
 export default function Navbar() {
-	const isLoggedIn = false;
+	const { user, valid, logout } = useAuth();
+	const [isOpen, setIsOpen] = useState(false);
 
 	return (
-		<section className="hidden-section sticky top-0 w-full  z-50 bg-[rgb(250, 247, 232)] backdrop-blur-lg hover:bg-[rgba(255,255,255,1)]  ">
-			<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-				<div className="flex justify-between h-16 items-center">
-					<div className="flex items-center">
-						<Link to="/" className="flex items-center space-x-2">
-							<img
-								src={logo}
-								alt="Festify Logo"
-								className="h-8 w-8 "
-							/>
-							<span className="text-xl font-semibold ml-2 text-gray-900">
-								Festify
-							</span>
-						</Link>
-						<div className="hidden md:flex items-center space-x-8 ml-10">
-							<Link
-								to="/events"
-								className="text-gray-700 transform hover:-translate-y-0.5 transition-all duration-200"
-							>
-								Events
-							</Link>
-							<Link
-								to="/events/create-event"
-								className="text-gray-700 transform hover:-translate-y-0.5 transition-all duration-200"
-							>
-								Create Event
-							</Link>
-						</div>
-					</div>
+		<nav className="fixed top-0 left-0 w-full backdrop-blur-md bg-white/80 shadow-md z-50">
+			<div className="container mx-auto px-6 py-4 flex justify-between items-center">
+				{/* Logo */}
+				<Link to="/" className="flex items-center space-x-2">
+					<img src={logo} alt="Festify" className="h-10 w-auto" />
+					<span className="text-2xl font-bold text-gray-800">
+						Festify
+					</span>
+				</Link>
 
-					<div className="flex items-center space-x-4">
-						{isLoggedIn ? (
+				{/* Desktop Menu */}
+				<div className="hidden md:flex space-x-6">
+					<Link
+						to="/"
+						className="text-gray-600 hover:text-gray-800 transition"
+					>
+						Home
+					</Link>
+					<Link
+						to="/events"
+						className="text-gray-600 hover:text-gray-800 transition"
+					>
+						Events
+					</Link>
+					{valid ? (
+						<>
+							<Link
+								to="/profile"
+								className="text-gray-600 hover:text-gray-800 transition"
+							>
+								{user?.name}
+							</Link>
+							<button
+								onClick={logout}
+								className="text-red-600 hover:text-red-800 transition"
+							>
+								Logout
+							</button>
+						</>
+					) : (
+						<>
+							<Link
+								to="/login"
+								className="text-gray-600 hover:text-gray-800 transition"
+							>
+								Login
+							</Link>
+							<Link
+								to="/signup"
+								className="text-gray-600 hover:text-gray-800 transition"
+							>
+								Signup
+							</Link>
+						</>
+					)}
+				</div>
+
+				{/* Mobile Menu Button */}
+				<button
+					className="md:hidden text-gray-800"
+					onClick={() => setIsOpen(!isOpen)}
+				>
+					{isOpen ? <X size={28} /> : <Menu size={28} />}
+				</button>
+			</div>
+
+			{/* Mobile Menu */}
+			{isOpen && (
+				<div className="md:hidden bg-white/80 backdrop-blur-md absolute top-16 left-0 w-full py-4 shadow-md">
+					<div className="flex flex-col items-center space-y-4">
+						<Link
+							to="/"
+							className="text-gray-600 hover:text-gray-800 transition"
+							onClick={() => setIsOpen(false)}
+						>
+							Home
+						</Link>
+						<Link
+							to="/events"
+							className="text-gray-600 hover:text-gray-800 transition"
+							onClick={() => setIsOpen(false)}
+						>
+							Events
+						</Link>
+						{valid ? (
 							<>
 								<Link
-									to="/dashboard"
-									className="flex items-center space-x-2 nav-link"
+									to="/profile"
+									className="text-gray-600 hover:text-gray-800 transition"
+									onClick={() => setIsOpen(false)}
 								>
-									<User className="h-5 w-5" />
-									<span>Dashboard</span>
+									{user?.name}
 								</Link>
-								<button className="flex items-center space-x-2 nav-link">
-									<LogOut className="h-5 w-5" />
-									<span>Logout</span>
+								<button
+									onClick={() => {
+										logout();
+										setIsOpen(false);
+									}}
+									className="text-red-600 hover:text-red-800 transition"
+								>
+									Logout
 								</button>
 							</>
 						) : (
 							<>
-								<Link to="/login" className=" btn-secondary">
+								<Link
+									to="/login"
+									className="text-gray-600 hover:text-gray-800 transition"
+									onClick={() => setIsOpen(false)}
+								>
 									Login
 								</Link>
-								<Link to="/signup" className=" btn-primary">
-									Sign Up
+								<Link
+									to="/signup"
+									className="text-gray-600 hover:text-gray-800 transition"
+									onClick={() => setIsOpen(false)}
+								>
+									Signup
 								</Link>
 							</>
 						)}
 					</div>
 				</div>
-			</div>
-		</section>
+			)}
+		</nav>
 	);
 }
