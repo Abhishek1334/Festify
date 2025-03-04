@@ -1,50 +1,61 @@
-import { createContext, useContext, useState, useEffect } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
+import axios from "axios";
 
 const AuthContext = createContext();
 
-export const AuthProvider = ({ children }) => {
+export function AuthProvider({ children }) {
 	const [user, setUser] = useState(null);
-	const [token, setToken] = useState(localStorage.getItem("token") || null);
-	const [valid, setValid] = useState(false); // Track auth status
+	const [valid, setValid] = useState(false);
 
 	useEffect(() => {
-		if (token) {
-			fetch("http://localhost:5000/api/auth/me", {
-				method: "GET",
-				headers: { Authorization: `Bearer ${token}` },
-			})
-				.then((res) => res.json())
-				.then((data) => {
-					if (data.user) {
-						setUser(data.user);
-						setValid(true);
-					} else {
-						logout();
-					}
-				})
-				.catch(() => logout());
-		}
-	}, [token]);
+		const checkAuth = async () => {
+			try {
+				const res = await axios.get("/api/auth/me", {
+					withCredentials: true,
+				});
+				setUser(res.data.user);
+				setValid(true);
+			} catch (error) {
+				setUser(null);
+				setValid(false);
+			}
+		};
+		checkAuth();
+	}, []);
 
-	const login = (userData, authToken) => {
-		setUser(userData);
-		setToken(authToken);
-		setValid(true);
-		localStorage.setItem("token", authToken);
+	const login = async (credentials) => {
+		try {
+			const res = await axios.post("/api/auth/login", credentials, {
+				withCredentials: true,
+			});
+			setUser(res.data.user);
+			setValid(true);
+		} catch (error) {
+			console.error(
+				"Login failed:",
+				error.response?.data?.message || error.message
+			);
+		}
 	};
 
-	const logout = () => {
-		setUser(null);
-		setToken(null);
-		setValid(false);
-		localStorage.removeItem("token");
+	const logout = async () => {
+		try {
+			await axios.post("/api/auth/logout", {}, { withCredentials: true });
+			setUser(null);
+			setValid(false);
+		} catch (error) {
+			console.error(
+				"Logout failed:",
+				error.response?.data?.message || error.message
+			);
+		}
 	};
 
 	return (
-		<AuthContext.Provider value={{ user, token, valid, login, logout }}>
+		<AuthContext.Provider value={{ user, valid, login, logout }}>
 			{children}
 		</AuthContext.Provider>
 	);
-};
+}
 
 export const useAuth = () => useContext(AuthContext);
