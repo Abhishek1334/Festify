@@ -17,15 +17,11 @@ export default function EventCard({ event }) {
 		<div className="card hidden-section border-1 border-gray-200 rounded-xl overflow-hidden">
 			<div className="relative overflow-hidden ">
 				<img
-					src={
-						event.imageUrl ||
-						"https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?auto=format&fit=crop&q=80"
-					}
+					src={`http://localhost:5000${event.imageUrl}`}
 					alt={event.title}
 					className="w-full h-48 object-cover transform hover:scale-105 transition-transform duration-300"
 				/>
 				<div className="absolute top-4 right-4">
-					
 					<button
 						onClick={toggleLike}
 						className="p-2 bg-white/90 backdrop-blur-sm rounded-full shadow-lg hover:bg-white transition-colors duration-200"
@@ -42,7 +38,7 @@ export default function EventCard({ event }) {
 				</div>
 			</div>
 
-			<Link to={`/events/${event.id}`}>
+			<Link to={`/events/${event._id}`}>
 				<div className="p-6">
 					<div className="flex items-start justify-between mb-4">
 						<div>
@@ -54,7 +50,7 @@ export default function EventCard({ event }) {
 							</p>
 						</div>
 						<span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-purple-100 text-purple-800">
-							${event.price}
+							₹{event.price}
 						</span>
 					</div>
 

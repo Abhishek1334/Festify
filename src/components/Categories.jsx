@@ -3,6 +3,8 @@ import PropTypes from "prop-types";
 import categories from "../categories.json";
 import * as LucideIcons from "lucide-react";
 import { useState } from "react";
+//Dispaly list of categories
+console.log(categories.map((category) => category.name));
 
 export default function Categories() {
 	const [isShowMore, setIsShowMore] = useState(false);
