@@ -10,6 +10,7 @@ import authRoutes from "./routes/authRoutes.js";
 import eventRoutes from "./routes/eventRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 
+
 dotenv.config();
 
 const PORT = process.env.PORT || 5000;

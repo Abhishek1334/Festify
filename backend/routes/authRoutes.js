@@ -7,7 +7,7 @@ import process from "process";
 
 const router = express.Router();
 
-// Register User
+// ✅ User Signup Route
 router.post(
 	"/signup",
 	[
@@ -26,30 +26,38 @@ router.post(
 		const { name, email, password } = req.body;
 
 		try {
-			let user = await User.findOne({ email });
-			if (user) {
+			// ❌ Debugging: Check if user already exists
+			let existingUser = await User.findOne({ email });
+			if (existingUser) {
+				console.log("⚠️ User already exists:", existingUser);
 				return res.status(400).json({ message: "User already exists" });
 			}
 
+			// ✅ Hash Password
+			console.log("🔑 Plain Password:", password);
 			const salt = await bcrypt.genSalt(10);
 			const hashedPassword = await bcrypt.hash(password, salt);
+			console.log("🔒 Hashed Password:", hashedPassword);
 
-			user = new User({ name, email, password: hashedPassword });
+			// ✅ Save User to Database
+			const user = new User({ name, email, password: hashedPassword });
 			await user.save();
+			console.log("✅ User Registered:", user);
 
+			// ✅ Generate JWT Token
 			const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
 				expiresIn: "1h",
 			});
 
 			res.json({ token, user: { id: user._id, name, email } });
 		} catch (err) {
-			console.error(err.message);
+			console.error("❌ Signup Error:", err.message);
 			res.status(500).send("Server error");
 		}
 	}
 );
 
-// Login User
+// ✅ User Login Route
 router.post(
 	"/login",
 	[
@@ -65,45 +73,35 @@ router.post(
 		const { email, password } = req.body;
 
 		try {
-			let user = await User.findOne({ email });
+			// ✅ Find User by Email
+			const user = await User.findOne({ email });
 			if (!user) {
+				console.log("❌ User Not Found:", email);
 				return res.status(400).json({ message: "Invalid credentials" });
 			}
 
+		
 			const isMatch = await bcrypt.compare(password, user.password);
+
 			if (!isMatch) {
+				console.log("❌ Password Mismatch");
 				return res.status(400).json({ message: "Invalid credentials" });
 			}
 
+			// ✅ Generate Token
 			const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
 				expiresIn: "1h",
 			});
 
-			res.json({ token, user: { id: user._id, name, email } });
+			res.json({
+				token,
+				user: { id: user._id, name: user.name, email: user.email },
+			});
 		} catch (err) {
-			console.error(err.message);
+			console.error("❌ Login Error:", err.message);
 			res.status(500).send("Server error");
 		}
 	}
 );
-
-// Protected Route Example
-router.get("/me", async (req, res) => {
-	try {
-		const token = req.header("x-auth-token");
-		if (!token) {
-			return res
-				.status(401)
-				.json({ message: "No token, authorization denied" });
-		}
-
-		const decoded = jwt.verify(token, process.env.JWT_SECRET);
-		const user = await User.findById(decoded.id).select("-password");
-		res.json(user);
-	} catch (err) {
-        console.error(err.message);
-		res.status(401).json({ message: "Invalid token" });
-	}
-});
 
 export default router;
