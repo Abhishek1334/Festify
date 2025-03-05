@@ -9,8 +9,8 @@ import UserProfile from "./pages/UserProfile";
 import Footer from "./components/Footer";
 import ScrollToTop from "./components/ScrollToTop";
 import CreateEvents from "./pages/CreateEvents";
-import { AuthProvider } from "./components/context/AuthContext";
-import ProtectedRoute from "./components/ProtectedRoute";
+import { AuthProvider } from "./context/AuthContext";
+import PrivateRoute from "./components/Auth/PrivateRoute";
 
 export default function App() {
 	return (
@@ -26,17 +26,20 @@ export default function App() {
 							path="/events/category/:category"
 							element={<Events />}
 						/>
-						<Route element={<ProtectedRoute />}>
+
+						{/* Protected Routes */}
+						<Route element={<PrivateRoute />}>
 							<Route
 								path="/events/:eventid"
 								element={<EventPage />}
 							/>
 							<Route
-								path="events/create-event"
+								path="/events/create-event"
 								element={<CreateEvents />}
 							/>
 							<Route path="/profile" element={<UserProfile />} />
 						</Route>
+
 						<Route path="/login" element={<Login />} />
 						<Route path="/signup" element={<Signup />} />
 					</Routes>
