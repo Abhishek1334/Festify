@@ -1,10 +1,11 @@
 import { Link } from "react-router-dom";
 import { User, LogOut } from "lucide-react";
 import logo from "../assets/images/logo.png";
-import { useAuth } from "../components/context/AuthContext";
+import { useContext } from "react";
+import { AuthContext } from "../context/AuthContext"; // Corrected import
 
 export default function Navbar() {
-	const { user, logout } = useAuth(); // Get user and logout function from AuthContext
+	const { user, logout } = useContext(AuthContext); // Get user and logout function from AuthContext
 	const isLoggedIn = !!user; // Check if user exists
 
 	return (
@@ -47,10 +48,12 @@ export default function Navbar() {
 									className="flex items-center space-x-2 nav-link"
 								>
 									<User className="h-5 w-5" />
-									<span>Profile</span>
+									<span>{user.username || "Profile"}</span>
 								</Link>
 								<button
-									onClick={logout}
+									onClick={() => {
+										logout();
+									}}
 									className="flex items-center space-x-2 nav-link"
 								>
 									<LogOut className="h-5 w-5" />
