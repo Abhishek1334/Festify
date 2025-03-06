@@ -1,26 +1,38 @@
-import { useContext } from "react";
-import { AuthContext } from "../context/AuthContext"; // Corrected import
-import { logoutUser } from "../api/auth";
-import { useNavigate } from "react-router-dom";
+import { useContext, useEffect, useState } from "react";
+import { AuthContext } from "../context/AuthContext";
+import { fetchUserEvents } from "../api/events";
 
 const UserProfile = () => {
-	const { user, setUser } = useContext(AuthContext); // Use useContext
-	const navigate = useNavigate();
+	const { user, token } = useContext(AuthContext);
+	const [events, setEvents] = useState([]);
 
-	const handleLogout = () => {
-		logoutUser();
-		setUser(null);
-		navigate("/login");
-	};
+	useEffect(() => {
+		const getEvents = async () => {
+			try {
+				if (token) {
+					const userEvents = await fetchUserEvents(token);
+					setEvents(userEvents);
+				}
+			} catch (error) {
+				console.error("Error fetching user events:", error);
+			}
+		};
+		getEvents();
+	}, [token]);
 
 	return (
 		<div>
 			<h2>User Profile</h2>
 			{user ? (
 				<>
-					<p>Username: {user.username}</p>
+					<p>Username: {user.name}</p>
 					<p>Email: {user.email}</p>
-					<button onClick={handleLogout}>Logout</button>
+					<h3>My Events</h3>
+					<ul>
+						{events.map((event) => (
+							<li key={event._id}>{event.title}</li>
+						))}
+					</ul>
 				</>
 			) : (
 				<p>Please log in.</p>

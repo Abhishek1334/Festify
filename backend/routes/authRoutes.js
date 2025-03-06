@@ -1,5 +1,5 @@
 import express from "express";
-import { check } from "express-validator";
+import { body } from "express-validator";
 import { protect } from "../middleware/authMiddleware.js"; // Import middleware
 import {
 	registerUser,
@@ -11,13 +11,13 @@ const router = express.Router();
 
 // User Signup
 router.post(
-	"/signup",
+	"/register",
 	[
-		check("name", "Name is required").not().isEmpty(),
-		check("email", "Please enter a valid email").isEmail(),
-		check("password", "Password must be 6 or more characters").isLength({
-			min: 6,
-		}),
+		body("name").not().isEmpty().withMessage("Name is required"),
+		body("email").isEmail().withMessage("Please enter a valid email"),
+		body("password")
+			.isLength({ min: 6 })
+			.withMessage("Password must be 6 or more characters"),
 	],
 	registerUser
 );

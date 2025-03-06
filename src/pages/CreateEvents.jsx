@@ -1,5 +1,5 @@
 import category from "../categories.json";
-
+import { useState } from "react";
 const CreateEvents = () => {
 
 	const [title, setTitle] = useState("");
@@ -12,6 +12,8 @@ const CreateEvents = () => {
 	const [capacity, setCapacity] = useState("");
 	const [organizer, setOrganizer] = useState("");
 	const [error, setError] = useState("");
+
+	const category = category.map((category) => category.category);
 
 	const handleSubmit = async (e) => {
 		e.preventDefault();
