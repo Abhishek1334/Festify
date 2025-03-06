@@ -7,7 +7,7 @@ import { AuthContext } from "../context/AuthContext"; // Corrected import
 export default function Navbar() {
 	const { user, logout } = useContext(AuthContext); // Get user and logout function from AuthContext
 	const isLoggedIn = !!user; // Check if user exists
-
+	console.log(user)
 	return (
 		<section className="hidden-section sticky top-0 w-full z-50 bg-[rgb(250, 247, 232)] backdrop-blur-lg hover:bg-[rgba(255,255,255,1)]">
 			<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -41,14 +41,16 @@ export default function Navbar() {
 
 					{/* Show Profile & Logout if logged in, otherwise show Login & Signup */}
 					<div className="flex items-center space-x-4">
+
+
 						{isLoggedIn ? (
 							<>
 								<Link
-									to="/profile"
+									to="/user-profile"
 									className="flex items-center space-x-2 nav-link"
 								>
 									<User className="h-5 w-5" />
-									<span>{user.username || "Profile"}</span>
+									<span>{ user.name || "Profile"}</span>
 								</Link>
 								<button
 									onClick={() => {

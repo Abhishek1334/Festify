@@ -14,8 +14,8 @@ import PrivateRoute from "./components/Auth/PrivateRoute";
 
 export default function App() {
 	return (
-		<div className="min-h-screen flex flex-col">
-			<AuthProvider>
+		<AuthProvider>
+			<div className="min-h-screen flex flex-col">
 				<Navbar />
 				<ScrollToTop />
 				<main className="flex-grow">
@@ -26,18 +26,21 @@ export default function App() {
 							path="/events/category/:category"
 							element={<Events />}
 						/>
+						<Route
+							path="/events/:eventid"
+							element={<EventPage />}
+						/>
 
 						{/* Protected Routes */}
 						<Route element={<PrivateRoute />}>
 							<Route
-								path="/events/:eventid"
-								element={<EventPage />}
-							/>
-							<Route
 								path="/events/create-event"
 								element={<CreateEvents />}
 							/>
-							<Route path="/profile" element={<UserProfile />} />
+							<Route
+								path="/user-profile"
+								element={<UserProfile />}
+							/>
 						</Route>
 
 						<Route path="/login" element={<Login />} />
@@ -45,7 +48,7 @@ export default function App() {
 					</Routes>
 				</main>
 				<Footer />
-			</AuthProvider>
-		</div>
+			</div>
+		</AuthProvider>
 	);
 }

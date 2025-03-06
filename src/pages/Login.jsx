@@ -11,8 +11,9 @@ export default function Login() {
 	const handleSubmit = async (e) => {
 		e.preventDefault();
 		const success = await login(email, password);
-		if (success) navigate("/UserProfile"); 
+		if (success) navigate("/user-profile"); // ✅ Correct route
 	};
+
 
 	return (
 		<div className="flex flex-col items-center justify-center min-h-screen">

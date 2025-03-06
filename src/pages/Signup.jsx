@@ -14,7 +14,7 @@ export default function Signup() {
 		const success = await signup(username, email, password); 
 		if (success) {
 			alert("Signup Successful!");
-			navigate("/UserProfile");
+			navigate("/user-profile");
 		} else {
 			alert("Signup Failed. Please try again.");
 		}

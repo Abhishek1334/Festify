@@ -1,58 +1,29 @@
-import { useParams, Link } from "react-router-dom";
-import {
-	Calendar,
-	Clock,
-	MapPin,	
-	Share2,
-} from "lucide-react";
+import {  useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
+import { Calendar, Clock, MapPin, Share2 } from "lucide-react";
 import { format } from "date-fns";
-import { useEffect, useState } from "react";
 
-export default function EventPage() {
-	const { eventid } = useParams(); // Get event ID from URL params
+import { fetchEventById } from "../api/events"; 
+import { Link } from "react-router-dom";
+const EventPage = () => {
+	
+	const id = useParams().eventid;
+	console.log(id)
 	const [event, setEvent] = useState(null);
-	const [loading, setLoading] = useState(true);
-	const [error, setError] = useState(null);
 
 	useEffect(() => {
-		fetch(`http://localhost:5000/api/events/${eventid}`)
-			.then((res) => {
-				if (!res.ok) throw new Error("Failed to fetch event");
-				return res.json();
-			})
-			.then((data) => {
-				setEvent(data);
-				setLoading(false);
-			})
-			.catch((err) => {
-				console.error("Error fetching event:", err);
-				setError(err.message);
-				setLoading(false);
-			});
-	}, [eventid]);
+		fetchEventById(id).then(setEvent);
+	}, [id]);
 
-	if (loading) return <p>Loading event...</p>;
-	if (error || !event) {
-		return (
-			<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-				<h1 className="text-3xl font-bold text-gray-900">
-					Event Not Found
-				</h1>
-				<p className="text-gray-600 mt-4">
-					{error || "Sorry, the event does not exist."}
-				</p>
-				<Link
-					to="/events"
-					className="mt-6 inline-block bg-purple-600 text-white px-4 py-2 rounded-md"
-				>
-					Back to Events
-				</Link>
-			</div>
-		);
-	}
+	if (!event) return (
+		<div className="flex flex-col space-y-5 w-full   h-[60vh] items-center justify-center bg-gray-200">
+			<p className="text-xl text-semibold">Event not found</p>
+			<Link to="/events">
+				<button className="btn-secondary">Return to Events</button>
+			</Link>
+		</div>
+	);
 
-	console.log(event.imageUrl);
-	
 	return (
 		<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
 			<div className="bg-white rounded-xl shadow-lg overflow-hidden">
@@ -105,4 +76,6 @@ export default function EventPage() {
 			</div>
 		</div>
 	);
-}
+};
+
+export default EventPage;
