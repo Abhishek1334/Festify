@@ -7,7 +7,6 @@ import { AuthContext } from "../context/AuthContext"; // Corrected import
 export default function Navbar() {
 	const { user, logout } = useContext(AuthContext); // Get user and logout function from AuthContext
 	const isLoggedIn = !!user; // Check if user exists
-	console.log(user)
 	return (
 		<section className="hidden-section sticky top-0 w-full z-50 bg-[rgb(250, 247, 232)] backdrop-blur-lg hover:bg-[rgba(255,255,255,1)]">
 			<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

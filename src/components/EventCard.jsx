@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Calendar, Clock, MapPin, Users, Heart } from "lucide-react";
+import { Calendar, Clock, MapPin, Users, Heart, User } from "lucide-react";
 import { format } from "date-fns";
 import PropTypes from "prop-types";
 
@@ -15,9 +15,9 @@ export default function EventCard({ event }) {
 
 	return (
 		<div className="card hidden-section border-1 border-gray-200 rounded-xl overflow-hidden">
-			<div className="relative overflow-hidden ">
+			<div className="relative overflow-hidden">
 				<img
-					src={`http://localhost:5000${event.imageUrl}`}
+					src={`http://localhost:5000/${event.image}`}
 					alt={event.title}
 					className="w-full h-48 object-cover transform hover:scale-105 transition-transform duration-300"
 				/>
@@ -31,8 +31,7 @@ export default function EventCard({ event }) {
 								liked
 									? "text-red-500 fill-red-500"
 									: "text-gray-600"
-							} `}
-							onClick={toggleLike}
+							}`}
 						/>
 					</button>
 				</div>
@@ -42,7 +41,7 @@ export default function EventCard({ event }) {
 				<div className="p-6">
 					<div className="flex items-start justify-between mb-4">
 						<div>
-							<h3 className="text-xl font-semibold text-gray-900 mb-2 ani-hover:text-purple-600 transition-colors duration-200">
+							<h3 className="text-xl font-semibold text-gray-900 mb-2 hover:text-purple-600 transition-colors duration-200">
 								{event.title}
 							</h3>
 							<p className="text-gray-600 line-clamp-2">
@@ -51,6 +50,14 @@ export default function EventCard({ event }) {
 						</div>
 						<span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-purple-100 text-purple-800">
 							₹{event.price}
+						</span>
+					</div>
+
+					{/* Organizer Name */}
+					<div className="flex items-center text-gray-600 mb-3">
+						<User className="h-5 w-5 mr-2 text-purple-500" />
+						<span className="font-medium">
+							Organized by: {event.organizerName || "Unknown"}
 						</span>
 					</div>
 
@@ -78,7 +85,7 @@ export default function EventCard({ event }) {
 					</div>
 
 					<div className="flex justify-between items-center">
-						<div className="btn-secondary ">View Details</div>
+						<div className="btn-secondary">View Details</div>
 						<div className="btn-primary">Book Now</div>
 					</div>
 				</div>
@@ -87,18 +94,18 @@ export default function EventCard({ event }) {
 	);
 }
 
-{
-	/*Prop Validation*/
-}
+// ✅ FIXED PropTypes (Added organizer)
 EventCard.propTypes = {
 	event: PropTypes.shape({
-		id: PropTypes.number.isRequired,
+		_id: PropTypes.string.isRequired,
 		title: PropTypes.string.isRequired,
 		description: PropTypes.string.isRequired,
-		imageUrl: PropTypes.string,
-		date: PropTypes.instanceOf(Date).isRequired,
+		image: PropTypes.string,
+		date: PropTypes.string.isRequired,
 		location: PropTypes.string.isRequired,
 		capacity: PropTypes.number.isRequired,
 		price: PropTypes.number.isRequired,
+		organizer: PropTypes.string.isRequired, // Added organizer
+		organizerName: PropTypes.string.isRequired, // Added organizer name
 	}).isRequired,
 };

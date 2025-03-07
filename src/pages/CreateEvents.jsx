@@ -1,162 +1,189 @@
-import category from "../categories.json";
 import { useState } from "react";
-const CreateEvents = () => {
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
 
-	const [title, setTitle] = useState("");
-	const [description, setDescription] = useState("");
-	const [date, setDate] = useState("");
+const CreateEvents = () => {
+	const navigate = useNavigate();
+	const [formData, setFormData] = useState({
+		title: "",
+		description: "",
+		date: "",
+		timing: "",
+		location: "",
+		price: "",
+		capacity: "",
+		category: "",
+	});
 	const [image, setImage] = useState(null);
-	const [category, setCategory] = useState("");
-	const [location, setLocation] = useState("");
-	const [price, setPrice] = useState("");
-	const [capacity, setCapacity] = useState("");
-	const [organizer, setOrganizer] = useState("");
 	const [error, setError] = useState("");
 
-	const category = category.map((category) => category.category);
-
-	const handleSubmit = async (e) => {
-		e.preventDefault();
-
-		const formData = new FormData();
-		formData.append("title", title);
-		formData.append("description", description);
-		formData.append("date", date);
-		formData.append("image", image);
-
-		const response = await fetch("http://localhost:5000/api/events", {
-			method: "POST",
-			body: formData,
-		});
-
-		const data = await response.json();
-		console.log(data);
+	// Handle input changes
+	const handleChange = (e) => {
+		setFormData({ ...formData, [e.target.name]: e.target.value });
 	};
 
+	// Handle file upload
+	const handleFileChange = (e) => {
+		setImage(e.target.files[0]);
+	};
+
+	// Handle form submission
+	const handleSubmit = async (e) => {
+		e.preventDefault();
+		setError(""); // Reset errors
+
+		// Validate fields
+		if (
+			!formData.title ||
+			!formData.description ||
+			!formData.date ||
+			!formData.timing ||
+			!formData.location ||
+			!formData.price ||
+			!formData.capacity ||
+			!formData.category
+		) {
+			setError("All fields are required.");
+			return;
+		}
+
+		// Validate image upload
+		if (!image) {
+			setError("Please upload an event image.");
+			return;
+		}
+
+		try {
+			const token = JSON.parse(localStorage.getItem("user"))?.token; // ✅ Correct token retrieval
+
+			if (!token) {
+				setError("Authentication required. Please log in.");
+				return;
+			}
+
+			const backendUrl =
+				import.meta.env.VITE_BACKEND_URL || "http://localhost:5000"; // ✅ Ensure backend URL exists
+			const apiUrl = `${backendUrl}/api/events`;
+
+			console.log("API URL:", apiUrl);
+			console.log("Token:", token);
+
+			const eventData = new FormData();
+			Object.keys(formData).forEach((key) => {
+				eventData.append(key, formData[key]);
+			});
+			eventData.append("image", image);
+
+			const response = await axios.post(apiUrl, eventData, {
+				headers: {
+					"Content-Type": "multipart/form-data",
+					Authorization: `Bearer ${token}`,
+				},
+			});
+
+			console.log("Event Created:", response.data);
+			navigate("/events"); // ✅ Redirect to events page after success
+		} catch (err) {
+			console.error(
+				"Error creating event:",
+				err.response?.data || err.message
+			);
+			setError(err.response?.data?.message || "Error creating event");
+		}
+	};
 
 	return (
-		<section className="  flex justify-center  border-t-1 border-gray-200">
-			<form className="flex flex-col w-[50%] space-y-5 my-8 p-8 h-fit border-2  rounded-tr-2xl rounded-bl-2xl text-sm font-base text-purple-900">
-				{/* Event Name Input Field */}
-				<label htmlFor="title" className="inputlabel">
-					Event Name
-					<input
-						type="text"
-						placeholder="Event Name"
-						name="title"
-						className="inputbox "
-						value={title}
-						onChange={(e) => setTitle(e.target.value)}
-						required
-					/>
-				</label>
+		<div className="max-w-lg mx-auto p-6 bg-white shadow-md rounded-lg">
+			<h2 className="text-2xl font-bold mb-4">Create Event</h2>
 
-				{/* Event Description Input Field */}
-				<label htmlFor="Description">
-					Description
-					<textarea
-						name="description"
-						id=""
-						cols="30"
-						rows="10"
-						placeholder="Event Description"
-						className=" inputbox"
-						value={description}
-						onChange={(e) => setDescription(e.target.value)}
-						required
-					></textarea>
-				</label>
+			{error && <p className="text-red-500">{error}</p>}
 
-				{/* Event Category Input Field */}
-				<label htmlFor="category">
-					Category
-					<select
-						name="category"
-						id="category"
-						className="bg-gray-50 border-2 border-gray-300  text-gray-800 placeholder:text-gray-800 rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
-					>
-						{category.map((category) => (
-							<option
-								key={category.category}
-								value={category.category}
-							>
-								{category.name}
-							</option>
-						))}
-					</select>
-				</label>
+			<form onSubmit={handleSubmit}>
+				<input
+					type="text"
+					name="title"
+					placeholder="Event Title"
+					value={formData.title}
+					onChange={handleChange}
+					required
+					className="w-full p-2 mb-2 border rounded"
+				/>
+				<textarea
+					name="description"
+					placeholder="Event Description"
+					value={formData.description}
+					onChange={handleChange}
+					required
+					className="w-full p-2 mb-2 border rounded"
+				/>
+				<input
+					type="date"
+					name="date"
+					value={formData.date}
+					onChange={handleChange}
+					required
+					className="w-full p-2 mb-2 border rounded"
+				/>
+				<input
+					type="time"
+					name="timing"
+					value={formData.timing}
+					onChange={handleChange}
+					required
+					className="w-full p-2 mb-2 border rounded"
+				/>
+				<input
+					type="text"
+					name="location"
+					placeholder="Location"
+					value={formData.location}
+					onChange={handleChange}
+					required
+					className="w-full p-2 mb-2 border rounded"
+				/>
+				<input
+					type="number"
+					name="price"
+					placeholder="Ticket Price"
+					value={formData.price}
+					onChange={handleChange}
+					required
+					className="w-full p-2 mb-2 border rounded"
+				/>
+				<input
+					type="number"
+					name="capacity"
+					placeholder="Capacity"
+					value={formData.capacity}
+					onChange={handleChange}
+					required
+					className="w-full p-2 mb-2 border rounded"
+				/>
+				<input
+					type="text"
+					name="category"
+					placeholder="Category"
+					value={formData.category}
+					onChange={handleChange}
+					required
+					className="w-full p-2 mb-2 border rounded"
+				/>
+				<input
+					type="file"
+					accept="image/*"
+					onChange={handleFileChange}
+					required
+					className="w-full p-2 mb-2 border rounded"
+				/>
 
-				{/* Event Date Input Field */}
-				<label htmlFor="date">
-					Date
-					<input
-						type="date"
-						placeholder="Event Date"
-						className=" inputbox"
-						value={date}
-						onChange={(e) => setDate(e.target.value)}
-						required
-					/>
-				</label>
-
-				{/* Event Time Input Field */}
-				<label htmlFor="time">
-					Time
-					<input
-						type="time"
-						placeholder="Event Time"
-						className="bg-gray-50 border border-gray-300  text-gray-800 placeholder:text-gray-800 rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
-						value={time}
-						onChange={(e) => setTime(e.target.value)}
-						required
-					/>
-				</label>
-				{/* Event Location Input Field */}
-				<label htmlFor="location">
-					Location
-					<input
-						type="text"
-						placeholder="Event Location"
-						className=" inputbox"
-						value={location}
-						onChange={(e) => setLocation(e.target.value)}
-						required
-					/>
-				</label>
-				{/* Ticket Price Input Field */}
-				<label htmlFor="Ticket Price">
-					Price Per Ticket
-					<input
-						type="number"
-						placeholder="Ticket Price"
-						className=" inputbox"
-						value={price}
-						onChange={(e) => setPrice(e.target.value)}
-						required
-					/>
-				</label>
-				{/* Event Capacity Input Field */}
-				<label htmlFor="capacity">
-					Capacity
-					<input
-						type="capacity"
-						placeholder="Event Capacity"
-						className=" inputbox"
-						value={capacity}
-						onChange={(e) => setCapacity(e.target.value)}
-						required
-					/>
-				</label>
-				{/* Image Input Field */}
-				<label htmlFor="image">
-					Image
-					<input type="file" className="inputbox" value={image} />
-				</label>
-				<button type="submit" className="btn-secondary ">
+				<button
+					type="submit"
+					className="w-full bg-blue-600 text-white p-2 rounded mt-3"
+				>
 					Create Event
 				</button>
 			</form>
-		</section>
+		</div>
 	);
 };
 
