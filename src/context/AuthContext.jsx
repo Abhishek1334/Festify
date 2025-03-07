@@ -5,6 +5,7 @@ export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
 	const [user, setUser] = useState(null);
+	const token = user?.token || ""; // Extract token safely
 
 	// Load user from localStorage when the app starts
 	useEffect(() => {
@@ -26,13 +27,12 @@ export const AuthProvider = ({ children }) => {
 			);
 			setUser(res.data);
 			localStorage.setItem("user", JSON.stringify(res.data));
-			return true; // ✅ Return success status
+			return true;
 		} catch (error) {
 			console.error("Signup failed", error.response?.data);
-			return false; // ❌ Return failure status
+			return false;
 		}
 	};
-
 
 	const login = async (email, password) => {
 		try {
@@ -45,13 +45,12 @@ export const AuthProvider = ({ children }) => {
 			);
 			setUser(res.data);
 			localStorage.setItem("user", JSON.stringify(res.data));
-			return true; // ✅ Return success
+			return true;
 		} catch (error) {
 			console.error("Login failed", error.response?.data);
-			return false; // ❌ Return failure
+			return false;
 		}
 	};
-
 
 	const logout = () => {
 		setUser(null);
@@ -59,7 +58,9 @@ export const AuthProvider = ({ children }) => {
 	};
 
 	return (
-		<AuthContext.Provider value={{ user, setUser, signup, login, logout }}>
+		<AuthContext.Provider
+			value={{ user, token, setUser, signup, login, logout }}
+		>
 			{children}
 		</AuthContext.Provider>
 	);
