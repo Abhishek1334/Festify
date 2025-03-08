@@ -1,7 +1,7 @@
-const API_URL = "http://localhost:5000/api/auth"; // Update this if needed
+const API_URL = import.meta.env.VITE_API_URL;
 
 export const registerUser = async (userData) => {
-	const response = await fetch(`${API_URL}/register`, {
+	const response = await fetch(`${API_URL}/auth/register`, {
 		method: "POST",
 		headers: {
 			"Content-Type": "application/json",
@@ -12,7 +12,7 @@ export const registerUser = async (userData) => {
 };
 
 export const loginUser = async (userData) => {
-	const response = await fetch(`${API_URL}/login`, {
+	const response = await fetch(`${API_URL}/auth/login`, {
 		method: "POST",
 		headers: {
 			"Content-Type": "application/json",
@@ -27,7 +27,7 @@ export const logoutUser = async () => {
 };
 
 export const fetchProtectedData = async (token) => {
-	const response = await fetch(`${API_URL}/protected`, {
+	const response = await fetch(`${API_URL}/auth/protected`, {
 		headers: {
 			Authorization: `Bearer ${token}`,
 		},
@@ -36,7 +36,7 @@ export const fetchProtectedData = async (token) => {
 };
 
 export const signup = async (userData) => {
-	const response = await fetch("http://localhost:5000/api/auth/signup", {
+	const response = await fetch(`${API_URL}/auth/signup`, {
 		method: "POST",
 		headers: { "Content-Type": "application/json" },
 		body: JSON.stringify(userData),

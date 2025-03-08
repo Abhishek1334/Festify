@@ -48,9 +48,7 @@ export default function EventCard({ event }) {
 								{event.description}
 							</p>
 						</div>
-						<span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-purple-100 text-purple-800">
-							₹{event.price}
-						</span>
+						
 					</div>
 
 					{/* Organizer Name */}
@@ -104,7 +102,6 @@ EventCard.propTypes = {
 		date: PropTypes.string.isRequired,
 		location: PropTypes.string.isRequired,
 		capacity: PropTypes.number.isRequired,
-		price: PropTypes.number.isRequired,
 		organizer: PropTypes.string.isRequired, // Added organizer
 		organizerName: PropTypes.string.isRequired, // Added organizer name
 	}).isRequired,

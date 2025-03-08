@@ -1,7 +1,8 @@
 import { useState, useContext } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
-
+import logo  from "../assets/images/logo.png";
+import { Mail, Lock } from "lucide-react";
 export default function Login() {
 	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
@@ -16,34 +17,88 @@ export default function Login() {
 
 
 	return (
-		<div className="flex flex-col items-center justify-center min-h-screen">
-			<h2 className="text-2xl font-bold">Login</h2>
-			<form onSubmit={handleSubmit} className="flex flex-col gap-4 w-80">
-				<input
-					type="email"
-					placeholder="Email"
-					value={email}
-					onChange={(e) => setEmail(e.target.value)}
-					required
-					className="border p-2 rounded"
-					autoComplete="email"
-				/>
-				<input
-					type="password"
-					placeholder="Password"
-					value={password}
-					onChange={(e) => setPassword(e.target.value)}
-					required
-					className="border p-2 rounded"
-					autoComplete="current-password"
-				/>
-				<button
-					type="submit"
-					className="bg-blue-500 text-white p-2 rounded"
-				>
-					Login
-				</button>
-			</form>
+		<div className="min-h-screen bg-gradient-to-br from-purple-600 to-indigo-700 py-12 px-4 sm:px-6 lg:px-8 flex items-center">
+			<div className="max-w-md w-full mx-auto space-y-8 bg-white rounded-2xl shadow-2xl p-10 ">
+				<div className="text-center">
+					<div className="flex justify-center">
+						<img src={logo} alt="Logo" className="h-16 w-auto" />
+					</div>
+					<h2 className="mt-6 text-3xl font-extrabold text-gray-900">
+						Welcome back
+					</h2>
+					<p className="mt-2 text-sm text-gray-600">
+						Don&apos;t have an account?{" "}
+						<Link
+							to="/signup"
+							className="font-medium text-purple-600 hover:text-purple-500"
+						>
+							Sign up
+						</Link>
+					</p>
+				</div>
+
+				<form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+					
+
+					<div className="space-y-4">
+						<div>
+							<label htmlFor="email" className="sr-only ">
+								Email address
+							</label>
+							<div className="relative">
+								<div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+									<Mail className="h-5 w-5 text-gray-400 " />
+								</div>
+								<input
+									id="email"
+									name="email"
+									type="email"
+									required
+									value={email}
+									onChange={(e) => setEmail(e.target.value)}
+									className="input-field pl-20"
+									placeholder="Email address"
+									autoComplete="email"
+								/>
+							</div>
+						</div>
+
+						<div>
+							<label htmlFor="password" className="sr-only">
+								Password
+							</label>
+							<div className="relative ">
+								<div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+									<Lock className="h-5 w-5 text-gray-400" />
+								</div>
+								<input
+									id="password"
+									name="password"
+									type="password"
+									required
+									value={password}
+									onChange={(e) =>
+										setPassword(e.target.value)
+									}
+									className="input-field "
+									placeholder="Password"
+									autoComplete="current-password"
+								/>
+							</div>
+						</div>
+					</div>
+
+
+					<button
+						type="submit"
+						
+						className="btn-primary w-full flex justify-center items-center"
+					>
+						
+						Sign in
+					</button>
+				</form>
+			</div>
 		</div>
 	);
 }

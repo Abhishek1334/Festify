@@ -1,17 +1,15 @@
 import axios from "axios";
-import { useAuth } from "../context/AuthContext"; // Ensure the path is correct
 
-const API_URL = "http://localhost:5000/api/events";
-
+const API_URL = import.meta.env.VITE_API_URL; // http://localhost:5000/api
 // Fetch all events
-export const fetchEvents = async () => {
-	const { token } = useAuth();
+export const fetchEvents = async (token) => {
 	try {
-		const response = await axios.get(API_URL, {
+		const response = await axios.get(`${API_URL}/events`, {
 			headers: {
 				Authorization: `Bearer ${token}`,
 			},
 		});
+		
 		return response.data;
 	} catch (error) {
 		console.error("Error fetching events:", error);
@@ -20,10 +18,9 @@ export const fetchEvents = async () => {
 };
 
 // Fetch event by ID
-export const fetchEventById = async (eventId) => {
-	const { token } = useAuth();
+export const fetchEventById = async (eventId, token) => {
 	try {
-		const response = await axios.get(`${API_URL}/${eventId}`, {
+		const response = await axios.get(`${API_URL}/events/${eventId}`, {
 			headers: {
 				Authorization: `Bearer ${token}`,
 			},
@@ -36,13 +33,12 @@ export const fetchEventById = async (eventId) => {
 };
 
 // Create a new event (with File Upload Support)
-export const createEvent = async (eventData) => {
-	const { token } = useAuth();
+export const createEvent = async (eventData, token) => {
 	try {
-		const response = await axios.post(API_URL, eventData, {
+		const response = await axios.post(`${API_URL}/events`, eventData, {
 			headers: {
 				Authorization: `Bearer ${token}`,
-				"Content-Type": "multipart/form-data", // Change this for file upload
+				"Content-Type": "multipart/form-data",
 			},
 		});
 		return response.data;
@@ -53,10 +49,9 @@ export const createEvent = async (eventData) => {
 };
 
 // Fetch User Events
-export const fetchUserEvents = async () => {
-	const { token } = useAuth();
+export const fetchUserEvents = async (token) => {
 	try {
-		const response = await axios.get(`${API_URL}/my-events`, {
+		const response = await axios.get(`${API_URL}/events/my-events`, {
 			headers: {
 				Authorization: `Bearer ${token}`,
 			},
@@ -72,10 +67,11 @@ export const fetchUserEvents = async () => {
 // Fetch Events by Category
 export const fetchEventsByCategory = async (category) => {
 	try {
-		const response = await axios.get(`${API_URL}/category/${category}`);
+		const response = await axios.get(`${API_URL}/events/category/${category}`);
 		return response.data;
 	} catch (error) {
 		console.error("Error fetching events by category:", error);
 		return [];
 	}
 };
+
