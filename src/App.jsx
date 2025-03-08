@@ -6,6 +6,7 @@ import EventPage from "./pages/EventPage";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import UserProfile from "./pages/UserProfile";
+import NotFound from "./pages/NotFound";
 import Footer from "./components/Footer";
 import ScrollToTop from "./components/ScrollToTop";
 import CreateEvents from "./pages/CreateEvents";
@@ -13,7 +14,9 @@ import { AuthProvider } from "./context/AuthContext";
 import PrivateRoute from "./components/Auth/PrivateRoute";
 
 export default function App() {
+
 	return (
+		
 		<AuthProvider>
 			<div className="min-h-screen flex flex-col">
 				<Navbar />
@@ -45,6 +48,7 @@ export default function App() {
 
 						<Route path="/login" element={<Login />} />
 						<Route path="/signup" element={<Signup />} />
+						<Route path="*" element={<NotFound />} />
 					</Routes>
 				</main>
 				<Footer />

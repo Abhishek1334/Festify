@@ -14,7 +14,6 @@ const eventSchema = new mongoose.Schema(
 			required: true,
 		}, // Reference to User model
 		organizerName: { type: String, required: true }, // Organizer's name
-		price: { type: Number, required: true }, // Ticket price
 		capacity: { type: Number, required: true }, // Maximum capacity
 		ticketsSold: { type: Number, default: 0 }, // Default tickets sold to 0
 		category: { type: String, required: true }, // ✅ Add category field

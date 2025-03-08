@@ -1,11 +1,15 @@
 import { createContext, useState, useEffect, useContext } from "react";
 import axios from "axios";
+import { PropTypes } from "prop-types";
+import { useNavigate } from "react-router-dom"; 
 
 export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
 	const [user, setUser] = useState(null);
-	const token = user?.token || ""; // Extract token safely
+	const token = user?.token || ""; // Extract token
+	const API_URL = import.meta.env.VITE_API_URL;
+	const navigate = useNavigate();
 
 	// Load user from localStorage when the app starts
 	useEffect(() => {
@@ -17,14 +21,11 @@ export const AuthProvider = ({ children }) => {
 
 	const signup = async (name, email, password) => {
 		try {
-			const res = await axios.post(
-				"http://localhost:5000/api/auth/signup",
-				{
-					name,
-					email,
-					password,
-				}
-			);
+			const res = await axios.post(`${API_URL}/auth/signup`, {
+				name,
+				email,
+				password,
+			});
 			setUser(res.data);
 			localStorage.setItem("user", JSON.stringify(res.data));
 			return true;
@@ -36,13 +37,10 @@ export const AuthProvider = ({ children }) => {
 
 	const login = async (email, password) => {
 		try {
-			const res = await axios.post(
-				"http://localhost:5000/api/auth/login",
-				{
-					email,
-					password,
-				}
-			);
+			const res = await axios.post(`${API_URL}/auth/login`, {
+				email,
+				password,
+			});
 			setUser(res.data);
 			localStorage.setItem("user", JSON.stringify(res.data));
 			return true;
@@ -55,6 +53,7 @@ export const AuthProvider = ({ children }) => {
 	const logout = () => {
 		setUser(null);
 		localStorage.removeItem("user");
+		navigate("/"); 
 	};
 
 	return (
@@ -68,3 +67,7 @@ export const AuthProvider = ({ children }) => {
 
 // ✅ Custom hook for consuming AuthContext
 export const useAuth = () => useContext(AuthContext);
+
+AuthProvider.propTypes = {
+	children: PropTypes.node.isRequired,
+};

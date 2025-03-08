@@ -1,25 +1,42 @@
 import EventCard from "../components/EventCard";
 import { useEffect, useState } from "react";
+import { useParams, useSearchParams } from "react-router-dom";
 import Categories from "../components/Categories";
-import { useParams } from "react-router-dom";
 
 export default function Events() {
 	const { category } = useParams();
 	const [events, setEvents] = useState([]);
 	const [loading, setLoading] = useState(true);
+	const [searchParams] = useSearchParams();
 
 	useEffect(() => {
-		setLoading(true);
-		const fetchEvents = async () => {
+		const loadEvents = async () => {
+			setLoading(true);
 			try {
-				let url = "http://localhost:5000/api/events";
-				if (category) {
-					url = `http://localhost:5000/api/events/category/${category}`;
-				}
+				// Construct query params dynamically
+				const queryString = new URLSearchParams();
+				if (category) queryString.append("category", category);
+				searchParams.forEach((value, key) => {
+					queryString.append(key, value);
+				});
 
-				const res = await fetch(url);
-				const data = await res.json();
-				setEvents(data);
+				const response = await fetch(
+					"http://localhost:5000/api/events",
+					{
+						headers: {
+							"Content-Type": "application/json",
+						},
+					}
+				);
+
+
+				const data = await response.json();
+				if (Array.isArray(data)) {
+					setEvents(data);
+				} else {
+					console.error("API did not return an array:", data);
+					setEvents([]); // Prevent errors
+				}
 			} catch (err) {
 				console.error("Error fetching events:", err);
 			} finally {
@@ -27,8 +44,8 @@ export default function Events() {
 			}
 		};
 
-		fetchEvents();
-	}, [category]);
+		loadEvents();
+	}, [category, searchParams]);
 
 	return (
 		<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 hidden-section">
@@ -38,9 +55,9 @@ export default function Events() {
 			</h1>
 
 			{loading ? (
-				<p className="text-xl font-light text-gray-900 mb-8">
-					Loading...
-				</p>
+				<div className="flex justify-center items-center h-32">
+					<div className="w-10 h-10 border-4 border-gray-300 border-t-blue-500 rounded-full animate-spin"></div>
+				</div>
 			) : events.length > 0 ? (
 				<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
 					{events.map((event) => (

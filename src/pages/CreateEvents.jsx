@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import categories from "../categories.json";
 
 const CreateEvents = () => {
 	const navigate = useNavigate();
@@ -10,9 +11,9 @@ const CreateEvents = () => {
 		date: "",
 		timing: "",
 		location: "",
-		price: "",
 		capacity: "",
 		category: "",
+		customCategory: "",
 	});
 	const [image, setImage] = useState(null);
 	const [error, setError] = useState("");
@@ -39,9 +40,8 @@ const CreateEvents = () => {
 			!formData.date ||
 			!formData.timing ||
 			!formData.location ||
-			!formData.price ||
 			!formData.capacity ||
-			!formData.category
+			!(formData.category || formData.customCategory)
 		) {
 			setError("All fields are required.");
 			return;
@@ -54,40 +54,37 @@ const CreateEvents = () => {
 		}
 
 		try {
-			const token = JSON.parse(localStorage.getItem("user"))?.token; // ✅ Correct token retrieval
-
-			if (!token) {
-				setError("Authentication required. Please log in.");
-				return;
-			}
-
-			const backendUrl =
-				import.meta.env.VITE_BACKEND_URL || "http://localhost:5000"; // ✅ Ensure backend URL exists
-			const apiUrl = `${backendUrl}/api/events`;
-
-			console.log("API URL:", apiUrl);
-			console.log("Token:", token);
+			const token = localStorage.getItem("token"); // Get token from local storage
 
 			const eventData = new FormData();
 			Object.keys(formData).forEach((key) => {
-				eventData.append(key, formData[key]);
+				if (key !== "customCategory") {
+					eventData.append(key, formData[key]);
+				}
 			});
+
+			// If user selected "Other", send the customCategory value
+			const categoryToSend =
+				formData.category === "Other"
+					? formData.customCategory
+					: formData.category;
+			eventData.append("category", categoryToSend);
 			eventData.append("image", image);
 
-			const response = await axios.post(apiUrl, eventData, {
-				headers: {
-					"Content-Type": "multipart/form-data",
-					Authorization: `Bearer ${token}`,
-				},
-			});
-
-			console.log("Event Created:", response.data);
-			navigate("/events"); // ✅ Redirect to events page after success
-		} catch (err) {
-			console.error(
-				"Error creating event:",
-				err.response?.data || err.message
+			const response = await axios.post(
+				`${import.meta.env.VITE_BACKEND_URL}/api/events`,
+				eventData,
+				{
+					headers: {
+						"Content-Type": "multipart/form-data",
+						Authorization: `Bearer ${token}`, // Send auth token
+					},
+				}
 			);
+
+			// Redirect to events page after success
+			navigate("/events");
+		} catch (err) {
 			setError(err.response?.data?.message || "Error creating event");
 		}
 	};
@@ -143,15 +140,6 @@ const CreateEvents = () => {
 				/>
 				<input
 					type="number"
-					name="price"
-					placeholder="Ticket Price"
-					value={formData.price}
-					onChange={handleChange}
-					required
-					className="w-full p-2 mb-2 border rounded"
-				/>
-				<input
-					type="number"
 					name="capacity"
 					placeholder="Capacity"
 					value={formData.capacity}
@@ -159,15 +147,35 @@ const CreateEvents = () => {
 					required
 					className="w-full p-2 mb-2 border rounded"
 				/>
-				<input
-					type="text"
+				<select
 					name="category"
-					placeholder="Category"
 					value={formData.category}
 					onChange={handleChange}
 					required
 					className="w-full p-2 mb-2 border rounded"
-				/>
+				>
+					<option value="">Select a Category</option>
+					<option value="Other">Other</option>{" "}
+					{categories.map((cat) => (
+						<option key={cat.category} value={cat.category}>
+							{cat.name}
+						</option>
+					))}
+					{/* Blank category for unmatched cases */}
+				</select>
+
+				{/* Show custom category input if "Other" is selected */}
+				{formData.category === "Other" && (
+					<input
+						type="text"
+						name="customCategory"
+						placeholder="Enter custom category"
+						value={formData.customCategory}
+						onChange={handleChange}
+						className="w-full p-2 mt-2 border rounded"
+					/>
+				)}
+
 				<input
 					type="file"
 					accept="image/*"

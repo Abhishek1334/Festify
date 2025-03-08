@@ -52,7 +52,7 @@ export const createEvent = async (req, res) => {
 			date,
 			timing,
 			location,
-			price,
+			
 			capacity,
 			category,
 		} = req.body;
@@ -68,7 +68,6 @@ export const createEvent = async (req, res) => {
 			date,
 			timing,
 			location,
-			price,
 			capacity,
 			category,
 			organizerId: req.user.id,
@@ -107,7 +106,6 @@ export const updateEvent = async (req, res) => {
 		event.description = req.body.description || event.description;
 		event.date = req.body.date || event.date;
 		event.location = req.body.location || event.location;
-		event.price = req.body.price || event.price;
 		event.capacity = req.body.capacity || event.capacity;
 		event.category = req.body.category || event.category;
 
