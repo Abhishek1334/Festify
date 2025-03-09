@@ -17,6 +17,7 @@ export default function Hero() {
 		if (location) queryParams.append("location", location);
 		if (date) queryParams.append("date", date);
 		navigate(`/events?${queryParams.toString()}`);
+		console.log(queryParams.toString());
 		};
 
 

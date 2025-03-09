@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 import PropTypes from "prop-types";
 import categories from "../categories.json";
 import * as LucideIcons from "lucide-react";
@@ -6,6 +6,10 @@ import { useState } from "react";
 
 export default function Categories() {
 	const [isShowMore, setIsShowMore] = useState(false);
+	const [searchParams, setSearchParams] = useSearchParams();
+
+	// Get current selected category from URL params
+	const selectedCategory = searchParams.get("category") || "";
 
 	// Map categories with corresponding Lucide icons
 	const categoriesWithIcons = categories.map((category) => ({
@@ -14,33 +18,58 @@ export default function Categories() {
 	}));
 
 	// Dynamically determine which categories to show
-	const displayedCategories = isShowMore ? categoriesWithIcons : categoriesWithIcons.slice(0, 8);
+	const displayedCategories = isShowMore
+		? categoriesWithIcons
+		: categoriesWithIcons.slice(0, 8);
+
+	// ✅ Update search params when a category is clicked
+	const handleCategorySelect = (category) => {
+		setSearchParams((prevParams) => {
+			const newParams = new URLSearchParams(prevParams);
+			if (category === selectedCategory) {
+				newParams.delete("category"); // Clear category if clicked again
+			} else {
+				newParams.set("category", category);
+			}
+			return newParams;
+		});
+	};
 
 	return (
 		<section className="pt-4 pb-8 hidden-section relative">
 			<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
-				<h2 className="section-title text-center text-xl">Browse by Category</h2>
+				<h2 className="section-title text-center text-xl">
+					Browse by Category
+				</h2>
 
-				<div className="grid grid-cols-2 md:grid-cols-4  gap-6 gap-x-0 pt-8">
+				<div className="grid grid-cols-2 md:grid-cols-4 gap-6 gap-x-0 pt-8">
 					{displayedCategories.map((category) => {
 						const Icon = category.icon;
+						const isActive = selectedCategory === category.category;
+
 						return (
-							<Link key={category.name} to={`/events/category/${category.category}`} className="mx-auto ">
-								<button
-									className="flex flex-col  items-center p-5 rounded-xl hover:bg-gray-50 transition-all duration-200 
-									transform hover:-translate-y-1 hover:shadow-lg hidden-section"
-								>
-									<div
-										className={`p-4 rounded-xl ${category.color} mb-4 transition-colors duration-200 
+							<button
+								key={category.name}
+								onClick={() =>
+									handleCategorySelect(category.category)
+								}
+								className={`flex flex-col items-center p-5 rounded-xl transition-all duration-200 
+									transform hover:-translate-y-1 hover:shadow-lg hidden-section ${
+										isActive
+											? "bg-blue-500 text-white"
+											: "hover:bg-gray-50"
+									}`}
+							>
+								<div
+									className={`p-4 rounded-xl ${category.color} mb-4 transition-colors duration-200 
 										hidden-section-hover:scale-110 transform`}
-									>
-										<Icon className="w-5 h-5" />
-									</div>
-									<span className="text-gray-900 font-medium hidden-section-hover:text-purple-600 transition-colors duration-200">
-										{category.name}
-									</span>
-								</button>
-							</Link>
+								>
+									<Icon className="w-5 h-5" />
+								</div>
+								<span className="text-gray-900 font-medium hidden-section-hover:text-purple-600 transition-colors duration-200">
+									{category.name}
+								</span>
+							</button>
 						);
 					})}
 				</div>
