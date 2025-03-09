@@ -12,11 +12,11 @@ const CreateEvents = () => {
 		timing: "",
 		location: "",
 		capacity: "",
-		category: "",
-		customCategory: "",
+		category: "", // Default empty category
 	});
 	const [image, setImage] = useState(null);
 	const [error, setError] = useState("");
+	const [loading, setLoading] = useState(false);
 
 	// Handle input changes
 	const handleChange = (e) => {
@@ -31,61 +31,80 @@ const CreateEvents = () => {
 	// Handle form submission
 	const handleSubmit = async (e) => {
 		e.preventDefault();
-		setError(""); // Reset errors
+		setError("");
+		setLoading(true);
 
-		// Validate fields
+		// Validate required fields
 		if (
 			!formData.title ||
 			!formData.description ||
 			!formData.date ||
 			!formData.timing ||
 			!formData.location ||
-			!formData.capacity ||
-			!(formData.category || formData.customCategory)
+			!formData.capacity
 		) {
-			setError("All fields are required.");
+			setError("All fields except category are required.");
+			setLoading(false);
 			return;
 		}
 
-		// Validate image upload
 		if (!image) {
 			setError("Please upload an event image.");
+			setLoading(false);
 			return;
 		}
 
 		try {
-			const token = localStorage.getItem("token"); // Get token from local storage
+			// Retrieve user token safely
+			const user = JSON.parse(localStorage.getItem("user")) || {};
+			const token = user?.token;
+
+			if (!token) {
+				setError(
+					"Authentication error: No token found. Please log in again."
+				);
+				setLoading(false);
+				return;
+			}
+
+			// Ensure category is never empty
+			const categoryValue = formData.category.trim()
+				? formData.category
+				: "Uncategorized";
 
 			const eventData = new FormData();
 			Object.keys(formData).forEach((key) => {
-				if (key !== "customCategory") {
-					eventData.append(key, formData[key]);
-				}
+				eventData.append(
+					key,
+					key === "category" ? categoryValue : formData[key]
+				);
 			});
-
-			// If user selected "Other", send the customCategory value
-			const categoryToSend =
-				formData.category === "Other"
-					? formData.customCategory
-					: formData.category;
-			eventData.append("category", categoryToSend);
 			eventData.append("image", image);
 
-			const response = await axios.post(
-				`${import.meta.env.VITE_BACKEND_URL}/api/events`,
-				eventData,
-				{
-					headers: {
-						"Content-Type": "multipart/form-data",
-						Authorization: `Bearer ${token}`, // Send auth token
-					},
-				}
-			);
+			// Debugging: Log form data before sending
+			console.log("🔍 FormData before sending:");
+			for (let pair of eventData.entries()) {
+				console.log(pair[0], pair[1]);
+			}
 
-			// Redirect to events page after success
-			navigate("/events");
+			// Ensure API URL is correctly set
+			const apiUrl =
+				(import.meta.env.VITE_API_URL || "http://localhost:5000") +
+				"/events";
+			const response = await axios.post(apiUrl, eventData, {
+				headers: {
+					"Content-Type": "multipart/form-data",
+					Authorization: `Bearer ${token}`,
+				},
+			});
+
+			console.log("✅ Event Created Successfully:", response.data);
+			navigate("/events"); // Redirect after success
 		} catch (err) {
+			console.error("❌ Error creating event:", err.response?.data);
 			setError(err.response?.data?.message || "Error creating event");
+		} finally {
+			setLoading(false);
 		}
 	};
 
@@ -151,30 +170,15 @@ const CreateEvents = () => {
 					name="category"
 					value={formData.category}
 					onChange={handleChange}
-					required
 					className="w-full p-2 mb-2 border rounded"
 				>
-					<option value="">Select a Category</option>
-					<option value="Other">Other</option>{" "}
+					<option value="">No Category</option>
 					{categories.map((cat) => (
 						<option key={cat.category} value={cat.category}>
 							{cat.name}
 						</option>
 					))}
-					{/* Blank category for unmatched cases */}
 				</select>
-
-				{/* Show custom category input if "Other" is selected */}
-				{formData.category === "Other" && (
-					<input
-						type="text"
-						name="customCategory"
-						placeholder="Enter custom category"
-						value={formData.customCategory}
-						onChange={handleChange}
-						className="w-full p-2 mt-2 border rounded"
-					/>
-				)}
 
 				<input
 					type="file"
@@ -187,8 +191,9 @@ const CreateEvents = () => {
 				<button
 					type="submit"
 					className="w-full bg-blue-600 text-white p-2 rounded mt-3"
+					disabled={loading}
 				>
-					Create Event
+					{loading ? "Creating Event..." : "Create Event"}
 				</button>
 			</form>
 		</div>

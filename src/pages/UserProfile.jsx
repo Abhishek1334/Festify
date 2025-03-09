@@ -49,11 +49,11 @@ const UserProfile = () => {
 					<strong>Email:</strong> {user.email}
 				</p>
 			</div>
-			<div className="flex gap-10 mt-4 ">
-				<h3 className="text-2xl font-semibold mt-6 cursor-pointer">My Events</h3>
+			<div className="flex gap-10 mt-4 justify-center">
+				<h3 className="text-2xl font-semibold mt-6 cursor-pointer {}">My Events</h3>
 				<h3 className="text-2xl font-semibold mt-6 cursor-pointer">RSVP Events</h3>
 			</div>
-			<div className="flex   mt-4  mx-auto">
+			<div className="flex justify-center mt-4  mx-auto">
 				{events.length > 0 ? (
 								<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
 									{events.map((event) => (

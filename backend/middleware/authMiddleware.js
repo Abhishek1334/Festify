@@ -34,5 +34,3 @@ export const protect = async (req, res, next) => {
 			.json({ message: "Unauthorized: No token provided" });
 	}
 };
-
-// "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY3Yzg4NDBlNWFiMWFkOGEwNGE4YTI2MiIsImlhdCI6MTc0MTE5NzA4MywiZXhwIjoxNzQxMjAwNjgzfQ.OnRTUtJ6KXrKaZ6R8iWN67aR8-aCGMtFmRNxo_UTFxE"
