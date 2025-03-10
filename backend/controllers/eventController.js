@@ -1,5 +1,4 @@
 import Event from "../models/eventModel.js";
-import User from "../models/userModel.js";
 import path from "path";
 import fs from "fs";
 
@@ -49,7 +48,8 @@ export const createEvent = async (req, res) => {
 			title,
 			description,
 			date,
-			timing,
+			startTime,
+			endTime,
 			location,
 			capacity,
 			category,
@@ -60,7 +60,8 @@ export const createEvent = async (req, res) => {
 			!title ||
 			!description ||
 			!date ||
-			!timing ||
+			!startTime ||
+			!endTime ||
 			!location ||
 			!capacity
 		) {
@@ -73,10 +74,11 @@ export const createEvent = async (req, res) => {
 			title,
 			description,
 			date,
-			timing,
+			startTime,
+			endTime,
 			location,
 			capacity,
-			category: category || "", // Allow blank category
+			category: category || "Uncategorized", // Default to "Uncategorized" if empty
 			organizerId: req.user.id,
 			organizerName: req.user.name,
 			image: req.file ? `uploads/${req.file.filename}` : "",
@@ -111,13 +113,14 @@ export const updateEvent = async (req, res) => {
 		event.title = req.body.title || event.title;
 		event.description = req.body.description || event.description;
 		event.date = req.body.date || event.date;
-		event.timing = req.body.timing || event.timing;
+		event.startTime = req.body.startTime || event.startTime;
+		event.endTime = req.body.endTime || event.endTime;
 		event.location = req.body.location || event.location;
 		event.capacity = req.body.capacity || event.capacity;
 		event.category =
 			req.body.category !== undefined
 				? req.body.category
-				: event.category; // Allow empty category
+				: event.category;
 
 		// Handle image upload
 		if (req.file) {

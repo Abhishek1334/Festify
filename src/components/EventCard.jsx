@@ -4,17 +4,16 @@ import { Calendar, Clock, MapPin, Users, Heart, User } from "lucide-react";
 import { format } from "date-fns";
 import PropTypes from "prop-types";
 
-export default function EventCard({ event }) {
+export default function EventCard({ event, organizer }) {
 	const [liked, setLiked] = useState(false);
 
-	// Toggle like status
 	const toggleLike = (e) => {
 		e.stopPropagation();
 		setLiked(!liked);
 	};
-
+	console.log(event.image)
 	return (
-		<div className="card hidden-section border-1 border-gray-200 rounded-xl overflow-hidden">
+		<div className="card hidden-section border-1 border-gray-200 rounded-xl overflow-hidden cursor-pointer">
 			<div className="relative overflow-hidden">
 				<img
 					src={`http://localhost:5000/${event.image}`}
@@ -36,20 +35,20 @@ export default function EventCard({ event }) {
 					</button>
 				</div>
 			</div>
-
-			<Link to={`/events/${event._id}`}>
+			<Link
+				to={
+					organizer
+						? `/organizer/${event._id}`
+						: `/events/${event._id}`
+				}
+			>
 				<div className="p-6">
-					<div className="flex items-start justify-between mb-4">
-						<div>
-							<h3 className="text-xl font-semibold text-gray-900 mb-2 hover:text-purple-600 transition-colors duration-200">
-								{event.title}
-							</h3>
-							<p className="text-gray-600 line-clamp-2">
-								{event.description}
-							</p>
-						</div>
-						
-					</div>
+					<h3 className="text-xl font-semibold text-gray-900 mb-2 hover:text-purple-600 transition-colors duration-200">
+						{event.title}
+					</h3>
+					<p className="text-gray-600 line-clamp-2">
+						{event.description}
+					</p>
 
 					{/* Organizer Name */}
 					<div className="flex items-center text-gray-600 mb-3">
@@ -60,31 +59,42 @@ export default function EventCard({ event }) {
 					</div>
 
 					<div className="space-y-2 mb-6">
+						{/* Event Date */}
 						<div className="flex items-center text-gray-600">
 							<Calendar className="h-5 w-5 mr-2 text-purple-500" />
 							<span>
-								{format(new Date(event.date), "MMMM d, yyyy")}
+								{event.date
+									? format(
+											new Date(event.date),
+											"MMMM d, yyyy"
+									  )
+									: "No date"}
 							</span>
 						</div>
+
+						{/* Event Timing - Start & End Time */}
 						<div className="flex items-center text-gray-600">
 							<Clock className="h-5 w-5 mr-2 text-purple-500" />
-							<span>
-								{format(new Date(event.date), "h:mm a")}
-							</span>
+							<span>{event.timing}</span>
 						</div>
+
+						{/* Location */}
 						<div className="flex items-center text-gray-600">
 							<MapPin className="h-5 w-5 mr-2 text-purple-500" />
-							<span>{event.location}</span>
+							<span>
+								{event.location || "Location not specified"}
+							</span>
 						</div>
+
+						{/* Capacity */}
 						<div className="flex items-center text-gray-600">
 							<Users className="h-5 w-5 mr-2 text-purple-500" />
-							<span>{event.capacity} spots available</span>
+							<span>
+								{event.capacity
+									? `${event.capacity} spots available`
+									: "Capacity not specified"}
+							</span>
 						</div>
-					</div>
-
-					<div className="flex justify-between items-center">
-						<div className="btn-secondary">View Details</div>
-						<div className="btn-primary">Book Now</div>
 					</div>
 				</div>
 			</Link>
@@ -92,7 +102,7 @@ export default function EventCard({ event }) {
 	);
 }
 
-// ✅ FIXED PropTypes (Added organizer)
+// ✅ Updated PropTypes
 EventCard.propTypes = {
 	event: PropTypes.shape({
 		_id: PropTypes.string.isRequired,
@@ -100,9 +110,11 @@ EventCard.propTypes = {
 		description: PropTypes.string.isRequired,
 		image: PropTypes.string,
 		date: PropTypes.string.isRequired,
+		timing: PropTypes.string.isRequired,
 		location: PropTypes.string.isRequired,
 		capacity: PropTypes.number.isRequired,
-		organizer: PropTypes.string.isRequired, // Added organizer
-		organizerName: PropTypes.string.isRequired, // Added organizer name
+		organizerName: PropTypes.string.isRequired,
 	}).isRequired,
+	onClick: PropTypes.func,
+	organizer: PropTypes.bool,
 };
