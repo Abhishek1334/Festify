@@ -54,14 +54,14 @@ export default function Navbar() {
 									className="flex items-center space-x-2 nav-link btn-secondary"
 								>
 									<User className="h-5 w-5" />
-									<span>{user.name || "Profile"}</span>
+									<span className="max-sm:hidden">{user.name || "Profile"}</span>
 								</Link>
 								<button
 									onClick={handleLogout}
 									className="flex items-center space-x-2 nav-link btn-secondary"
 								>
 									<LogOut className="h-5 w-5" />
-									<span>Logout</span>
+									<span className="max-md:hidden">Logout</span>
 								</button>
 							</>
 						) : (

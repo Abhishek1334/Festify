@@ -1,12 +1,18 @@
 import { useContext, useEffect, useState } from "react";
 import { AuthContext } from "../context/AuthContext";
-import EventCard from "../components/EventCard"; // Import EventCard
-
+import EventCard from "../components/EventCard"; // ✅ Keep for My Events
+import { Link } from "react-router-dom";
+import TicketCard from "../components/TicketCard"; // ✅ Keep for RSVP Events
 const UserProfile = () => {
 	const { user } = useContext(AuthContext);
-	const [events, setEvents] = useState([]);
+	const [myEvents, setMyEvents] = useState([]);
+	const [rsvpEvents, setRsvpEvents] = useState([]);
+	const [activeTab, setActiveTab] = useState("myEvents"); // ✅ Manage tabs
 
 	useEffect(() => {
+		if (!user) return;
+
+		// ✅ Fetch My Events
 		const fetchUserEvents = async () => {
 			try {
 				const response = await fetch(
@@ -20,50 +26,120 @@ const UserProfile = () => {
 					}
 				);
 
-				if (!response.ok) {
-					throw new Error("Failed to fetch events");
-				}
+				if (!response.ok) throw new Error("Failed to fetch events");
 
 				const data = await response.json();
-				setEvents(data);
+				setMyEvents((prev) =>
+					JSON.stringify(prev) === JSON.stringify(data) ? prev : data
+				); // Prevent unnecessary state updates
 			} catch (error) {
 				console.error("Error fetching user events:", error);
 			}
 		};
 
-		if (user) {
-			fetchUserEvents();
-		}
-	}, [user]);
+		// ✅ Fetch RSVP Events
+		const fetchRSVPEvents = async () => {
+			try {
+				const response = await fetch(
+					"http://localhost:5000/api/tickets/my-tickets",
+					{
+						method: "GET",
+						headers: {
+							"Content-Type": "application/json",
+							Authorization: `Bearer ${user.token}`,
+						},
+					}
+				);
 
+				if (!response.ok)
+					throw new Error("Failed to fetch RSVP events");
 
+				const data = await response.json();
+
+				setRsvpEvents((prev) =>
+					JSON.stringify(prev) === JSON.stringify(data) ? prev : data
+				); // Prevent unnecessary state updates
+			} catch (error) {
+				console.error("Error fetching RSVP events:", error);
+			}
+		};
+
+		fetchUserEvents();
+		fetchRSVPEvents();
+	}, [user]); // ✅ Runs only when `user` changes
 
 	return (
 		<div className="max-w-7xl mx-auto py-10 px-5">
 			<h2 className="text-3xl font-bold mb-4">User Profile</h2>
-			<div className="bg-white shadow-md rounded-lg p-6">
-				<p className="text-lg">
-					<strong>Username:</strong> {user.name}
-				</p>
-				<p className="text-lg">
-					<strong>Email:</strong> {user.email}
-				</p>
+
+			{/* ✅ User Details */}
+			<div className="flex justify-between bg-white shadow-md rounded-lg p-6">
+				<div>
+					<p className="text-lg">
+						<strong>Username:</strong> {user?.name || "Guest"}
+					</p>
+					<p className="text-lg">
+						<strong>Email:</strong> {user?.email || "N/A"}
+					</p>
+				</div>
+				<div>
+					<Link to="/organizer">
+						<button className="btn-secondary">
+							Organizer Panel
+						</button>
+					</Link>
+				</div>
 			</div>
+
+			{/* ✅ Tab Navigation */}
 			<div className="flex gap-10 mt-4 justify-center">
-				<h3 className="text-2xl font-semibold mt-6 cursor-pointer {}">My Events</h3>
-				<h3 className="text-2xl font-semibold mt-6 cursor-pointer">RSVP Events</h3>
+				<h3
+					className={`text-2xl font-semibold mt-6 cursor-pointer ${
+						activeTab === "myEvents"
+							? "text-blue-600"
+							: "text-gray-600"
+					}`}
+					onClick={() => setActiveTab("myEvents")}
+				>
+					My Events
+				</h3>
+				<h3
+					className={`text-2xl font-semibold mt-6 cursor-pointer ${
+						activeTab === "rsvpEvents"
+							? "text-blue-600"
+							: "text-gray-600"
+					}`}
+					onClick={() => setActiveTab("rsvpEvents")}
+				>
+					RSVP Events
+				</h3>
 			</div>
-			<div className="flex justify-center mt-4  mx-auto">
-				{events.length > 0 ? (
-								<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-									{events.map((event) => (
-										
-										<EventCard key={event._id} event={event} />
-									))}
-									
-								</div>
+
+			{/* ✅ Events List */}
+			<div className="mt-6">
+				{activeTab === "myEvents" && myEvents.length > 0 ? (
+					<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+						{myEvents.map((event) => (
+							<EventCard key={event._id} event={event} />
+						))}
+					</div>
+				) : activeTab === "rsvpEvents" && rsvpEvents.length > 0 ? (
+					<div className="bg-white shadow-md rounded-lg p-6">
+						<h3 className="text-xl font-semibold mb-4">
+							Your RSVP Events
+						</h3>
+						<ul className="list-disc pl-5">
+							{rsvpEvents.map((ticket) =>
+								<TicketCard key={ticket._id} ticket={ticket} />
+							)}
+						</ul>
+					</div>
 				) : (
-					<p>No events found</p>
+					<p className="text-gray-500 text-center">
+						{activeTab === "myEvents"
+							? "No created events found"
+							: "No RSVP events found"}
+					</p>
 				)}
 			</div>
 		</div>

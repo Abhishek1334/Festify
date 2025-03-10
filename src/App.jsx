@@ -11,12 +11,14 @@ import Footer from "./components/Footer";
 import ScrollToTop from "./components/ScrollToTop";
 import CreateEvents from "./pages/CreateEvents";
 import { AuthProvider } from "./context/AuthContext";
+import OrganizerAdmin from "./pages/OrganizerPanel";
+import OrganizerEventDetails from "./pages/OrganizerEventDetails";
 import PrivateRoute from "./components/Auth/PrivateRoute";
+
 
 export default function App() {
 
 	return (
-		
 		<AuthProvider>
 			<div className="min-h-screen flex flex-col">
 				<Navbar />
@@ -36,6 +38,15 @@ export default function App() {
 
 						{/* Protected Routes */}
 						<Route element={<PrivateRoute />}>
+							<Route
+								path="/organizer"
+								element={<OrganizerAdmin />}
+							/>
+							<Route
+								path="/organizer/:eventId"
+								element={<OrganizerEventDetails />}
+							/>
+
 							<Route
 								path="/events/create-event"
 								element={<CreateEvents />}
