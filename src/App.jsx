@@ -43,7 +43,7 @@ export default function App() {
 								element={<OrganizerAdmin />}
 							/>
 							<Route
-								path="/organizer/:eventId"
+								path="/organizer/:eventId/edit"
 								element={<OrganizerEventDetails />}
 							/>
 

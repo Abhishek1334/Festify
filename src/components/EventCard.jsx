@@ -11,7 +11,7 @@ export default function EventCard({ event, organizer }) {
 		e.stopPropagation();
 		setLiked(!liked);
 	};
-	console.log(event.image)
+
 	return (
 		<div className="card hidden-section border-1 border-gray-200 rounded-xl overflow-hidden cursor-pointer">
 			<div className="relative overflow-hidden">

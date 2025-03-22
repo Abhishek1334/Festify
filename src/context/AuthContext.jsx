@@ -22,9 +22,19 @@ export const AuthProvider = ({ children }) => {
 	useEffect(() => {
 		const storedUser = localStorage.getItem("user");
 		if (storedUser) {
-			setUser(JSON.parse(storedUser));
+			try {
+				setUser(JSON.parse(storedUser));
+			} catch (error) {
+				console.error(
+					"Failed to parse user data from localStorage:",
+					error
+				);
+				localStorage.removeItem("user"); // Remove invalid data
+			}
 		}
 	}, []);
+
+
 
 	// ✅ Signup function with better error handling
 	const signup = async (name, email, password) => {

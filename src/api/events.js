@@ -32,7 +32,7 @@ export const fetchEventById = async (eventId, token) => {
 	}
 };
 
-// Create a new event (with File Upload Support)
+// Create a new event
 export const createEvent = async (eventData, token) => {
 	try {
 		const response = await axios.post(`${API_URL}/events`, eventData, {
@@ -47,6 +47,24 @@ export const createEvent = async (eventData, token) => {
 		throw error;
 	}
 };
+
+
+// Update an existing event
+export const updateEvent = async (eventId, eventData, token) => {
+	try {
+		const response = await axios.put(`${API_URL}/events/${eventId}`, eventData, {
+			headers: {
+				Authorization: `Bearer ${token}`,
+				"Content-Type": "multipart/form-data",
+			},
+		});
+		return response.data;
+	} catch (error) {
+		console.error("Error updating event:", error);
+		throw error;
+	}
+};
+
 
 // Fetch User Events
 export const fetchUserEvents = async (token) => {
