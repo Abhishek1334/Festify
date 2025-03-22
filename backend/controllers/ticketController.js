@@ -82,7 +82,7 @@ export const getEventTickets = async (req, res) => {
 
 		// Get all tickets for the event
 		const tickets = await Ticket.find({ eventId }).select(
-			"userName checkedIn"
+			"userName checkedIn createdAt updatedAt qrCode userId eventId" 
 		);
 
 		res.status(200).json(tickets);

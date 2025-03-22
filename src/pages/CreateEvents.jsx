@@ -54,15 +54,30 @@ const CreateEvents = () => {
 				return;
 			}
 
+			// ✅ Convert date, startTime, and endTime to ISO format
+			const eventDate = new Date(formData.date);
+			const startTime = new Date(
+				`${formData.date}T${formData.startTime}:00`
+			).toISOString();
+			const endTime = new Date(
+				`${formData.date}T${formData.endTime}:00`
+			).toISOString();
+
 			const eventData = new FormData();
-			Object.keys(formData).forEach((key) => {
-				eventData.append(key, formData[key]);
-			});
+			eventData.append("title", formData.title);
+			eventData.append("description", formData.description);
+			eventData.append("date", eventDate.toISOString());
+			eventData.append("startTime", startTime);
+			eventData.append("endTime", endTime);
+			eventData.append("location", formData.location);
+			eventData.append("capacity", formData.capacity);
+			eventData.append("category", formData.category);
 			eventData.append("image", image);
 
-			const apiUrl =
-				(import.meta.env.VITE_API_URL || "http://localhost:5000") +
-				"/events";
+			const apiUrl = import.meta.env.VITE_API_URL
+				? `${import.meta.env.VITE_API_URL}/events`
+				: "http://localhost:5000/api/events";
+
 			await axios.post(apiUrl, eventData, {
 				headers: {
 					"Content-Type": "multipart/form-data",
@@ -77,6 +92,9 @@ const CreateEvents = () => {
 			setLoading(false);
 		}
 	};
+
+
+
 
 	return (
 		<div className="bg-gradient-to-br from-purple-500 to-indigo-300 min-h-[82vh] flex items-center justify-center py-8">

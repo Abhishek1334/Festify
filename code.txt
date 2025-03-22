@@ -1,0 +1,894 @@
+here are all the files you need to setup event details editing and updating in organzier event details
+
+eventRoutesjs
+import express from "express";
+import { protect } from "../middleware/authMiddleware.js";
+import {
+	getEvents,
+	getEventById,
+	createEvent,
+	updateEvent,
+	deleteEvent,
+	getUserEvents,
+} from "../controllers/eventController.js";
+import upload from "../middleware/uploadMiddleware.js";
+import Event from "../models/eventModel.js"; // ✅ Ensure Event model is imported
+
+const router = express.Router();
+
+// ✅ Get all events & Create an event (with image upload)
+router
+	.route("/")
+	.get(getEvents)
+	.post(protect, upload.single("image"), createEvent);
+
+// ✅ Get events created by the logged-in user
+router.get("/my-events", protect, getUserEvents);
+
+// ✅ Get events for a specific user
+router.get("/user", protect, getUserEvents);
+
+// ✅ Get, update, and delete event by ID
+router
+	.route("/:id")
+	.get(getEventById)
+	.put(protect, upload.single("image"), updateEvent)
+	.delete(protect, deleteEvent);
+
+// ✅ Get events by category
+router.get("/category/:category", async (req, res) => {
+	try {
+		const { category } = req.params;
+		const events = await Event.find({ category });
+
+		if (events.length === 0) {
+			return res
+				.status(404)
+				.json({ message: "No events found in this category" });
+		}
+
+		res.status(200).json(events);
+	} catch (error) {
+		console.error("Error fetching events by category:", error);
+		res.status(500).json({ message: "Error fetching events" });
+	}
+});
+
+export default router;
+
+
+eventController.js
+import Event from "../models/eventModel.js";
+import path from "path";
+import fs from "fs";
+
+// Get all events
+export const getEvents = async (req, res) => {
+	try {
+		const events = await Event.find().populate("organizerId", "name");
+		res.json(
+			events.map((event) => ({
+				...event.toObject(),
+				organizerName: event.organizerId
+					? event.organizerId.name
+					: "Unknown",
+			}))
+		);
+	} catch (error) {
+		console.error("Error fetching events:", error);
+		res.status(500).json({ message: "Server error" });
+	}
+};
+
+// Get a single event by ID
+export const getEventById = async (req, res) => {
+	try {
+		const event = await Event.findById(req.params.id).populate(
+			"organizerId",
+			"name"
+		);
+		if (!event) return res.status(404).json({ message: "Event not found" });
+
+		res.json({
+			...event.toObject(),
+			organizerName: event.organizerId
+				? event.organizerId.name
+				: "Unknown",
+		});
+	} catch (error) {
+		console.error("Error fetching event:", error);
+		res.status(500).json({ message: "Server error" });
+	}
+};
+
+// Create a new event
+export const createEvent = async (req, res) => {
+	try {
+		const {
+			title,
+			description,
+			date,
+			startTime,
+			endTime,
+			location,
+			capacity,
+			category,
+		} = req.body;
+
+		// Ensure required fields are provided
+		if (
+			!title ||
+			!description ||
+			!date ||
+			!startTime ||
+			!endTime ||
+			!location ||
+			!capacity
+		) {
+			return res
+				.status(400)
+				.json({ message: "All fields except category are required." });
+		}
+
+		const event = new Event({
+			title,
+			description,
+			date,
+			startTime,
+			endTime,
+			location,
+			capacity,
+			category: category || "Uncategorized", // Default to "Uncategorized" if empty
+			organizerId: req.user.id,
+			organizerName: req.user.name,
+			image: req.file ? uploads/${req.file.filename} : "",
+		});
+
+		await event.save();
+		res.status(201).json(event);
+	} catch (error) {
+		console.error("Error creating event:", error);
+		res.status(500).json({ message: "Error creating event" });
+	}
+};
+
+// Update an event
+import mongoose from "mongoose";
+import Event from "../models/eventModel.js"; // Make sure you have this import
+
+export const updateEvent = async (req, res) => {
+	try {
+		const {
+			title,
+			description,
+			date,
+			startTime,
+			endTime,
+			location,
+			capacity,
+		} = req.body;
+
+		// Ensure the date exists before setting startTime and endTime
+		if (!date) {
+			return res.status(400).json({ error: "Date is required" });
+		}
+
+		const updatedFields = {
+			title,
+			description,
+			date: new Date(date), // Ensure date is stored correctly
+			startTime: new Date(${date}T${startTime}:00Z), // Convert to full Date format
+			endTime: new Date(${date}T${endTime}:00Z), // Convert to full Date format
+			location,
+			capacity,
+		};
+
+		const updatedEvent = await Event.findByIdAndUpdate(
+			req.params.id,
+			updatedFields,
+			{ new: true }
+		);
+
+		if (!updatedEvent) {
+			return res.status(404).json({ error: "Event not found" });
+		}
+
+		res.status(200).json({
+			success: true,
+			message: "Event updated successfully",
+			event: updatedEvent,
+		});
+	} catch (error) {
+		console.error("Error updating event:", error);
+		res.status(500).json({ error: "Internal Server Error" });
+	}
+};
+
+
+
+// Delete an event
+export const deleteEvent = async (req, res) => {
+	try {
+		const event = await Event.findById(req.params.id);
+
+		if (!event) return res.status(404).json({ message: "Event not found" });
+
+		// Ensure only the organizer can delete
+		if (event.organizerId.toString() !== req.user.id) {
+			return res
+				.status(403)
+				.json({ message: "Unauthorized to delete this event" });
+		}
+
+		// Delete the event image if exists
+		if (event.image) {
+			const imagePath = path.join("backend", event.image);
+			fs.unlink(imagePath, (err) => {
+				if (err) console.error("Error deleting image:", err);
+			});
+		}
+
+		await event.deleteOne();
+		res.json({ message: "Event deleted successfully" });
+	} catch (error) {
+		console.error("Error deleting event:", error);
+		res.status(500).json({ message: "Server error" });
+	}
+};
+
+// Get all events created by the authenticated user
+export const getUserEvents = async (req, res) => {
+	try {
+		const userId = req.user.id;
+		const events = await Event.find({ organizerId: userId });
+		res.json(events);
+	} catch (error) {
+		console.error("Error fetching user events:", error);
+		res.status(500).json({ message: "Server error" });
+	}
+};
+
+eventModeljs
+import mongoose from "mongoose";
+
+const eventSchema = new mongoose.Schema(
+	{
+		title: { type: String, required: true },
+		description: { type: String, required: true },
+		date: { type: Date, required: true },
+		startTime: { type: Date, required: true }, 
+		endTime: { type: Date, required: true }, 
+		location: { type: String, required: true },
+		image: { type: String },
+		organizerId: {
+			type: mongoose.Schema.Types.ObjectId,
+			ref: "User",
+			required: true,
+		},
+		organizerName: { type: String, required: true },
+		capacity: { type: Number, required: true },
+		ticketsSold: { type: Number, default: 0 },
+		category: { type: String, required: true },
+	},
+	{ timestamps: true }
+);
+
+const Event = mongoose.model("Event", eventSchema);
+export default Event;
+
+
+authMiddleware.js
+import jwt from "jsonwebtoken";
+import User from "../models/userModel.js";
+import process from "process";
+export const protect = async (req, res, next) => {
+	let token;
+	if (
+		req.headers.authorization &&
+		req.headers.authorization.startsWith("Bearer")
+	) {
+		try {
+			token = req.headers.authorization.split(" ")[1];
+			const decoded = jwt.verify(token, process.env.JWT_SECRET);
+			console.log("✅ Decoded JWT:", decoded);
+
+			req.user = await User.findById(decoded.id).select("-password");
+
+			if (!req.user) {
+				console.error("❌ ERROR: User not found in DB!");
+				return res.status(401).json({ message: "User not found" });
+			}
+
+			console.log("✅ Authenticated user:", req.user);
+			next();
+		} catch (error) {
+			console.error("❌ ERROR in Auth Middleware:", error);
+			return res
+				.status(401)
+				.json({ message: "Unauthorized: Invalid token" });
+		}
+	} else {
+		console.error("❌ ERROR: No token provided!");
+		return res
+			.status(401)
+			.json({ message: "Unauthorized: No token provided" });
+	}
+};
+
+
+no file named eventContext and editeventsjsx
+
+createevents.jsx
+// CreateEvents.jsx
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
+import categories from "../categories.json";
+
+const CreateEvents = () => {
+	const navigate = useNavigate();
+	const [formData, setFormData] = useState({
+		title: "",
+		description: "",
+		date: "",
+		startTime: "",
+		endTime: "",
+		location: "",
+		capacity: "",
+		category: "", // Default empty category
+	});
+	const [image, setImage] = useState(null);
+	const [error, setError] = useState("");
+	const [loading, setLoading] = useState(false);
+
+	// Handle input changes
+	const handleChange = (e) => {
+		setFormData({ ...formData, [e.target.name]: e.target.value });
+	};
+
+	// Handle file upload
+	const handleFileChange = (e) => {
+		setImage(e.target.files[0]);
+	};
+
+	// Handle form submission
+	const handleSubmit = async (e) => {
+		e.preventDefault();
+		setError("");
+		setLoading(true);
+
+		if (!image) {
+			setError("Please upload an event image.");
+			setLoading(false);
+			return;
+		}
+
+		try {
+			const user = JSON.parse(localStorage.getItem("user")) || {};
+			const token = user?.token;
+
+			if (!token) {
+				setError(
+					"Authentication error: No token found. Please log in again."
+				);
+				setLoading(false);
+				return;
+			}
+
+			const eventData = new FormData();
+			Object.keys(formData).forEach((key) => {
+				eventData.append(key, formData[key]);
+			});
+			eventData.append("image", image);
+
+			const apiUrl =
+				(import.meta.env.VITE_API_URL || "http://localhost:5000") +
+				"/events";
+			await axios.post(apiUrl, eventData, {
+				headers: {
+					"Content-Type": "multipart/form-data",
+					Authorization: Bearer ${token},
+				},
+			});
+
+			navigate("/events");
+		} catch (err) {
+			setError(err.response?.data?.message || "Error creating event");
+		} finally {
+			setLoading(false);
+		}
+	};
+
+	return (
+		<div className="bg-gradient-to-br from-purple-500 to-indigo-300 min-h-[82vh] flex items-center justify-center py-8">
+			<div className="max-w-[35vw] mx-auto p-6  shadow-black shadow-sm rounded-lg bg-gray-100">
+				<h2 className="text-2xl font-semibold mb-4 w-[50vw]">Create Event</h2>
+				{error && <p className="text-red-500">{error}</p>}
+				<form onSubmit={handleSubmit} className="grid gap-4 ">
+					<input
+						type="text"
+						name="title"
+						placeholder="Event Title"
+						value={formData.title}
+						onChange={handleChange}
+						required
+						className="inputbox"
+					/>
+					<textarea
+						name="description"
+						placeholder="Event Description"
+						value={formData.description}
+						onChange={handleChange}
+						required
+						className="inputbox"
+					/>
+					<input
+						type="date"
+						name="date"
+						value={formData.date}
+						onChange={handleChange}
+						required
+						className="inputbox"
+					/>
+					<label>
+						Start Time
+						<input
+							type="time"
+							name="startTime"
+							value={formData.startTime}
+							onChange={handleChange}
+							required
+							className="inputbox"
+						/>
+					</label>
+					<label>
+						End Time
+						<input
+							type="time"
+							name="endTime"
+							value={formData.endTime}
+							onChange={handleChange}
+							required
+							className="inputbox"
+						/>
+					</label>
+					<input
+						type="text"
+						name="location"
+						placeholder="Location"
+						value={formData.location}
+						onChange={handleChange}
+						required
+						className="inputbox"
+					/>
+					<input
+						type="number"
+						name="capacity"
+						placeholder="Capacity"
+						value={formData.capacity}
+						onChange={handleChange}
+						required
+						className="inputbox"
+					/>
+					<label>
+						Category
+					<select
+						name="category"
+						value={formData.category}
+						onChange={handleChange}
+						className="inputbox"
+					>
+						<option value="">No Category</option>
+						{categories.map((cat) => (
+							<option key={cat.category} value={cat.category}>
+								{cat.name}
+							</option>
+						))}
+					</select>
+					</label>
+					<label>
+						Event Image
+					<input
+						type="file"
+						accept="image/*"
+						onChange={handleFileChange}
+						required
+						className="inputbox"
+					/>
+					</label>
+					<button
+						type="submit"
+						className="btn-primary mt-2"
+						disabled={loading}
+					>
+						{loading ? "Creating Event..." : "Create Event"}
+					</button>
+				</form>
+			</div>
+		</div>
+	);
+};
+
+export default CreateEvents;
+
+
+organizereventdetails
+import { useEffect, useState, useContext } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import axios from "axios";
+import { AuthContext } from "../context/AuthContext";
+
+const OrganizerEventDetail = () => {
+	const { user } = useContext(AuthContext);
+	const { eventId } = useParams();
+	const navigate = useNavigate();
+
+	const [event, setEvent] = useState(null);
+	const [tickets, setTickets] = useState([]);
+	const [loading, setLoading] = useState(true);
+	const [error, setError] = useState(null);
+	const [isEditing, setIsEditing] = useState(false);
+	const [formData, setFormData] = useState({
+		title: "",
+		description: "",
+		date: "",
+		startTime: "",
+		endTime: "",
+		location: "",
+		capacity: "",
+	});
+
+
+	const [imagePreview, setImagePreview] = useState(null);
+	const [imageFile, setImageFile] = useState(null);
+
+	useEffect(() => {
+		const fetchEventDetails = async () => {
+			try {
+				setLoading(true); // Use setLoading before the request
+				const { data } = await axios.get(
+					http://localhost:5000/api/events/${eventId},
+					{ headers: { Authorization: Bearer ${user.token} } }
+				);
+				setEvent(data);
+				setTickets(data.tickets || []); // Set tickets if available
+
+				setFormData({
+					title: data.title || "",
+					description: data.description || "",
+					date: data.date ? data.date.split("T")[0] : "",
+					startTime: data.startTime || "",
+					endTime: data.endTime || "",
+					location: data.location || "",
+					capacity: data.capacity || "",
+				});
+
+				setImagePreview(
+					data.image ? http://localhost:5000/${data.image} : ""
+				);
+			} catch (err) {
+				setError(err.message);
+			} finally {
+				setLoading(false); // Set loading to false after request completes
+			}
+		};
+		if (eventId && user) {
+			fetchEventDetails(); // ✅ Call the function here
+		}
+	}, [eventId, user]);
+
+
+	const handleChange = (e) => {
+		setFormData({ ...formData, [e.target.name]: e.target.value });
+	};
+
+	const handleImageChange = (e) => {
+		const file = e.target.files[0];
+		setImageFile(file);
+		setImagePreview(URL.createObjectURL(file));
+	};
+
+	const handleSave = async () => {
+		try {
+			const updatedEvent = {
+				...formData,
+				startTime: formData.startTime || "", // Ensure it's always a string
+				endTime: formData.endTime || "",
+				date: formData.date
+					? new Date(formData.date).toISOString()
+					: "",
+				capacity: Number(formData.capacity) || 0, // Convert to number
+			};
+
+			const eventFormData = new FormData();
+			Object.keys(updatedEvent).forEach((key) => {
+				eventFormData.append(key, updatedEvent[key]);
+			});
+
+			if (imageFile) {
+				eventFormData.append("image", imageFile);
+			}
+
+			const { data } = await axios.put(
+				http://localhost:5000/api/events/${eventId},
+				eventFormData,
+				{
+					headers: {
+						Authorization: Bearer ${user.token},
+						"Content-Type": "multipart/form-data",
+					},
+				}
+			);
+
+			setEvent(data);
+			setIsEditing(false);
+		} catch (error) {
+			console.error("Error updating event:", error);
+			setError("Failed to update event.");
+		}
+	};
+
+
+	if (loading) return <p className="text-center text-gray-500">Loading...</p>;
+	if (error)
+		return <p className="text-center text-red-500">Error: {error}</p>;
+	if (!event)
+		return <p className="text-center text-gray-500">Event not found.</p>;
+
+	return (
+		<div className="max-w-4xl mx-auto py-10 px-5">
+			<button
+				onClick={() => navigate("/organizer")}
+				className="mb-4 px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600"
+			>
+				⬅ Back to Organizer Page
+			</button>
+
+			{isEditing ? (
+				<>
+					<label className="block font-semibold">Event Title</label>
+					<input
+						type="text"
+						name="title"
+						value={formData.title || ""}
+						onChange={handleChange}
+						className="w-full p-2 border rounded mb-4"
+					/>
+
+					<label className="block font-semibold">
+						Event Description
+					</label>
+					<textarea
+						name="description"
+						value={formData.description}
+						onChange={handleChange}
+						className="w-full p-2 border rounded mb-4"
+					/>
+
+					<label className="block font-semibold">Event Date</label>
+					<input
+						type="date"
+						name="date"
+						value={formData.date}
+						onChange={handleChange}
+						className="w-full p-2 border rounded mb-4"
+					/>
+
+					<label className="block font-semibold">
+						Event Start Time
+					</label>
+					<input
+						type="time"
+						name="startTime"
+						value={formData.startTime}
+						onChange={handleChange}
+						className="w-full p-2 border rounded mb-4"
+					/>
+
+					<label className="block font-semibold">
+						Event End Time
+					</label>
+					<input
+						type="time"
+						name="endTime"
+						value={formData.endTime}
+						onChange={handleChange}
+						className="w-full p-2 border rounded mb-4"
+					/>
+
+					<label className="block font-semibold">
+						Event Location
+					</label>
+					<input
+						type="text"
+						name="location"
+						value={formData.location}
+						onChange={handleChange}
+						className="w-full p-2 border rounded mb-4"
+					/>
+
+					<label className="block font-semibold">
+						Event Capacity
+					</label>
+					<input
+						type="number"
+						name="capacity"
+						value={formData.capacity}
+						onChange={handleChange}
+						className="w-full p-2 border rounded mb-4"
+					/>
+
+					<label className="block font-semibold">Event Image</label>
+					<input
+						type="file"
+						accept="image/*"
+						onChange={handleImageChange}
+						className="w-full mb-4"
+					/>
+					{imagePreview && (
+						<img
+							src={imagePreview}
+							alt="Event"
+							className="w-full h-64 object-cover mb-4"
+						/>
+					)}
+
+					<button
+						onClick={handleSave}
+						className="mt-4 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+					>
+						Save Changes
+					</button>
+				</>
+			) : (
+				<>
+					<img
+						src={${event.image}} // Use the relative path to the event.image}
+						alt={event.title}
+						className="w-full h-64 object-cover rounded-lg mb-4"
+					/>
+					<h1 className="text-3xl font-bold">{event.title}</h1>
+					<p className="text-gray-600">{event.description}</p>
+					<button
+						onClick={() => setIsEditing(true)}
+						className="mt-4 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
+					>
+						Edit Event
+					</button>
+				</>
+			)}
+
+			<h3 className="text-2xl font-semibold mt-8">Attendees</h3>
+			{tickets.length > 0 ? (
+				<div className="overflow-x-auto mt-4">
+					<table className="min-w-full bg-white border border-gray-300">
+						<thead>
+							<tr className="bg-gray-200">
+								<th className="py-2 px-4 border">Ticket ID</th>
+								<th className="py-2 px-4 border">
+									Attendee Name
+								</th>
+								<th className="py-2 px-4 border">QR Code</th>
+							</tr>
+						</thead>
+						<tbody>
+							{tickets.map((ticket) => (
+								<tr key={ticket._id} className="text-center">
+									<td className="py-2 px-4 border">
+										{ticket._id}
+									</td>
+									<td className="py-2 px-4 border">
+										{ticket.userName}
+									</td>
+									<td className="py-2 px-4 border">
+										{ticket.qrCode ? (
+											<img
+												src={ticket.qrCode}
+												alt="QR Code"
+												className="mt-3 w-24 h-24 mx-auto"
+												onError={(e) =>
+													(e.target.src =
+														"/default-placeholder.jpg")
+												}
+											/>
+										) : (
+											<span className="text-gray-500">
+												No QR Code
+											</span>
+										)}
+									</td>
+								</tr>
+							))}
+						</tbody>
+					</table>
+				</div>
+			) : (
+				<p className="text-gray-500 mt-4">No tickets booked yet.</p>
+			)}
+		</div>
+	);
+};
+
+export default OrganizerEventDetail;
+
+
+api/events.js
+import axios from "axios";
+
+const API_URL = import.meta.env.VITE_API_URL; // http://localhost:5000/api
+// Fetch all events
+export const fetchEvents = async (token) => {
+	try {
+		const response = await axios.get(${API_URL}/events, {
+			headers: {
+				Authorization: Bearer ${token},
+			},
+		});
+		
+		return response.data;
+	} catch (error) {
+		console.error("Error fetching events:", error);
+		throw error;
+	}
+};
+
+// Fetch event by ID
+export const fetchEventById = async (eventId, token) => {
+	try {
+		const response = await axios.get(${API_URL}/events/${eventId}, {
+			headers: {
+				Authorization: Bearer ${token},
+			},
+		});
+		return response.data;
+	} catch (error) {
+		console.error("Error fetching event by ID:", error);
+		throw error;
+	}
+};
+
+// Create a new event (with File Upload Support)
+export const createEvent = async (eventData, token) => {
+	try {
+		const response = await axios.post(${API_URL}/events, eventData, {
+			headers: {
+				Authorization: Bearer ${token},
+				"Content-Type": "multipart/form-data",
+			},
+		});
+		return response.data;
+	} catch (error) {
+		console.error("Error creating event:", error);
+		throw error;
+	}
+};
+
+// Fetch User Events
+export const fetchUserEvents = async (token) => {
+	try {
+		const response = await axios.get(${API_URL}/events/my-events, {
+			headers: {
+				Authorization: Bearer ${token},
+			},
+		});
+		console.log("API Response:", response.data); // Debugging
+		return response.data || []; // Ensure it returns an array
+	} catch (error) {
+		console.error("Error fetching user events:", error);
+		return [];
+	}
+};
+
+// Fetch Events by Category
+export const fetchEventsByCategory = async (category) => {
+	try {
+		const response = await axios.get(${API_URL}/events/category/${category});
+		return response.data;
+	} catch (error) {
+		console.error("Error fetching events by category:", error);
+		return [];
+	}
+};
+
+
+help me fix create event and updat event functionality

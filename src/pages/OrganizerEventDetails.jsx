@@ -10,131 +10,116 @@ const OrganizerEventDetail = () => {
 
 	const [event, setEvent] = useState(null);
 	const [tickets, setTickets] = useState([]);
-	const [attendees, setAttendees] = useState({});
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState(null);
 	const [isEditing, setIsEditing] = useState(false);
-	const [formData, setFormData] = useState({});
+	const [formData, setFormData] = useState({
+		title: "",
+		description: "",
+		date: "",
+		startTime: "",
+		endTime: "",
+		location: "",
+		capacity: "",
+	});
+
+
 	const [imagePreview, setImagePreview] = useState(null);
 	const [imageFile, setImageFile] = useState(null);
 
 	useEffect(() => {
 		const fetchEventDetails = async () => {
 			try {
-				const response = await axios.get(
+				setLoading(true); // Use setLoading before the request
+				const { data } = await axios.get(
 					`http://localhost:5000/api/events/${eventId}`,
 					{ headers: { Authorization: `Bearer ${user.token}` } }
 				);
-				setEvent(response.data);
-				setFormData(response.data);
-				setImagePreview(`http://localhost:5000/${response.data.image}`);
-			} catch (err) {
-				setError(err.message);
-			}
-		};
+				setEvent(data);
+				setTickets(data.tickets || []); // Set tickets if available
 
-		const fetchTickets = async () => {
-			try {
-				const response = await axios.get(
-					`http://localhost:5000/api/tickets/event/${eventId}`,
-					{ headers: { Authorization: `Bearer ${user.token}` } }
+				setFormData({
+					title: data.title || "",
+					description: data.description || "",
+					date: data.date ? data.date.split("T")[0] : "",
+					startTime: data.startTime || "",
+					endTime: data.endTime || "",
+					location: data.location || "",
+					capacity: data.capacity || "",
+				});
+
+				setImagePreview(
+					data.image ? `http://localhost:5000/${data.image}` : ""
 				);
-				setTickets(response.data);
-				fetchAttendeeNames(response.data);
 			} catch (err) {
 				setError(err.message);
+			} finally {
+				setLoading(false); // Set loading to false after request completes
 			}
 		};
-
-		const fetchAttendeeNames = async (tickets) => {
-			const attendeeData = {};
-			await Promise.all(
-				tickets.map(async (ticket) => {
-					const userId = ticket.userId?._id || ticket.userId;
-					if (!userId) return;
-
-					try {
-						const userResponse = await axios.get(
-							`http://localhost:5000/api/users/${userId}`,
-							{
-								headers: {
-									Authorization: `Bearer ${user.token}`,
-								},
-							}
-						);
-						attendeeData[userId] = userResponse.data.name;
-					} catch (err) {
-						console.error("Error fetching user details:", err);
-						attendeeData[userId] = "Unknown";
-					}
-				})
-			);
-			setAttendees(attendeeData);
-		};
-
 		if (eventId && user) {
-			Promise.all([fetchEventDetails(), fetchTickets()]).finally(() =>
-				setLoading(false)
-			);
+			fetchEventDetails(); // ✅ Call the function here
 		}
 	}, [eventId, user]);
 
-	// Handle input changes
+
 	const handleChange = (e) => {
 		setFormData({ ...formData, [e.target.name]: e.target.value });
 	};
 
-	// Handle image change
 	const handleImageChange = (e) => {
 		const file = e.target.files[0];
 		setImageFile(file);
 		setImagePreview(URL.createObjectURL(file));
 	};
 
-	// Handle event update
 	const handleSave = async () => {
 		try {
-			const updatedEvent = { ...formData };
+			const updatedEvent = {
+				...formData,
+				startTime: new Date(
+					`${formData.date}T${formData.startTime}:00Z`
+				).toISOString(),
+				endTime: new Date(
+					`${formData.date}T${formData.endTime}:00Z`
+				).toISOString(),
+				date: new Date(formData.date).toISOString(),
+				capacity: Number(formData.capacity) || 0, // Ensure capacity is a number
+			};
 
-			// If there's an image file, upload it first
+			const eventFormData = new FormData();
+			Object.keys(updatedEvent).forEach((key) => {
+				eventFormData.append(key, updatedEvent[key]);
+			});
+
 			if (imageFile) {
-				const formData = new FormData();
-				formData.append("image", imageFile);
-
-				const uploadResponse = await axios.post(
-					`http://localhost:5000/api/events/upload/${eventId}`,
-					formData,
-					{
-						headers: {
-							Authorization: `Bearer ${user.token}`,
-							"Content-Type": "multipart/form-data",
-						},
-					}
-				);
-				updatedEvent.image = uploadResponse.data.imagePath;
+				eventFormData.append("image", imageFile);
 			}
 
-			// Update event details
-			const response = await axios.put(
+			const { data } = await axios.put(
 				`http://localhost:5000/api/events/${eventId}`,
-				updatedEvent,
-				{ headers: { Authorization: `Bearer ${user.token}` } }
+				eventFormData,
+				{
+					headers: {
+						Authorization: `Bearer ${user.token}`,
+						"Content-Type": "multipart/form-data",
+					},
+				}
 			);
-			setEvent(response.data);
+
+			setEvent(data);
 			setIsEditing(false);
 		} catch (error) {
 			console.error("Error updating event:", error);
+			setError("Failed to update event.");
 		}
 	};
 
-	// Handle loading state
-	if (loading) return <p className="text-center text-gray-500">Loading...</p>;
 
-	// Handle error state
+
+	if (loading) return <p className="text-center text-gray-500">Loading...</p>;
 	if (error)
 		return <p className="text-center text-red-500">Error: {error}</p>;
-
-	// Handle case when event data is missing
 	if (!event)
 		return <p className="text-center text-gray-500">Event not found.</p>;
 
@@ -149,28 +134,92 @@ const OrganizerEventDetail = () => {
 
 			{isEditing ? (
 				<>
-					{/* Editable Fields */}
+					<label className="block font-semibold">Event Title</label>
 					<input
 						type="text"
 						name="title"
-						value={formData.title}
+						value={formData.title || ""}
 						onChange={handleChange}
-						className="w-full p-2 border rounded"
+						className="w-full p-2 border rounded mb-4"
 					/>
+
+					<label className="block font-semibold">
+						Event Description
+					</label>
 					<textarea
 						name="description"
 						value={formData.description}
 						onChange={handleChange}
-						className="w-full p-2 border rounded mt-2"
+						className="w-full p-2 border rounded mb-4"
 					/>
 
-					{/* Image Upload */}
+					<label className="block font-semibold">Event Date</label>
+					<input
+						type="date"
+						name="date"
+						value={formData.date}
+						onChange={handleChange}
+						className="w-full p-2 border rounded mb-4"
+					/>
+
+					<label className="block font-semibold">
+						Event Start Time
+					</label>
+					<input
+						type="time"
+						name="startTime"
+						value={formData.startTime}
+						onChange={handleChange}
+						className="w-full p-2 border rounded mb-4"
+					/>
+
+					<label className="block font-semibold">
+						Event End Time
+					</label>
+					<input
+						type="time"
+						name="endTime"
+						value={formData.endTime}
+						onChange={handleChange}
+						className="w-full p-2 border rounded mb-4"
+					/>
+
+					<label className="block font-semibold">
+						Event Location
+					</label>
+					<input
+						type="text"
+						name="location"
+						value={formData.location}
+						onChange={handleChange}
+						className="w-full p-2 border rounded mb-4"
+					/>
+
+					<label className="block font-semibold">
+						Event Capacity
+					</label>
+					<input
+						type="number"
+						name="capacity"
+						value={formData.capacity}
+						onChange={handleChange}
+						className="w-full p-2 border rounded mb-4"
+					/>
+
+					<label className="block font-semibold">Event Image</label>
 					<input
 						type="file"
 						accept="image/*"
 						onChange={handleImageChange}
-						className="mt-2"
+						className="w-full mb-4"
 					/>
+					{imagePreview && (
+						<img
+							src={imagePreview}
+							alt="Event"
+							className="w-full h-64 object-cover mb-4"
+						/>
+					)}
 
 					<button
 						onClick={handleSave}
@@ -182,7 +231,7 @@ const OrganizerEventDetail = () => {
 			) : (
 				<>
 					<img
-						src={imagePreview || "/default-placeholder.jpg"}
+						src={`${event.image}`} // Use the relative path to the event.image}
 						alt={event.title}
 						className="w-full h-64 object-cover rounded-lg mb-4"
 					/>
@@ -217,15 +266,24 @@ const OrganizerEventDetail = () => {
 										{ticket._id}
 									</td>
 									<td className="py-2 px-4 border">
-										{attendees[ticket.userId] ||
-											"Loading..."}
+										{ticket.userName}
 									</td>
 									<td className="py-2 px-4 border">
-										<img
-											src={ticket.qrCode}
-											alt="QR Code"
-											className="w-16 h-16 mx-auto"
-										/>
+										{ticket.qrCode ? (
+											<img
+												src={ticket.qrCode}
+												alt="QR Code"
+												className="mt-3 w-24 h-24 mx-auto"
+												onError={(e) =>
+													(e.target.src =
+														"/default-placeholder.jpg")
+												}
+											/>
+										) : (
+											<span className="text-gray-500">
+												No QR Code
+											</span>
+										)}
 									</td>
 								</tr>
 							))}
