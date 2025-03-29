@@ -33,9 +33,22 @@ export const fetchEventById = async (eventId, token) => {
 };
 
 // Create a new event
-export const createEvent = async (eventData, token) => {
+export const createEvent = async (eventData, imageFile, token) => {
 	try {
-		const response = await axios.post(`${API_URL}/events`, eventData, {
+		const formData = new FormData();
+		formData.append("title", eventData.title);
+		formData.append("description", eventData.description);
+		formData.append("date", eventData.date);
+		formData.append("startTime", eventData.startTime);
+		formData.append("endTime", eventData.endTime);
+		formData.append("location", eventData.location);
+		formData.append("organizerId", eventData.organizerId);
+		formData.append("organizerName", eventData.organizerName);
+		formData.append("capacity", eventData.capacity);
+		formData.append("category", eventData.category);
+		formData.append("image", imageFile); // Image file should be included here
+
+		const response = await axios.post(`${API_URL}/events`, formData, {
 			headers: {
 				Authorization: `Bearer ${token}`,
 				"Content-Type": "multipart/form-data",
@@ -49,21 +62,43 @@ export const createEvent = async (eventData, token) => {
 };
 
 
+
+
 // Update an existing event
-export const updateEvent = async (eventId, eventData, token) => {
+export const updateEvent = async (eventId, eventData, token, imageFile) => {
 	try {
-		const response = await axios.put(`${API_URL}/events/${eventId}`, eventData, {
-			headers: {
-				Authorization: `Bearer ${token}`,
-				"Content-Type": "multipart/form-data",
-			},
+		const formData = new FormData();
+
+		// Append only non-null fields
+		Object.entries(eventData).forEach(([key, value]) => {
+			if (value) {
+				formData.append(key, value);
+			}
 		});
+
+		// Append image if provided
+		if (imageFile) {
+			formData.append("image", imageFile);
+		}
+
+		const response = await axios.put(
+			`${API_URL}/events/${eventId}`,
+			formData,
+			{
+				headers: {
+					Authorization: `Bearer ${token}`,
+					"Content-Type": "multipart/form-data",
+				},
+			}
+		);
+
 		return response.data;
 	} catch (error) {
 		console.error("Error updating event:", error);
 		throw error;
 	}
 };
+
 
 
 // Fetch User Events

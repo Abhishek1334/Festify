@@ -1,14 +1,9 @@
 import multer from "multer";
 import path from "path";
-import { fileURLToPath } from "url";
 import fs from "fs";
 
-// Get the directory name
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
 // Ensure uploads folder exists
-const uploadPath = path.join(__dirname, "../uploads/");
+const uploadPath = path.join("backend", "uploads");
 if (!fs.existsSync(uploadPath)) {
 	fs.mkdirSync(uploadPath, { recursive: true });
 }
@@ -16,7 +11,7 @@ if (!fs.existsSync(uploadPath)) {
 // Multer Storage Setup
 const storage = multer.diskStorage({
 	destination: (req, file, cb) => {
-		cb(null, uploadPath); // Use absolute path
+		cb(null, uploadPath);
 	},
 	filename: (req, file, cb) => {
 		cb(null, Date.now() + path.extname(file.originalname));

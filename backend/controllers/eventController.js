@@ -51,99 +51,118 @@ export const createEvent = async (req, res) => {
 			startTime,
 			endTime,
 			location,
+			organizerId,
+			organizerName,
 			capacity,
 			category,
 		} = req.body;
 
+		// ✅ Save only the relative image path
+		const imagePath = req.file ? `uploads/${req.file.filename}` : null;
+
+		const parsedDate = new Date(date);
+		const parsedStartTime = new Date(startTime);
+		const parsedEndTime = new Date(endTime);
+
 		if (
-			!title ||
-			!description ||
-			!date ||
-			!startTime ||
-			!endTime ||
-			!location ||
-			!capacity
+			isNaN(parsedDate) ||
+			isNaN(parsedStartTime) ||
+			isNaN(parsedEndTime)
 		) {
+			return res.status(400).json({
+				message: "Invalid date format. Please provide a valid date.",
+			});
+		}
+
+		if (parsedStartTime >= parsedEndTime) {
 			return res
 				.status(400)
-				.json({ message: "All fields except category are required." });
+				.json({ message: "Start time must be before end time." });
 		}
 
 		const event = new Event({
 			title,
 			description,
-			date,
-			startTime: new Date(`${date}T${startTime}:00`),
-			endTime: new Date(`${date}T${endTime}:00`),
+			date: parsedDate,
+			startTime: parsedStartTime,
+			endTime: parsedEndTime,
 			location,
+			image: imagePath, // ✅ Stores only `uploads/filename.jpg`
+			organizerId,
+			organizerName,
 			capacity,
-			category: category || "General",
-			organizerId: req.user.id,
-			organizerName: req.user.name,
-			image: req.file ? `uploads/${req.file.filename}` : "",
+			category,
 		});
 
 		await event.save();
-		res.status(201).json(event);
+		res.status(201).json({ message: "Event created successfully", event });
 	} catch (error) {
 		console.error("Error creating event:", error);
-		res.status(500).json({ message: "Error creating event" });
+		res.status(500).json({ message: "Server Error" });
 	}
 };
 
-
-
+// Update an event by ID
 export const updateEvent = async (req, res) => {
 	try {
 		const {
 			title,
 			description,
+			category,
 			date,
 			startTime,
 			endTime,
 			location,
-			image,
-			category,
+			capacity,
 		} = req.body;
+		const eventId = req.params.id;
 
-		// ✅ Convert string dates to Date objects
-		const parsedDate = date ? new Date(date) : null;
-		const parsedStartTime = startTime ? new Date(startTime) : null;
-		const parsedEndTime = endTime ? new Date(endTime) : null;
-
-		if (
-			parsedStartTime == "Invalid Date" ||
-			parsedEndTime == "Invalid Date"
-		) {
-			return res.status(400).json({ message: "Invalid date format" });
-		}
-
-		const updatedEvent = await Event.findByIdAndUpdate(
-			req.params.id,
-			{
-				title,
-				description,
-				date: parsedDate,
-				startTime: parsedStartTime,
-				endTime: parsedEndTime,
-				location,
-				image,
-				category,
-			},
-			{ new: true }
-		);
-
-		if (!updatedEvent) {
+		let event = await Event.findById(eventId);
+		if (!event) {
 			return res.status(404).json({ message: "Event not found" });
 		}
 
-		res.status(200).json(updatedEvent);
-	} catch (error) {
-		console.error("Error updating event:", error);
+		// Ensure only the organizer can update
+		if (event.organizerId.toString() !== req.user.id) {
+			return res
+				.status(403)
+				.json({ message: "Unauthorized to update this event" });
+		}
+
+		// Update fields
+		event.title = title || event.title;
+		event.description = description || event.description;
+		event.category = category || event.category;
+		const isValidDate = (date) => !isNaN(new Date(date).getTime());
+
+if (date && isValidDate(date)) event.date = new Date(date);
+if (startTime && isValidDate(startTime)) event.startTime = new Date(startTime);
+if (endTime && isValidDate(endTime)) event.endTime = new Date(endTime);
+
+		event.location = location || event.location;
+
+		// ✅ Fix: Ensure capacity is updated
+		if (
+			capacity !== undefined &&
+			!isNaN(capacity) &&
+			Number(capacity) > 0
+		) {
+			event.capacity = Number(capacity);
+		}
+
+		// Handle image update if provided
+		if (req.file) {
+			event.image = `uploads/${req.file.filename}`;
+		}
+
+
+		await event.save();
+		res.json(event);
+	} catch (err) {
+		console.error("Update Event Error:", err);
 		res.status(500).json({ message: "Server error" });
 	}
 };
-
 
 
 
@@ -151,20 +170,10 @@ export const updateEvent = async (req, res) => {
 export const deleteEvent = async (req, res) => {
 	try {
 		const event = await Event.findById(req.params.id);
-
 		if (!event) return res.status(404).json({ message: "Event not found" });
 
-		// Ensure only the organizer can delete
-		if (event.organizerId.toString() !== req.user.id) {
-			return res
-				.status(403)
-				.json({ message: "Unauthorized to delete this event" });
-		}
-
-		// Delete the event image if exists
 		if (event.image) {
-			const imagePath = path.join("backend", event.image);
-			fs.unlink(imagePath, (err) => {
+			fs.unlink(path.join("backend", event.image), (err) => {
 				if (err) console.error("Error deleting image:", err);
 			});
 		}
@@ -177,7 +186,6 @@ export const deleteEvent = async (req, res) => {
 	}
 };
 
-// Get all events created by the authenticated user
 export const getUserEvents = async (req, res) => {
 	try {
 		const userId = req.user.id;

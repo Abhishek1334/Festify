@@ -10,7 +10,7 @@ import NotFound from "./pages/NotFound";
 import Footer from "./components/Footer";
 import ScrollToTop from "./components/ScrollToTop";
 import CreateEvents from "./pages/CreateEvents";
-import { AuthProvider } from "./context/AuthContext";
+import { AuthProvider } from "./context/AuthProvider";
 import OrganizerAdmin from "./pages/OrganizerPanel";
 import OrganizerEventDetails from "./pages/OrganizerEventDetails";
 import PrivateRoute from "./components/Auth/PrivateRoute";
@@ -43,7 +43,7 @@ export default function App() {
 								element={<OrganizerAdmin />}
 							/>
 							<Route
-								path="/organizer/:eventId/edit"
+								path="/organizer/:eventId"
 								element={<OrganizerEventDetails />}
 							/>
 
