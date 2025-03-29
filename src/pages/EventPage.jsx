@@ -7,25 +7,50 @@ import { useAuth } from "../context/AuthContext";
 
 const EventPage = () => {
 	const { eventid } = useParams();
-	const { bookTicket } = useAuth();
+	const { bookTicket, user } = useAuth(); // ✅ Extracting user
 	const [event, setEvent] = useState(null);
+	const [error, setError] = useState(null); // ✅ Error state
 
 	useEffect(() => {
+		let isMounted = true; // ✅ Prevents unnecessary state updates
+
 		axios
 			.get(`http://localhost:5000/api/events/${eventid}`)
 			.then((response) => {
-				setEvent(response.data);
+				if (isMounted) {
+					setEvent(response.data);
+					setError(null);
+				}
 			})
-			.catch((error) => console.error("Error fetching event:", error));
+			.catch((error) => {
+				if (isMounted) {
+					console.error("Error fetching event:", error);
+					setError("Failed to load event details. Please try again.");
+				}
+			});
+
+		return () => {
+			isMounted = false; // Cleanup function
+		};
 	}, [eventid]);
+
+	if (error) {
+		return (
+			<div className="flex flex-col space-y-5 w-full h-[60vh] items-center justify-center bg-gray-200">
+				<p className="text-xl font-semibold text-red-600">{error}</p>
+				<Link to="/events">
+					<button className="btn-secondary">Return to Events</button>
+				</Link>
+			</div>
+		);
+	}
 
 	if (!event) {
 		return (
 			<div className="flex flex-col space-y-5 w-full h-[60vh] items-center justify-center bg-gray-200">
-				<p className="text-xl font-semibold">Event not found</p>
-				<Link to="/events">
-					<button className="btn-secondary">Return to Events</button>
-				</Link>
+				<p className="text-xl font-semibold">
+					Loading event details...
+				</p>
 			</div>
 		);
 	}
@@ -61,7 +86,7 @@ const EventPage = () => {
 									? format(
 											new Date(event.date),
 											"MMMM d, yyyy"
-									  )
+										)
 									: "No date available"}
 							</span>
 						</div>
@@ -90,11 +115,31 @@ const EventPage = () => {
 							</span>
 						</div>
 
-						{/* Timing */}
-						<div className="flex items-center">
+						{/* Event Timing - Start & End Time */}
+						<div className="flex items-center text-gray-600">
 							<Clock className="h-5 w-5 mr-2" />
 							<span>
-								{event.timing || "Timing not available"}
+								{event.startTime
+									? new Date(
+											event.startTime
+										).toLocaleTimeString([], {
+											hour: "2-digit",
+											minute: "2-digit",
+											hour12: true,
+									})
+									: "Start time not available"}
+							</span>
+							-
+							<span>
+								{event.endTime
+									? new Date(
+											event.endTime
+										).toLocaleTimeString([], {
+											hour: "2-digit",
+											minute: "2-digit",
+											hour12: true,
+										})
+									: "End time not available"}
 							</span>
 						</div>
 					</div>
@@ -103,18 +148,21 @@ const EventPage = () => {
 						{event.description || "No description provided"}
 					</p>
 
-					<span>
+					<span className="font-semibold">
 						Organized by: {event.organizerId?.name || "Unknown"}
 					</span>
 
-					<div className="flex space-x-4 mt-4">
-						<button
-							onClick={() => bookTicket(event._id)}
-							className="btn-primary"
-						>
-							Get Ticket
-						</button>
-					</div>
+					{/* Hide "Get Ticket" button if user is the event organizer */}
+					{user && user.id !== event.organizerId?._id && (
+						<div className="flex space-x-4 mt-4">
+							<button
+								onClick={() => bookTicket(event._id)}
+								className="btn-primary"
+							>
+								Get Ticket
+							</button>
+						</div>
+					)}
 				</div>
 			</div>
 		</div>
