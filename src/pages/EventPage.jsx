@@ -4,15 +4,17 @@ import { Calendar, MapPin, Users, Clock, Tag } from "lucide-react";
 import { format } from "date-fns";
 import axios from "axios";
 import { useAuth } from "../context/AuthContext";
+import moment from "moment-timezone";
 
 const EventPage = () => {
 	const { eventid } = useParams();
-	const { bookTicket, user } = useAuth(); // ✅ Extracting user
+	const { bookTicket, user } = useAuth();
 	const [event, setEvent] = useState(null);
-	const [error, setError] = useState(null); // ✅ Error state
+	const [error, setError] = useState(null);
+	const [currentTime, setCurrentTime] = useState(moment().tz("Asia/Kolkata")); // ✅ Current IST time
 
 	useEffect(() => {
-		let isMounted = true; // ✅ Prevents unnecessary state updates
+		let isMounted = true;
 
 		axios
 			.get(`http://localhost:5000/api/events/${eventid}`)
@@ -29,8 +31,14 @@ const EventPage = () => {
 				}
 			});
 
+		// Update current time every 30 seconds to check for event status
+		const interval = setInterval(() => {
+			setCurrentTime(moment().tz("Asia/Kolkata"));
+		}, 30000);
+
 		return () => {
-			isMounted = false; // Cleanup function
+			isMounted = false;
+			clearInterval(interval);
 		};
 	}, [eventid]);
 
@@ -55,6 +63,14 @@ const EventPage = () => {
 		);
 	}
 
+	// ✅ Convert event start and end times to IST
+	const eventStartTime = moment(event.startTime).tz("Asia/Kolkata");
+	const eventEndTime = moment(event.endTime).tz("Asia/Kolkata");
+
+	// ✅ Check if event has started or ended
+	const hasEventStarted = currentTime.isSameOrAfter(eventStartTime);
+	const hasEventEnded = currentTime.isSameOrAfter(eventEndTime);
+
 	return (
 		<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
 			<div className="bg-white rounded-xl shadow-lg overflow-hidden">
@@ -64,7 +80,7 @@ const EventPage = () => {
 						src={
 							event.image
 								? `http://localhost:5000/${event.image}`
-								: "/default-placeholder.jpg"
+								: "http://localhost:5000/uploads/default-placeholder.svg"
 						}
 						alt={event.title}
 						className="w-full h-full object-cover"
@@ -86,7 +102,7 @@ const EventPage = () => {
 									? format(
 											new Date(event.date),
 											"MMMM d, yyyy"
-										)
+									  )
 									: "No date available"}
 							</span>
 						</div>
@@ -122,11 +138,11 @@ const EventPage = () => {
 								{event.startTime
 									? new Date(
 											event.startTime
-										).toLocaleTimeString([], {
+									  ).toLocaleTimeString([], {
 											hour: "2-digit",
 											minute: "2-digit",
 											hour12: true,
-									})
+									  })
 									: "Start time not available"}
 							</span>
 							-
@@ -134,11 +150,11 @@ const EventPage = () => {
 								{event.endTime
 									? new Date(
 											event.endTime
-										).toLocaleTimeString([], {
+									  ).toLocaleTimeString([], {
 											hour: "2-digit",
 											minute: "2-digit",
 											hour12: true,
-										})
+									  })
 									: "End time not available"}
 							</span>
 						</div>
@@ -152,17 +168,31 @@ const EventPage = () => {
 						Organized by: {event.organizerId?.name || "Unknown"}
 					</span>
 
-					{/* Hide "Get Ticket" button if user is the event organizer */}
-					{user && user.id !== event.organizerId?._id && (
-						<div className="flex space-x-4 mt-4">
-							<button
-								onClick={() => bookTicket(event._id)}
-								className="btn-primary"
-							>
-								Get Ticket
-							</button>
-						</div>
-					)}
+					{/* Show event status */}
+					{hasEventEnded ? (
+						<p className="text-red-600 font-bold mt-4 text-lg">
+							⚠ Event has ended.
+						</p>
+					) : hasEventStarted ? (
+						<p className="text-yellow-500 font-bold mt-4 text-lg">
+							⚠ Event has started.
+						</p>
+					) : null}
+
+					{/* Hide "Get Ticket" button if event has started or ended */}
+					{!hasEventStarted &&
+						!hasEventEnded &&
+						user &&
+						user.id !== event.organizerId?._id && (
+							<div className="flex space-x-4 mt-4">
+								<button
+									onClick={() => bookTicket(event._id)}
+									className="btn-primary"
+								>
+									Get Ticket
+								</button>
+							</div>
+						)}
 				</div>
 			</div>
 		</div>

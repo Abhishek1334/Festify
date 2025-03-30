@@ -56,7 +56,7 @@ export default function Categories() {
 								className={`flex flex-col items-center p-5 rounded-xl transition-all duration-200 
 									transform hover:-translate-y-1 hover:shadow-lg hidden-section ${
 										isActive
-											? "bg-blue-500 text-white"
+											? "bg-blue-100 text-white"
 											: "hover:bg-gray-50"
 									}`}
 							>

@@ -1,8 +1,9 @@
 import Ticket from "../models/ticketModel.js";
 import Event from "../models/eventModel.js";
 import User from "../models/userModel.js";
-
 // 🎟️ Book a Ticket
+import moment from "moment-timezone";
+
 export const bookTicket = async (req, res) => {
 	try {
 		if (!req.user || !req.user.id) {
@@ -17,10 +18,31 @@ export const bookTicket = async (req, res) => {
 			return res.status(400).json({ message: "Event ID is required." });
 		}
 
-		// Fetch user details
-		const user = await User.findById(req.user.id);
-		if (!user) {
-			return res.status(404).json({ message: "User not found." });
+		// Fetch event details
+		const event = await Event.findById(eventId);
+		if (!event) {
+			return res.status(404).json({ message: "Event not found." });
+		}
+
+		// ✅ Convert event start & end time to IST for proper comparison
+		const currentTime = moment().tz("Asia/Kolkata"); // Current time in IST
+		const eventStartTime = moment(event.startTime).tz("Asia/Kolkata");
+		const eventEndTime = moment(event.endTime).tz("Asia/Kolkata");
+
+		// 🛑 Stop booking when event starts
+		if (currentTime.isSameOrAfter(eventStartTime)) {
+			return res
+				.status(400)
+				.json({ message: "Ticket sales closed. Event has started." });
+		}
+
+		// 🛑 Stop booking when event ends
+		if (currentTime.isSameOrAfter(eventEndTime)) {
+			return res
+				.status(400)
+				.json({
+					message: "Event has ended. No more tickets available.",
+				});
 		}
 
 		// Check if user already booked a ticket
@@ -36,15 +58,33 @@ export const bookTicket = async (req, res) => {
 				});
 		}
 
+		// Check event capacity
+		if (event.ticketsSold >= event.capacity) {
+			return res
+				.status(400)
+				.json({ message: "No more tickets available." });
+		}
+
+		// Fetch user details
+		const user = await User.findById(req.user.id);
+		if (!user) {
+			return res.status(404).json({ message: "User not found." });
+		}
+
 		// Generate QR Code Data
 		const qrCode = `https://api.qrserver.com/v1/create-qr-code/?data=${req.user.id}-${eventId}`;
 
+		// Create ticket
 		const ticket = await Ticket.create({
 			eventId,
 			userId: req.user.id,
-			userName: user.name, // ✅ Store username
+			userName: user.name,
 			qrCode,
 		});
+
+		// Increase ticket count
+		event.ticketsSold += 1;
+		await event.save();
 
 		res.status(201).json(ticket);
 	} catch (error) {
@@ -52,6 +92,9 @@ export const bookTicket = async (req, res) => {
 		res.status(500).json({ message: "Internal server error." });
 	}
 };
+
+
+
 
 // 🗂 Get User's Tickets
 export const getUserTickets = async (req, res) => {
@@ -82,7 +125,7 @@ export const getEventTickets = async (req, res) => {
 
 		// Get all tickets for the event
 		const tickets = await Ticket.find({ eventId }).select(
-			"userName checkedIn createdAt updatedAt qrCode userId eventId" 
+			"userName checkedIn createdAt updatedAt qrCode userId eventId"
 		);
 
 		res.status(200).json(tickets);
@@ -122,7 +165,6 @@ export const checkInTicket = async (req, res) => {
 };
 
 // ❌ Cancel a Ticket
-
 export const cancelTicket = async (req, res) => {
 	try {
 		const { ticketId } = req.params;
@@ -130,8 +172,6 @@ export const cancelTicket = async (req, res) => {
 
 		// Find the ticket
 		const ticket = await Ticket.findById(ticketId);
-
-		// Check if ticket exists
 		if (!ticket) {
 			return res.status(404).json({ message: "Ticket not found" });
 		}
@@ -143,8 +183,27 @@ export const cancelTicket = async (req, res) => {
 				.json({ message: "Unauthorized to cancel this ticket" });
 		}
 
-		// Delete the ticket
+		// Fetch the event and update ticketsSold atomically
+		const event = await Event.findById(ticket.eventId);
+		if (!event) {
+			return res.status(404).json({ message: "Event not found" });
+		}
+
+		// ❌ Delete the ticket first
 		await Ticket.findByIdAndDelete(ticketId);
+
+		// ✅ Atomically decrement ticketsSold (prevent negative values)
+		await Event.findByIdAndUpdate(
+			ticket.eventId,
+			{ $inc: { ticketsSold: -1 } },
+			{ new: true }
+		);
+
+		// Ensure ticketsSold is never negative
+		await Event.findByIdAndUpdate(
+			ticket.eventId,
+			{ $max: { ticketsSold: 0 } } // Ensures ticketsSold never goes below 0
+		);
 
 		res.status(200).json({ message: "Ticket canceled successfully" });
 	} catch (error) {
@@ -152,4 +211,3 @@ export const cancelTicket = async (req, res) => {
 		res.status(500).json({ message: "Internal server error" });
 	}
 };
-
