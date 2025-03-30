@@ -1,18 +1,25 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useContext } from "react";
 import axios from "axios";
 import PropTypes from "prop-types";
+import { AuthContext } from "../context/AuthContext"; // ✅ Use AuthContext for token
 
 const TicketCard = ({ ticket, onCancel }) => {
+	const { user } = useContext(AuthContext); // ✅ Get token from context
 	const [event, setEvent] = useState(null);
 	const [isCancelling, setIsCancelling] = useState(false);
 	const [successMessage, setSuccessMessage] = useState("");
 
+	// ✅ Ensure eventId is correctly extracted
+	const eventId = ticket.eventId?._id || ticket.eventId;
+
 	// Fetch event details
 	useEffect(() => {
 		const fetchEventDetails = async () => {
+			if (!eventId) return;
+
 			try {
 				const response = await axios.get(
-					`http://localhost:5000/api/events/${ticket.eventId._id}`
+					`http://localhost:5000/api/events/${eventId}`
 				);
 				setEvent(response.data);
 			} catch (error) {
@@ -20,23 +27,23 @@ const TicketCard = ({ ticket, onCancel }) => {
 			}
 		};
 
-		if (ticket.eventId?._id) {
-			fetchEventDetails();
-		}
-	}, [ticket.eventId?._id]);
+		fetchEventDetails();
+	}, [eventId]);
 
 	// Cancel ticket function
 	const handleCancelTicket = async () => {
-		if (!window.confirm("Are you sure you want to cancel this ticket?"))
+		if (!window.confirm("Are you sure you want to cancel this ticket?")) {
 			return;
+		}
 
 		setIsCancelling(true);
-		setSuccessMessage(""); // Reset the success message when the cancel action starts
+		setSuccessMessage("");
+
+		// ✅ Immediately remove ticket from UI before API request completes
+		onCancel(ticket._id);
 
 		try {
-			const token = localStorage.getItem("token"); // ✅ Retrieve token
-
-			if (!token) {
+			if (!user?.token) {
 				alert(
 					"⚠️ Authentication token is missing. Please log in again."
 				);
@@ -44,30 +51,31 @@ const TicketCard = ({ ticket, onCancel }) => {
 				return;
 			}
 
+			console.log(`🎟️ Cancelling Ticket ID: ${ticket._id}`);
+			console.log("📡 Sending Token:", user.token);
+
 			const response = await axios.delete(
 				`http://localhost:5000/api/tickets/cancel/${ticket._id}`,
 				{
 					headers: {
-						Authorization: `Bearer ${token}`, // ✅ Ensure correct format
+						Authorization: `Bearer ${user.token}`,
 						"Content-Type": "application/json",
 					},
 				}
 			);
 
-			// Check for success status code
+			console.log("✅ API Response:", response.data);
+
 			if (response.status === 200 || response.status === 204) {
-				console.log("✅ Ticket cancel response:", response.data);
 				setSuccessMessage("✅ Ticket cancelled successfully!");
-				onCancel(ticket._id); // Call the onCancel function passed from UserProfile
 			} else {
-				console.error(
-					"❌ Unexpected response status:",
-					response.status
-				);
+				console.error("❌ Unexpected Response:", response);
 				alert("⚠️ Failed to cancel ticket. Please try again.");
 			}
 		} catch (error) {
 			console.error("❌ Error cancelling ticket:", error);
+			console.log("📡 API Error Response:", error.response?.data);
+
 			alert(
 				error.response?.data?.message ||
 					"⚠️ Failed to cancel ticket. Please try again."
@@ -81,6 +89,8 @@ const TicketCard = ({ ticket, onCancel }) => {
 			}, 3000);
 		}
 	};
+
+
 
 	// Display loading message until event data is fetched
 	if (!event) return <p>Loading event details...</p>;

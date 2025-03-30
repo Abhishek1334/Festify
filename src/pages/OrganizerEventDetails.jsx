@@ -2,6 +2,7 @@ import { useEffect, useState, useContext } from "react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
 import { AuthContext } from "../context/AuthContext";
+import {Link} from 'react-router-dom';
 
 const OrganizerEventDetail = () => {
 	const { user } = useContext(AuthContext);
@@ -130,6 +131,27 @@ const OrganizerEventDetail = () => {
 		}
 	};
 
+	// ✅ Handle event deletion
+	const handleDelete = async () => {
+		if (!window.confirm("Are you sure you want to delete this event?"))
+			return;
+
+		try {
+			await axios.delete(`http://localhost:5000/api/events/${eventId}`, {
+				headers: { Authorization: `Bearer ${user.token}` },
+			});
+
+			alert("Event deleted successfully.");
+			window.location.href = "/organizer"; // Redirect to organizer panel
+		} catch (err) {
+			console.error(
+				"❌ Delete Error:",
+				err.response?.data || err.message
+			);
+			alert(err.response?.data?.message || "Failed to delete event.");
+		}
+	};
+
 	// ✅ Format Date and Time
 	const formatDate = (timestamp) => {
 		if (!timestamp) return "";
@@ -156,10 +178,20 @@ const OrganizerEventDetail = () => {
 
 	return (
 		<div className="max-w-4xl mx-auto py-10 px-5">
-			<button onClick={() => setIsEditing(true)} className="btn-primary">
-				Edit Event
-			</button>
-
+			<div className="flex gap-5 mb-2 ">
+				<Link to="/organizer" className="btn-primary ">
+					Return to Event Panel
+				</Link>
+				<button
+					onClick={() => setIsEditing(true)}
+					className="btn-primary"
+				>
+					Edit Event
+				</button>
+				<button onClick={handleDelete} className="bg-red-500 text-white px-5 py-2 rounded-xl font-semibold">
+					Delete Event
+				</button>
+			</div>
 			{/* ✅ Event Image */}
 			{imagePreview && (
 				<img
@@ -179,11 +211,25 @@ const OrganizerEventDetail = () => {
 				<strong>Date:</strong> {formatDate(event.date)}
 			</p>
 			<p>
-				<strong>Start Time:</strong> {formatTime(event.startTime)}
+				<strong>Start Time: </strong>
+				{new Date(event.startTime).toLocaleTimeString("en-IN", {
+					timeZone: "Asia/Kolkata",
+					hour: "2-digit",
+					minute: "2-digit",
+					hour12: true,
+				})}
 			</p>
+
 			<p>
-				<strong>End Time:</strong> {formatTime(event.endTime)}
+				<strong>End Time: </strong>
+				{new Date(event.endTime).toLocaleTimeString("en-IN", {
+					timeZone: "Asia/Kolkata",
+					hour: "2-digit",
+					minute: "2-digit",
+					hour12: true,
+				})}
 			</p>
+
 			<p>
 				<strong>Location:</strong> {event.location}
 			</p>

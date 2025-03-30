@@ -1,24 +1,16 @@
-import { Link } from "react-router-dom";
-import { Search, MapPin, Calendar } from "lucide-react";
+
 import { motion } from "framer-motion";
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import image1 from "../../assets/images/hero.jpg";
+import image2 from "../../assets/images/hero2.jpg";
+import image3 from "../../assets/images/hero3.jpg";
+import image4 from "../../assets/images/hero4.jpg";
+import image5 from "../../assets/images/hero5.jpg";
 
 export default function Hero() {
-	const [searchQuery, setSearchQuery] = useState("");
-	const [location, setLocation] = useState("");
-	const [date, setDate] = useState("");
-	const navigate = useNavigate();
 
-	const handleSearch = (e) => {
-		e.preventDefault();
-		const queryParams = new URLSearchParams();
-		if (searchQuery) queryParams.append("q", searchQuery);
-		if (location) queryParams.append("location", location);
-		if (date) queryParams.append("date", date);
-		navigate(`/events?${queryParams.toString()}`);
-		console.log(queryParams.toString());
-		};
+
+
+	const images = [image1, image2, image3, image4, image5];
 
 
 
@@ -113,81 +105,42 @@ export default function Hero() {
 							</div>
 						</motion.div>
 					</div>
+					<div className="relative w-96 h-72 mx-auto">
+						{/* Image 1 - Base */}
+						<img
+							src={images[0]}
+							alt="Image 1"
+							className="absolute w-100 h-60 transform -rotate-6 rounded-lg shadow-lg bottom-10 left-0"
+						/>
 
-					{/* Right Section - Search Box */}
-					<motion.div
-						className="grid grid-cols-1 md:grid-cols-1"
-						initial={{ opacity: 0, scale: 0 }}
-						animate={{ opacity: 1, scale: 1 }}
-						transition={{ duration: 1.5, ease: "easeOut" }}
-					>
-						<motion.div className="flex flex-col ">
-							<form
-								onSubmit={handleSearch}
-								className="bg-opacity-10 backdrop-blur-lg rounded-3xl p-6 bg-[#24157194] space-y-4 my-auto h-fit "
-							>
-								{/* Search Input */}
-								<div className="relative">
-									<Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+						{/* Image 2 - Slightly Overlapping */}
+						<img
+							src={images[1]}
+							alt="Image 2"
+							className="absolute w-60 h-60 rounded-lg shadow-lg top-8 left-80 z-10 transform rotate-6"
+						/>
 
-									<input
-										type="text"
-										placeholder="Search events..."
-										className="w-full bg-white text-gray-600 placeholder-gray-500 rounded-lg py-3 pl-12 pr-4 focus:ring-2 focus:ring-purple-500 focus:outline-none"
-										value={searchQuery}
-										onChange={(e) =>
-											setSearchQuery(e.target.value)
-										}
-									/>
-								</div>
+						{/* Image 3 - More Overlapping */}
+						<img
+							src={images[2]}
+							alt="Image 3"
+							className="absolute w-70 h-58 rounded-lg shadow-lg top-56 left-10 z-50 transform -rotate-8"
+						/>
 
-								{/* Location Input */}
-								<div className="relative">
-									<MapPin className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-									<input
-										type="text"
-										placeholder="Location"
-										className="w-full bg-white text-gray-600 placeholder-gray-500 rounded-lg py-3 pl-12 pr-4 focus:ring-2 focus:ring-purple-500 focus:outline-none"
-										value={location}
-										onChange={(e) =>
-											setLocation(e.target.value)
-										}
-									/>
-								</div>
+						{/* Image 4 - Positioned at Bottom */}
+						<img
+							src={images[3]}
+							alt="Image 4"
+							className="absolute w-80 h-80 rounded-lg shadow-lg top-50 left-60 z-50 transform rotate-5"
+						/>
 
-								{/* Date Input */}
-								<div className="relative">
-									<Calendar className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-									<input
-										type="date"
-										className="w-full bg-white text-gray-500 placeholder-gray-500 rounded-lg py-3 pl-12 pr-4 focus:ring-2 focus:ring-purple-500 focus:outline-none"
-										value={date}
-										onChange={(e) =>
-											setDate(e.target.value)
-										}
-									/>
-								</div>
-
-								{/* Search Button */}
-								<motion.div className="mt-4">
-									<motion.div
-										whileHover={{ scale: 1.05 }}
-										whileTap={{ scale: 0.95 }}
-										transition={{ duration: 0.2 }}
-									>
-										<button className="btn-primary mx-auto w-full">
-											<Link
-												to="/events"
-												
-											>
-												Find Events
-											</Link>
-										</button>
-									</motion.div>
-								</motion.div>
-							</form>
-						</motion.div>
-					</motion.div>
+						{/* Image 5 - On Top Right */}
+						<img
+							src={images[4]}
+							alt="Image 5"
+							className="absolute w-36 h-36 rounded-lg shadow-lg bottom-4 right-4 z-40 transform -rotate-6"
+						/>
+					</div>
 				</div>
 			</div>
 		</section>
