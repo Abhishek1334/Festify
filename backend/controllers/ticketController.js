@@ -122,6 +122,7 @@ export const checkInTicket = async (req, res) => {
 };
 
 // ❌ Cancel a Ticket
+
 export const cancelTicket = async (req, res) => {
 	try {
 		const { ticketId } = req.params;

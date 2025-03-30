@@ -63,12 +63,50 @@ const UserProfile = () => {
 	}, [user]);
 
 	// ✅ Define handleCancelTicket function
-	const handleCancelTicket = (ticketId) => {
+	const handleCancelTicket = async (ticketId) => {
+		if (!user?.token) {
+			alert("You are not logged in. Please log in again.");
+			return;
+		}
+
+		console.log(`🛠️ Canceling ticket: ${ticketId}`);
+		console.log("📡 Sending token:", user.token);
+
+		// ✅ Immediately remove ticket from state to prevent UI delay issue
 		setRsvpEvents((prev) =>
 			prev.filter((ticket) => ticket._id !== ticketId)
 		);
-		alert("Ticket canceled successfully!");
+
+		try {
+			const response = await fetch(
+				`http://localhost:5000/api/tickets/cancel/${ticketId}`,
+				{
+					method: "DELETE",
+					headers: {
+						"Content-Type": "application/json",
+						Authorization: `Bearer ${user.token}`,
+					},
+				}
+			);
+
+			console.log("📡 Response status:", response.status);
+
+			if (!response.ok) {
+				const errorData = await response.json();
+				throw new Error(
+					errorData?.message || "Failed to cancel ticket"
+				);
+			}
+
+			alert("🎟️ Ticket canceled successfully!");
+		} catch (error) {
+			console.error("🚨 Error canceling ticket:", error);
+			alert(error.message);
+		}
 	};
+
+
+
 
 	return (
 		<div className="max-w-7xl mx-auto py-10 px-5">

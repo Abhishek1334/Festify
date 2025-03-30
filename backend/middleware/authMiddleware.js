@@ -3,6 +3,8 @@ import User from "../models/userModel.js";
 import process from "process";
 export const protect = async (req, res, next) => {
 	let token;
+	console.log("Headers received:", req.headers); // ✅ Log headers
+	console.log("Authorization Header:", req.headers.authorization); // ✅ Log token header
 	if (
 		req.headers.authorization &&
 		req.headers.authorization.startsWith("Bearer")
