@@ -105,42 +105,7 @@ export default function Hero() {
 							</div>
 						</motion.div>
 					</div>
-					<div className="relative w-96 h-72 mx-auto">
-						{/* Image 1 - Base */}
-						<img
-							src={images[0]}
-							alt="Image 1"
-							className="absolute w-100 h-60 transform -rotate-6 rounded-lg shadow-lg bottom-10 left-0"
-						/>
-
-						{/* Image 2 - Slightly Overlapping */}
-						<img
-							src={images[1]}
-							alt="Image 2"
-							className="absolute w-60 h-60 rounded-lg shadow-lg top-8 left-80 z-10 transform rotate-6"
-						/>
-
-						{/* Image 3 - More Overlapping */}
-						<img
-							src={images[2]}
-							alt="Image 3"
-							className="absolute w-70 h-58 rounded-lg shadow-lg top-56 left-10 z-50 transform -rotate-8"
-						/>
-
-						{/* Image 4 - Positioned at Bottom */}
-						<img
-							src={images[3]}
-							alt="Image 4"
-							className="absolute w-80 h-80 rounded-lg shadow-lg top-50 left-60 z-50 transform rotate-5"
-						/>
-
-						{/* Image 5 - On Top Right */}
-						<img
-							src={images[4]}
-							alt="Image 5"
-							className="absolute w-36 h-36 rounded-lg shadow-lg bottom-4 right-4 z-40 transform -rotate-6"
-						/>
-					</div>
+					
 				</div>
 			</div>
 		</section>

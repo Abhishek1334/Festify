@@ -35,6 +35,7 @@ const OrganizerEventDetail = () => {
 						`http://localhost:5000/uploads/${data.image}`
 					);
 				}
+
 			} catch (err) {
 				setError(err.response?.data?.message || "An error occurred");
 			} finally {
@@ -48,11 +49,17 @@ const OrganizerEventDetail = () => {
 	// ✅ Handle input changes (Ensure proper formatting)
 	const handleChange = (e) => {
 		const { name, value } = e.target;
+
 		setEditEvent((prev) => ({
 			...prev,
-			[name]: name === "capacity" ? Number(value) || "" : value,
+			[name]: name.includes("Time")
+				? value
+				: name === "capacity"
+				? Number(value) || ""
+				: value,
 		}));
 	};
+
 
 	// ✅ Handle image change
 	const handleImageChange = (e) => {
@@ -83,20 +90,17 @@ const OrganizerEventDetail = () => {
 				}
 			});
 
-			// ✅ Fix: Ensure correct date and time format
+			// ✅ Ensure correct date format before sending to API
 			if (date) {
-				formData.append(
-					"date",
-					new Date(date).toISOString().split("T")[0]
-				); // YYYY-MM-DD
+				formData.append("date", date); // No need for conversion
 			}
 
-			// ✅ Format time properly
+			// ✅ Ensure proper time format
 			if (startTime) {
-				formData.append("startTime", `${date}T${startTime}:00`);
+				formData.append("startTime", startTime); // HH:mm format
 			}
 			if (endTime) {
-				formData.append("endTime", `${date}T${endTime}:00`);
+				formData.append("endTime", endTime); // HH:mm format
 			}
 
 			// ✅ Ensure capacity is a number
@@ -161,13 +165,17 @@ const OrganizerEventDetail = () => {
 
 	const formatTime = (timestamp) => {
 		if (!timestamp) return "";
-		if (typeof timestamp === "string" && timestamp.match(/^\d{2}:\d{2}$/))
-			return timestamp;
+
+		// If already in HH:mm format, return it
+		if (/^\d{2}:\d{2}$/.test(timestamp)) return timestamp;
+
 		const date = new Date(timestamp);
 		return isNaN(date.getTime())
 			? ""
-			: date.toISOString().split("T")[1].slice(0, 5); // HH:mm
+			: date.toISOString().substring(11, 16); // Extract HH:mm
 	};
+
+
 
 	// ✅ Loading & Error States
 	if (loading) return <p className="text-center text-gray-500">Loading...</p>;
@@ -188,18 +196,23 @@ const OrganizerEventDetail = () => {
 				>
 					Edit Event
 				</button>
-				<button onClick={handleDelete} className="bg-red-500 text-white px-5 py-2 rounded-xl font-semibold">
+				<button
+					onClick={handleDelete}
+					className="bg-red-500 text-white px-5 py-2 rounded-xl font-semibold"
+				>
 					Delete Event
 				</button>
 			</div>
 			{/* ✅ Event Image */}
-			{imagePreview && (
-				<img
-					src={`http://localhost:5000/${event.image}`}
-					alt={event.title}
-					className="w-full h-64 object-cover rounded-lg mb-4"
-				/>
-			)}
+			<img
+				src={
+					event.image
+						? `http://localhost:5000/${event.image}`
+						: "http://localhost:5000/default-placeholder.svg"
+				}
+				alt={event.title}
+				className="w-full h-64 object-cover rounded-lg mb-4"
+			/>
 
 			{/* ✅ Event Details */}
 			<h1 className="text-3xl font-bold mb-2">{event.title}</h1>
@@ -211,23 +224,12 @@ const OrganizerEventDetail = () => {
 				<strong>Date:</strong> {formatDate(event.date)}
 			</p>
 			<p>
-				<strong>Start Time: </strong>
-				{new Date(event.startTime).toLocaleTimeString("en-IN", {
-					timeZone: "Asia/Kolkata",
-					hour: "2-digit",
-					minute: "2-digit",
-					hour12: true,
-				})}
+				<strong>Start Time: </strong> value=
+				{editEvent?.startTime ? formatTime(editEvent.startTime) : ""}
 			</p>
-
 			<p>
-				<strong>End Time: </strong>
-				{new Date(event.endTime).toLocaleTimeString("en-IN", {
-					timeZone: "Asia/Kolkata",
-					hour: "2-digit",
-					minute: "2-digit",
-					hour12: true,
-				})}
+				<strong>End Time: </strong> value=
+				{editEvent?.endTime ? formatTime(editEvent.endTime) : ""}
 			</p>
 
 			<p>
@@ -299,6 +301,17 @@ const OrganizerEventDetail = () => {
 							onChange={handleChange}
 							className="w-full mb-3 p-2 border rounded"
 							placeholder="Capacity"
+						/>
+						<img
+							src={
+								imagePreview ||
+								`http://localhost:5000/${event.image.replace(
+									/^uploads\//,
+									""
+								)}`
+							}
+							alt="No image selected"
+							className="w-full h-64 object-cover rounded-lg mb-4"
 						/>
 
 						<input
