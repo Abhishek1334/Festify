@@ -5,6 +5,7 @@ import {
 	getEventTickets,
 	checkInTicket,
 	cancelTicket,
+	verifyTicket
 } from "../controllers/ticketController.js";
 import { protect } from "../middleware/authMiddleware.js";
 
@@ -24,5 +25,7 @@ router.post("/check-in", protect, checkInTicket);
 
 // ❌ Cancel a Ticket
 router.delete("/cancel/:ticketId", protect, cancelTicket);
+
+router.post("/verify", protect, verifyTicket);
 
 export default router;

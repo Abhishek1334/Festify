@@ -1,8 +1,17 @@
 import Ticket from "../models/ticketModel.js";
 import Event from "../models/eventModel.js";
 import User from "../models/userModel.js";
-// 🎟️ Book a Ticket
 import moment from "moment-timezone";
+import crypto from "crypto";
+
+const generateRFID = () => {
+	const buffer = crypto.randomBytes(4); // Generate 4 random bytes
+	return buffer
+		.toString("hex")
+		.toUpperCase()
+		.match(/.{1,2}/g)
+		.join(" "); // Convert to hex & format
+};
 
 export const bookTicket = async (req, res) => {
 	try {
@@ -38,11 +47,9 @@ export const bookTicket = async (req, res) => {
 
 		// 🛑 Stop booking when event ends
 		if (currentTime.isSameOrAfter(eventEndTime)) {
-			return res
-				.status(400)
-				.json({
-					message: "Event has ended. No more tickets available.",
-				});
+			return res.status(400).json({
+				message: "Event has ended. No more tickets available.",
+			});
 		}
 
 		// Check if user already booked a ticket
@@ -51,11 +58,9 @@ export const bookTicket = async (req, res) => {
 			userId: req.user.id,
 		});
 		if (existingTicket) {
-			return res
-				.status(400)
-				.json({
-					message: "You already booked a ticket for this event.",
-				});
+			return res.status(400).json({
+				message: "You already booked a ticket for this event.",
+			});
 		}
 
 		// Check event capacity
@@ -71,18 +76,28 @@ export const bookTicket = async (req, res) => {
 			return res.status(404).json({ message: "User not found." });
 		}
 
-		// Generate QR Code Data
-		const qrCode = `https://api.qrserver.com/v1/create-qr-code/?data=${req.user.id}-${eventId}`;
+		// ✅ Generate Unique RFID (Retry if Duplicate)
+		let rfid;
+		let isUnique = false;
+		while (!isUnique) {
+			rfid = generateRFID();
+			const existingRFID = await Ticket.findOne({ rfid });
+			if (!existingRFID) isUnique = true;
+		}
 
-		// Create ticket
+		// ✅ Generate QR Code with Embedded RFID & Ticket ID
+		const qrCode = `https://api.qrserver.com/v1/create-qr-code/?data=${req.user.id}-${eventId}-RFID:${rfid}`;
+
+		// ✅ Create Ticket with RFID
 		const ticket = await Ticket.create({
 			eventId,
 			userId: req.user.id,
 			userName: user.name,
 			qrCode,
+			rfid,
 		});
 
-		// Increase ticket count
+		// ✅ Increase ticket count
 		event.ticketsSold += 1;
 		await event.save();
 
@@ -92,7 +107,6 @@ export const bookTicket = async (req, res) => {
 		res.status(500).json({ message: "Internal server error." });
 	}
 };
-
 
 
 
@@ -138,31 +152,58 @@ export const getEventTickets = async (req, res) => {
 // ✅ Check-In a Ticket
 export const checkInTicket = async (req, res) => {
 	try {
-		const { ticketId } = req.body;
+		const { ticketId, rfid, eventId } = req.body; // Accept both RFID and Ticket ID
 
-		// Find the ticket by ID
-		const ticket = await Ticket.findById(ticketId);
+		// ✅ Ensure at least one identifier is provided
+		if (!ticketId && !rfid) {
+			return res.status(400).json({
+				message:
+					"⚠️ Please provide either Ticket ID or RFID for check-in.",
+			});
+		}
+
+		// ✅ Find the ticket by either Ticket ID or RFID
+		const ticket = await Ticket.findOne({
+			$or: [{ _id: ticketId }, { rfid }],
+		});
+
 		if (!ticket) {
-			return res.status(404).json({ message: "Ticket not found" });
+			return res.status(404).json({
+				message: "❌ Ticket not found. Please check the ID or RFID.",
+			});
 		}
 
-		// Check if already checked in
+		// ✅ Ensure the ticket belongs to the correct event
+		if (ticket.event.toString() !== eventId) {
+			return res.status(400).json({
+				message: "⚠️ This ticket does not belong to this event.",
+			});
+		}
+
+		// ✅ Check if the ticket has already been checked in
 		if (ticket.checkedIn) {
-			return res
-				.status(400)
-				.json({ message: "Ticket already checked in" });
+			return res.status(400).json({
+				message: "⚠️ Ticket has already been checked in.",
+			});
 		}
 
-		// Mark ticket as checked in
+		// ✅ Mark ticket as checked in
 		ticket.checkedIn = true;
 		await ticket.save();
 
-		res.status(200).json({ message: "Check-in successful", ticket });
+		res.status(200).json({
+			message: "✅ Check-in successful.",
+			ticket,
+		});
 	} catch (error) {
-		console.error("Error during check-in:", error);
-		res.status(500).json({ message: "Internal server error" });
+		console.error("🚨 Error during check-in:", error);
+		res.status(500).json({
+			message: "❌ Internal server error. Please try again.",
+		});
 	}
 };
+
+
 
 // ❌ Cancel a Ticket
 export const cancelTicket = async (req, res) => {
@@ -209,5 +250,76 @@ export const cancelTicket = async (req, res) => {
 	} catch (error) {
 		console.error("Error canceling ticket:", error);
 		res.status(500).json({ message: "Internal server error" });
+	}
+};
+
+
+// ✅ Ticket Verification API
+export const verifyTicket = async (req, res) => {
+	try {
+		const { rfid, ticketId, eventId } = req.body;
+
+		if (!eventId) {
+			return res.status(400).json({ message: "Event ID is required." });
+		}
+
+		// 🔹 Fetch event details using eventId
+		const event = await Event.findById(eventId);
+		if (!event) {
+			return res.status(404).json({ message: "Event not found." });
+		}
+
+		// ✅ Convert event start & end time to IST for proper comparison
+		const currentTime = moment().tz("Asia/Kolkata"); // Current time in IST
+		const eventStartTime = moment(event.startTime).tz("Asia/Kolkata");
+		const eventEndTime = moment(event.endTime).tz("Asia/Kolkata");
+
+		// 🛑 Ticket scanned too early (Before Event Start)
+		if (currentTime.isBefore(eventStartTime)) {
+			return res
+				.status(400)
+				.json({ message: "Event has not started yet." });
+		}
+
+		// 🛑 Ticket scanned too late (After Event End)
+		if (currentTime.isAfter(eventEndTime)) {
+			return res
+				.status(400)
+				.json({ message: "Ticket expired. Event has ended." });
+		}
+
+		let ticket;
+
+		// 🎫 Method 1: Verify by RFID
+		if (rfid) {
+			ticket = await Ticket.findOne({ rfid, eventId });
+		}
+		// 🎫 Method 2 & 3: Verify by Ticket ID (QR Code / Manual Entry)
+		else if (ticketId) {
+			ticket = await Ticket.findOne({ _id: ticketId, eventId });
+		} else {
+			return res
+				.status(400)
+				.json({ message: "Provide RFID or Ticket ID." });
+		}
+
+		if (!ticket) {
+			return res
+				.status(404)
+				.json({ message: "Invalid Ticket. Not found." });
+		}
+
+		// ✅ Mark ticket as checked-in
+		if (!ticket.checkedIn) {
+			ticket.checkedIn = true;
+			await ticket.save();
+		}
+
+		return res
+			.status(200)
+			.json({ message: "Ticket Verified Successfully!", ticket });
+	} catch (error) {
+		console.error("Ticket verification error:", error);
+		res.status(500).json({ message: "Internal Server Error." });
 	}
 };

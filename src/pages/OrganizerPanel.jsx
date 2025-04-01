@@ -32,21 +32,38 @@ const OrganizerPanel = () => {
 	}, [user]);
 
 	return (
-		<div className="max-w-7xl mx-auto py-10 px-5">
-			<h2 className="text-3xl font-bold mb-4">Organizer Panel</h2>
+		<div className="max-w-7xl mx-auto py-10 px-6 sm:px-8">
+			{/* Header */}
+			<h2 className="text-4xl font-bold text-gray-800 mb-6">
+				Organizer Panel
+			</h2>
 
-			<div className="bg-white shadow-md rounded-lg p-6">
-				<p className="text-lg">
-					<strong>Organizer Name:</strong> {user.name}
-				</p>
-				<p className="text-lg">
-					<strong>Number of Events:</strong> {events.length}
-				</p>
+			{/* Organizer Info */}
+			<div className="bg-white shadow-lg rounded-lg p-6 mb-8 flex items-center justify-between space-x-4">
+				<div>
+					<p className="text-xl font-semibold text-gray-800">
+						<strong>Organizer Name:</strong> {user.name}
+					</p>
+					<p className="text-lg text-gray-600 mt-2">
+						<strong>Number of Events:</strong> {events.length}
+					</p>
+				</div>
+				{/* Organizer Image or Icon */}
+				<div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center">
+					{/* Placeholder for Profile Picture */}
+					<span className="text-2xl font-semibold text-gray-700">
+						{user.name[0]}
+					</span>
+				</div>
 			</div>
 
-			<h3 className="text-2xl font-semibold mt-6">My Created Events</h3>
+			{/* My Events Section */}
+			<h3 className="text-3xl font-semibold text-gray-800 mb-4">
+				My Created Events
+			</h3>
 
-			<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mt-4">
+			{/* Event Cards */}
+			<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
 				{events.length > 0 ? (
 					events.map((event) => (
 						<EventCard
@@ -56,7 +73,9 @@ const OrganizerPanel = () => {
 						/>
 					))
 				) : (
-					<p>No events found</p>
+					<p className="col-span-full text-center text-lg text-gray-500">
+						No events found
+					</p>
 				)}
 			</div>
 		</div>

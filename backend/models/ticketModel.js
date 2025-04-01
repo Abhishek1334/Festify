@@ -12,6 +12,7 @@ const ticketSchema = new mongoose.Schema(
 			ref: "Event",
 			required: true,
 		},
+		rfid: { type: String, required: true, unique: true },
 		userName: {
 			// ✅ Store user name
 			type: String,

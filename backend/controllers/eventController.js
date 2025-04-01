@@ -133,12 +133,17 @@ export const updateEvent = async (req, res) => {
 		event.title = title || event.title;
 		event.description = description || event.description;
 		event.category = category || event.category;
-		const isValidDate = (date) => !isNaN(new Date(date).getTime());
-
-if (date && isValidDate(date)) event.date = new Date(date);
-if (startTime && isValidDate(startTime)) event.startTime = new Date(startTime);
-if (endTime && isValidDate(endTime)) event.endTime = new Date(endTime);
-
+		
+		// Debug logs
+		console.log("Received date:", date);
+		console.log("Received startTime:", startTime);
+		console.log("Received endTime:", endTime);
+		
+		// Handle date and time updates
+		if (date) event.date = new Date(date);
+		if (startTime) event.startTime = new Date(startTime);
+		if (endTime) event.endTime = new Date(endTime);
+		
 		event.location = location || event.location;
 
 		// ✅ Fix: Ensure capacity is updated
@@ -155,15 +160,20 @@ if (endTime && isValidDate(endTime)) event.endTime = new Date(endTime);
 			event.image = `uploads/${req.file.filename}`;
 		}
 
+		// Debug log
+		console.log("Saving event with dates:", {
+			date: event.date,
+			startTime: event.startTime,
+			endTime: event.endTime
+		});
 
 		await event.save();
 		res.json(event);
 	} catch (err) {
 		console.error("Update Event Error:", err);
-		res.status(500).json({ message: "Server error" });
+		res.status(500).json({ message: "Server error", error: err.message });
 	}
 };
-
 
 
 // Delete an event
