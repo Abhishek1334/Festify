@@ -1,12 +1,13 @@
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import PropTypes from "prop-types";
 import categories from "../categories.json";
 import * as LucideIcons from "lucide-react";
 import { useState } from "react";
 
-export default function Categories() {
+export default function Categories({ isHomepage }) {
 	const [isShowMore, setIsShowMore] = useState(false);
 	const [searchParams, setSearchParams] = useSearchParams();
+	const navigate = useNavigate();
 
 	// Get current selected category from URL params
 	const selectedCategory = searchParams.get("category") || "";
@@ -22,17 +23,26 @@ export default function Categories() {
 		? categoriesWithIcons
 		: categoriesWithIcons.slice(0, 8);
 
-	// ✅ Update search params when a category is clicked
+	// ✅ Handle category selection
 	const handleCategorySelect = (category) => {
-		setSearchParams((prevParams) => {
-			const newParams = new URLSearchParams(prevParams);
-			if (category === selectedCategory) {
-				newParams.delete("category"); // Clear category if clicked again
-			} else {
-				newParams.set("category", category);
-			}
-			return newParams;
-		});
+		if (isHomepage) {
+			// Redirect to Events page with the selected category
+			navigate(`/events?category=${category}`, { replace: true });
+		} else {
+			// Stay on the Events page and update URL params
+			setSearchParams((prevParams) => {
+				const newParams = new URLSearchParams(prevParams);
+				if (category === selectedCategory) {
+					newParams.delete("category"); // Clear category if clicked again
+				} else {
+					newParams.set("category", category);
+				}
+				return newParams;
+			});
+
+			// ✅ Force reload by navigating to the same URL again
+			navigate(`/events?category=${category}`, { replace: true });
+		}
 	};
 
 	return (
@@ -56,7 +66,7 @@ export default function Categories() {
 								className={`flex flex-col items-center p-5 rounded-xl transition-all duration-200 
 									transform hover:-translate-y-1 hover:shadow-lg hidden-section ${
 										isActive
-											? "bg-blue-100 text-white"
+											? "bg-gray-100 text-white"
 											: "hover:bg-gray-50"
 									}`}
 							>

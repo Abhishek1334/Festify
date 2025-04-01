@@ -12,9 +12,9 @@ import ScrollToTop from "./components/ScrollToTop";
 import CreateEvents from "./pages/CreateEvents";
 import { AuthProvider } from "./context/AuthProvider";
 import OrganizerAdmin from "./pages/OrganizerPanel";
-import OrganizerEventDetails from "./pages/OrganizerEventDetails";
+import EventDetails from "./pages/EventDetails";
 import PrivateRoute from "./components/Auth/PrivateRoute";
-
+import TicketCheckIn from "./pages/TicketCheckIn";
 
 export default function App() {
 
@@ -44,7 +44,7 @@ export default function App() {
 							/>
 							<Route
 								path="/organizer/:eventId"
-								element={<OrganizerEventDetails />}
+								element={<EventDetails />}
 							/>
 
 							<Route
@@ -54,6 +54,10 @@ export default function App() {
 							<Route
 								path="/user-profile"
 								element={<UserProfile />}
+							/>
+							<Route 
+								path="/events/checkin/:eventId"
+								element={<TicketCheckIn/>}
 							/>
 						</Route>
 

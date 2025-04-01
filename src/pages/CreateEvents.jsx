@@ -28,7 +28,6 @@ const CreateEvents = () => {
 	const handleFileChange = (e) => {
 		const file = e.target.files[0];
 		if (file) {
-			console.log("📸 Selected file:", file);
 			setImage(file);
 		}
 	};
@@ -87,8 +86,6 @@ const CreateEvents = () => {
 			eventData.append("organizerId", organizerId);
 			eventData.append("organizerName", organizerName);
 
-			console.log("📤 Sending event data:", eventData);
-
 			const apiUrl = import.meta.env.VITE_API_URL
 				? `${import.meta.env.VITE_API_URL}/events`
 				: "http://localhost:5000/api/events";
@@ -102,10 +99,6 @@ const CreateEvents = () => {
 
 			navigate("/events");
 		} catch (err) {
-			console.error(
-				"❌ Error creating event:",
-				err.response?.data || err
-			);
 			setError(err.response?.data?.message || "Error creating event");
 		} finally {
 			setLoading(false);
@@ -114,12 +107,14 @@ const CreateEvents = () => {
 
 	return (
 		<div className="bg-gradient-to-br from-purple-500 to-indigo-300 min-h-[82vh] flex items-center justify-center py-8">
-			<div className="max-w-[35vw] mx-auto p-6 shadow-black shadow-sm rounded-lg bg-gray-100">
-				<h2 className="text-2xl font-semibold mb-4 w-[50vw]">
+			<div className="max-w-3xl mx-auto p-8 shadow-xl rounded-lg bg-white">
+				<h2 className="text-3xl font-semibold text-center mb-6">
 					Create Event
 				</h2>
-				{error && <p className="text-red-500">{error}</p>}
-				<form onSubmit={handleSubmit} className="grid gap-4">
+				{error && (
+					<p className="text-red-500 text-center mb-4">{error}</p>
+				)}
+				<form onSubmit={handleSubmit} className="grid gap-6">
 					<input
 						type="text"
 						name="title"
@@ -145,32 +140,34 @@ const CreateEvents = () => {
 						required
 						className="inputbox"
 					/>
-					<label>
-						Start Time
-						<input
-							type="time"
-							name="startTime"
-							value={formData.startTime}
-							onChange={handleChange}
-							required
-							className="inputbox"
-						/>
-					</label>
-					<label>
-						End Time
-						<input
-							type="time"
-							name="endTime"
-							value={formData.endTime}
-							onChange={handleChange}
-							required
-							className="inputbox"
-						/>
-					</label>
+					<div className="grid grid-cols-2 gap-4">
+						<label className="w-full">
+							Start Time
+							<input
+								type="time"
+								name="startTime"
+								value={formData.startTime}
+								onChange={handleChange}
+								required
+								className="inputbox"
+							/>
+						</label>
+						<label className="w-full">
+							End Time
+							<input
+								type="time"
+								name="endTime"
+								value={formData.endTime}
+								onChange={handleChange}
+								required
+								className="inputbox"
+							/>
+						</label>
+					</div>
 					<input
 						type="text"
 						name="location"
-						placeholder="Location"
+						placeholder="Event Location"
 						value={formData.location}
 						onChange={handleChange}
 						required
@@ -213,7 +210,7 @@ const CreateEvents = () => {
 					</label>
 					<button
 						type="submit"
-						className="btn-primary mt-2"
+						className="btn-primary mt-4 w-full"
 						disabled={loading}
 					>
 						{loading ? "Creating Event..." : "Create Event"}
