@@ -132,12 +132,12 @@ const TicketCheckInPage = () => {
 			{event ? (
 				<div className="flex flex-wrap gap-5 max-lg:flex-col ">
 					{/* Event Details */}
-					<div className="flex-1 p-5 border  border-gray-300 space-y-3 max-h-[80vh]">
+					<div className="flex-1 p-5 border  border-gray-300 space-y-3 min-h-[30vh">
 						<h2 className="font-bold">{event.title}</h2>
 						<p className="text-sm">Event ID: {event._id}</p>
 
 						{/* Live, Upcoming, or Ended Status */}
-						<div className="flex items-center gap-1">
+						<div className="flex items-center gap-1 ">
 							{dayjs().isBefore(dayjs(event.startTime)) ? (
 								<>
 									<span className="text-blue-500">🔵</span>
