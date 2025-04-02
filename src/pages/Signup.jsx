@@ -1,41 +1,53 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { useAuth } from "../context/AuthContext"; 
+import { useAuth } from "../context/AuthContext";
 import { Mail, Lock, User } from "lucide-react";
 import logo from "../assets/images/logo.png";
+import { toast, ToastContainer } from "react-toastify";
 
 export default function Signup() {
 	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
 	const [username, setUsername] = useState("");
-	const { signup } = useAuth(); 
+	const { signup } = useAuth();
 	const navigate = useNavigate();
 
 	const handleSubmit = async (e) => {
 		e.preventDefault();
-		const success = await signup(username, email, password); 
-		if (success) {
-			alert("Signup Successful!");
-			navigate("/user-profile");
-		} else {
-			alert("Signup Failed. Please try again.");
+		try {
+			const response = await signup(username, email, password);
+
+			if (response?.success) {
+				toast.success("Signup successful!");
+				navigate("/user-profile");
+			} else {
+				toast.error(
+					response?.message || "Signup failed. Please try again."
+				);
+			}
+		} catch (error) {
+			console.error("Signup Error:", error);
+			toast.error("An error occurred. Please try again.");
 		}
 	};
 
 	return (
 		<div className="min-h-screen bg-gradient-to-br from-purple-600 to-indigo-700 py-12 px-4 sm:px-6 lg:px-8 flex items-center">
-			<div className="max-w-md w-full mx-auto space-y-8 bg-white rounded-2xl shadow-2xl p-10 ">
+			<ToastContainer position="top-right" autoClose={3000} />
+			<div className="max-w-md w-full mx-auto space-y-8 bg-white rounded-2xl shadow-2xl p-10">
 				<div className="text-center">
-					<div className="flex justify-center">
-						<img src={logo} alt="Logo" className="h-16 w-auto" />
-					</div>
+					<img
+						src={logo}
+						alt="Logo"
+						className="h-16 w-auto mx-auto"
+					/>
 					<h2 className="mt-6 text-3xl font-extrabold text-gray-900">
 						Create your account
 					</h2>
 					<p className="mt-2 text-sm text-gray-600">
 						Already have an account?{" "}
 						<Link
-							to="/signup"
+							to="/login"
 							className="font-medium text-purple-600 hover:text-purple-500"
 						>
 							Sign in
@@ -45,74 +57,43 @@ export default function Signup() {
 
 				<form className="mt-8 space-y-6" onSubmit={handleSubmit}>
 					<div className="space-y-4">
-						<div>
-							<label htmlFor="username" className="sr-only">
-								Username
-							</label>
-							<div className="relative">
-								<div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-									<User className="h-5 w-5 text-gray-400 " />
-								</div>
-								<input
-									id="username"
-									name="username"
-									type="text"
-									required
-									value={username}
-									onChange={(e) =>
-										setUsername(e.target.value)
-									}
-									className="input-field pl-20"
-									placeholder="Username"
-									autoComplete="username"
-								/>
-							</div>
+						<div className="relative">
+							<User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+							<input
+								type="text"
+								value={username}
+								onChange={(e) => setUsername(e.target.value)}
+								required
+								placeholder="Username"
+								className="input-field pl-10"
+								autoComplete="username"
+							/>
 						</div>
 
-						<div>
-							<label htmlFor="email" className="sr-only ">
-								Email address
-							</label>
-							<div className="relative">
-								<div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-									<Mail className="h-5 w-5 text-gray-400 " />
-								</div>
-								<input
-									id="email"
-									name="email"
-									type="email"
-									required
-									value={email}
-									onChange={(e) => setEmail(e.target.value)}
-									className="input-field pl-20"
-									placeholder="Email address"
-									autoComplete="email"
-								/>
-							</div>
+						<div className="relative">
+							<Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+							<input
+								type="email"
+								value={email}
+								onChange={(e) => setEmail(e.target.value)}
+								required
+								placeholder="Email address"
+								className="input-field pl-10"
+								autoComplete="email"
+							/>
 						</div>
 
-						<div>
-							<label htmlFor="password" className="sr-only">
-								Password
-							</label>
-							<div className="relative ">
-								<div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-									<Lock className="h-5 w-5 text-gray-400" />
-								</div>
-								<input
-									id="password"
-									name="password"
-									type="password"
-									required
-									value={password}
-									onChange={(e) =>
-										setPassword(e.target.value)
-									}
-									className="input-field "
-									placeholder="Password"
-									autoComplete="current-password"
-								/>
-							</div>
+						<div className="relative">
+							<Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+							<input
+								type="password"
+								value={password}
+								onChange={(e) => setPassword(e.target.value)}
+								required
+								placeholder="Password"
+								className="input-field pl-10"
+								autoComplete="current-password"
+							/>
 						</div>
 					</div>
 
@@ -120,7 +101,7 @@ export default function Signup() {
 						type="submit"
 						className="btn-primary w-full flex justify-center items-center"
 					>
-						Sign in
+						Sign up
 					</button>
 				</form>
 			</div>

@@ -259,43 +259,41 @@ export const verifyTicket = async (req, res) => {
 	try {
 		const { rfid, ticketId, eventId } = req.body;
 
+		// ✅ Ensure eventId is provided
 		if (!eventId) {
 			return res.status(400).json({ message: "Event ID is required." });
 		}
 
-		// 🔹 Fetch event details using eventId
+		// ✅ Fetch event details
 		const event = await Event.findById(eventId);
 		if (!event) {
 			return res.status(404).json({ message: "Event not found." });
 		}
 
-		// ✅ Convert event start & end time to IST for proper comparison
-		const currentTime = moment().tz("Asia/Kolkata"); // Current time in IST
+		// ✅ Convert event times to IST
+		const currentTime = moment().tz("Asia/Kolkata");
 		const eventStartTime = moment(event.startTime).tz("Asia/Kolkata");
 		const eventEndTime = moment(event.endTime).tz("Asia/Kolkata");
 
-		// 🛑 Ticket scanned too early (Before Event Start)
+		// 🛑 Event not started yet
 		if (currentTime.isBefore(eventStartTime)) {
 			return res
 				.status(400)
 				.json({ message: "Event has not started yet." });
 		}
 
-		// 🛑 Ticket scanned too late (After Event End)
+		// 🛑 Event has ended
 		if (currentTime.isAfter(eventEndTime)) {
 			return res
 				.status(400)
 				.json({ message: "Ticket expired. Event has ended." });
 		}
 
+		// ✅ Find ticket using RFID or Ticket ID
 		let ticket;
-
-		// 🎫 Method 1: Verify by RFID
 		if (rfid) {
 			ticket = await Ticket.findOne({ rfid, eventId });
-		}
-		// 🎫 Method 2 & 3: Verify by Ticket ID (QR Code / Manual Entry)
-		else if (ticketId) {
+		} else if (ticketId) {
 			ticket = await Ticket.findOne({ _id: ticketId, eventId });
 		} else {
 			return res
@@ -303,21 +301,29 @@ export const verifyTicket = async (req, res) => {
 				.json({ message: "Provide RFID or Ticket ID." });
 		}
 
+		// 🛑 Invalid ticket
 		if (!ticket) {
 			return res
 				.status(404)
 				.json({ message: "Invalid Ticket. Not found." });
 		}
 
-		// ✅ Mark ticket as checked-in
-		if (!ticket.checkedIn) {
-			ticket.checkedIn = true;
-			await ticket.save();
+		// ✅ Check if ticket is already verified
+		if (ticket.checkedIn) {
+			return res.status(200).json({
+				message: "Ticket already verified.",
+				ticket,
+			});
 		}
 
-		return res
-			.status(200)
-			.json({ message: "Ticket Verified Successfully!", ticket });
+		// ✅ Mark ticket as verified (checked-in)
+		ticket.checkedIn = true;
+		await ticket.save();
+
+		return res.status(200).json({
+			message: "Ticket Verified Successfully!",
+			ticket,
+		});
 	} catch (error) {
 		console.error("Ticket verification error:", error);
 		res.status(500).json({ message: "Internal Server Error." });

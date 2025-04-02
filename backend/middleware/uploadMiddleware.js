@@ -1,38 +1,27 @@
 import multer from "multer";
-import path from "path";
-import fs from "fs";
+import cloudinary from "cloudinary";
+import { CloudinaryStorage } from "multer-storage-cloudinary";
+import dotenv from "dotenv";
+dotenv.config();
+import process from "process";
 
-// Ensure uploads folder exists
-const uploadPath = path.join("backend", "uploads");
-if (!fs.existsSync(uploadPath)) {
-	fs.mkdirSync(uploadPath, { recursive: true });
-}
+// Configure Cloudinary
+cloudinary.config({
+	cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+	api_key: process.env.CLOUDINARY_API_KEY,
+	api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
-// Multer Storage Setup
-const storage = multer.diskStorage({
-	destination: (req, file, cb) => {
-		cb(null, uploadPath);
-	},
-	filename: (req, file, cb) => {
-		cb(null, Date.now() + path.extname(file.originalname));
+// Setup storage
+const storage = new CloudinaryStorage({
+	cloudinary: cloudinary,
+	params: {
+		folder: "uploads", // Folder in Cloudinary
+		allowed_formats: ["jpg", "png", "jpeg"],
+		transformation: [{ width: 500, height: 500, crop: "limit" }],
 	},
 });
 
-// File Filter (Only Images)
-const fileFilter = (req, file, cb) => {
-	const allowedTypes = /jpeg|jpg|png/;
-	const extname = allowedTypes.test(
-		path.extname(file.originalname).toLowerCase()
-	);
-	const mimetype = allowedTypes.test(file.mimetype);
-
-	if (mimetype && extname) {
-		return cb(null, true);
-	} else {
-		cb(new Error("Images only!"));
-	}
-};
-
-const upload = multer({ storage, fileFilter });
+const upload = multer({ storage: storage });
 
 export default upload;

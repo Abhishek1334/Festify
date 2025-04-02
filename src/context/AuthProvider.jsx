@@ -3,7 +3,9 @@ import axios from "axios";
 import { PropTypes } from "prop-types";
 import { useNavigate } from "react-router-dom";
 import { bookTicket as bookTicketAPI } from "../api/ticket";
-import { AuthContext } from "./AuthContext"; // ✅ Import from separate file
+import { AuthContext } from "./AuthContext";
+import { toast } from "react-toastify";
+const API_URL = import.meta.env.VITE_API_URL+"/api";
 
 export const AuthProvider = ({ children }) => {
 	const [user, setUser] = useState(() => {
@@ -12,9 +14,8 @@ export const AuthProvider = ({ children }) => {
 	});
 	const [tickets, setTickets] = useState([]);
 	const navigate = useNavigate();
-	const API_URL = import.meta.env.VITE_API_URL;
 
-	// Update localStorage whenever user state changes
+	// ✅ Keep user data in sync with localStorage
 	useEffect(() => {
 		if (user) {
 			localStorage.setItem("user", JSON.stringify(user));
@@ -23,7 +24,26 @@ export const AuthProvider = ({ children }) => {
 		}
 	}, [user]);
 
-	// ✅ Signup function with better error handling
+	// ✅ Fetch User Tickets
+	const fetchTickets = useCallback(async () => {
+		if (!user?.token) return;
+
+		try {
+			const res = await axios.get(`${API_URL}/tickets/my-tickets`, {
+				headers: { Authorization: `Bearer ${user.token}` },
+			});
+			setTickets(res.data);
+		} catch (error) {
+			console.error("Error fetching tickets:", error.response?.data);
+		}
+	}, [user]);
+
+	// ✅ Auto-fetch tickets when user changes
+	useEffect(() => {
+		if (user) fetchTickets();
+	}, [user, fetchTickets]);
+
+	// ✅ Signup function
 	const signup = async (name, email, password) => {
 		try {
 			const res = await axios.post(`${API_URL}/auth/signup`, {
@@ -31,8 +51,10 @@ export const AuthProvider = ({ children }) => {
 				email,
 				password,
 			});
-			setUser(res.data);
-			localStorage.setItem("user", JSON.stringify(res.data));
+
+			const { id, name: username, email: userEmail, token } = res.data;
+			setUser({ id, username, email: userEmail, token });
+
 			return { success: true };
 		} catch (error) {
 			console.error("Signup failed", error.response?.data);
@@ -43,15 +65,17 @@ export const AuthProvider = ({ children }) => {
 		}
 	};
 
-	// ✅ Login function with better error handling
+	// ✅ Login function
 	const login = async (email, password) => {
 		try {
 			const res = await axios.post(`${API_URL}/auth/login`, {
 				email,
 				password,
 			});
-			setUser(res.data);
-			localStorage.setItem("user", JSON.stringify(res.data));
+
+			const { id, name: username, email: userEmail, token } = res.data;
+			setUser({ id, username, email: userEmail, token });
+
 			return { success: true };
 		} catch (error) {
 			console.error("Login failed", error.response?.data);
@@ -67,43 +91,39 @@ export const AuthProvider = ({ children }) => {
 		setUser(null);
 		setTickets([]);
 		localStorage.removeItem("user");
-		navigate("/");
 	};
-
-	// ✅ Fetch User Tickets
-	const fetchTickets = useCallback(async () => {
-		if (!user?.token) return;
-		try {
-			const res = await axios.get(`${API_URL}/tickets/my-tickets`, {
-				headers: { Authorization: `Bearer ${user.token}` },
-			});
-			setTickets(res.data);
-		} catch (error) {
-			console.error("Error fetching tickets:", error);
-		}
-	}, [user?.token, API_URL]);
-
-	// ✅ Fetch tickets when user logs in
-	useEffect(() => {
-		fetchTickets();
-	}, [fetchTickets]);
 
 	// ✅ Book a Ticket
 	const bookTicket = async (eventId) => {
 		if (!user) {
-			alert("You must be logged in to book a ticket.");
+			toast.error("You must be logged in to book a ticket.");
+			return;
+		}
+
+		// Check if user already has a ticket for this event
+		const alreadyBooked = tickets.some(
+			(ticket) => ticket.eventId === eventId
+		);
+		if (alreadyBooked) {
+			toast.info("🎟️ You already have a ticket for this event.");
 			return;
 		}
 
 		try {
 			const ticket = await bookTicketAPI(eventId, user.token);
 			setTickets((prevTickets) => [...prevTickets, ticket]);
-			alert("Ticket booked successfully!");
+
+			toast.success("🎟️ Ticket booked successfully!");
 		} catch (error) {
-			console.error("Failed to book ticket:", error);
-			alert("Failed to book ticket.");
+			console.error("Failed to book ticket:", error.response?.data);
+			toast.error(
+				error.response?.data?.message ||
+					"Failed to book ticket. Please try again."
+			);
 		}
 	};
+
+
 
 	// ✅ Cancel a Ticket
 	const cancelTicket = async (ticketId) => {
@@ -115,7 +135,7 @@ export const AuthProvider = ({ children }) => {
 				prevTickets.filter((t) => t._id !== ticketId)
 			);
 		} catch (error) {
-			console.error("Error canceling ticket:", error);
+			console.error("Error canceling ticket:", error.response?.data);
 		}
 	};
 

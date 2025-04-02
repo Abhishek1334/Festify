@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { fetchEvents, fetchEventsByCategory } from "../../api/events";
 import Categories from "../Categories";
+import { Link } from "react-router-dom";
 export default function Events() {
 	const { category } = useParams();
 	const [events, setEvents] = useState([]);
@@ -34,7 +35,7 @@ export default function Events() {
 		loadEvents();
 	}, [category]);
 
-
+	const displayEvents = events.length > 0 ? events.slice(0, 6) : [];
 	return (
 		<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 hidden-section">
 			<Categories />
@@ -48,7 +49,7 @@ export default function Events() {
 				</div>
 			) : events.length > 0 ? (
 				<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-					{events.map((event) => (
+					{displayEvents.map((event) => (
 						<EventCard key={event._id} event={event} />
 					))}
 				</div>
@@ -57,6 +58,9 @@ export default function Events() {
 					No events found
 				</p>
 			)}
+			<Link to={"/events"}>
+				<button className="btn-primary mx-auto mt-8 grid ">Explore Events</button>
+			</Link>
 		</div>
 	);
 }

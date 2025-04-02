@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import categories from "../categories.json";
-
+const API_URL = import.meta.env.VITE_API_URL + "/api";
 const CreateEvents = () => {
 	const navigate = useNavigate();
 	const [formData, setFormData] = useState({
@@ -13,7 +13,7 @@ const CreateEvents = () => {
 		endTime: "",
 		location: "",
 		capacity: "",
-		category: "General", // Default category
+		category: "General",
 	});
 	const [image, setImage] = useState(null);
 	const [error, setError] = useState("");
@@ -32,6 +32,26 @@ const CreateEvents = () => {
 		}
 	};
 
+	// Function to upload image to Cloudinary
+	const uploadImageToCloudinary = async (imageFile) => {
+		const formData = new FormData();
+		formData.append("file", imageFile);
+		formData.append("upload_preset", "festify"); // Replace with your actual upload preset
+
+		try {
+			const response = await axios.post(
+				"https://api.cloudinary.com/v1_1/dmgyx29ou/image/upload",
+				formData
+			);
+			console.log("✅ Cloudinary Response:", response.data);
+
+			return response.data.public_id; // Return public_id of uploaded image
+		} catch (error) {
+			console.error("❌ Cloudinary Upload Error:", error);
+			throw new Error("Failed to upload image. Please try again.");
+		}
+	};
+
 	// Handle form submission
 	const handleSubmit = async (e) => {
 		e.preventDefault();
@@ -45,26 +65,29 @@ const CreateEvents = () => {
 		}
 
 		try {
+			// ✅ Fetch user details
 			const user = JSON.parse(localStorage.getItem("user")) || {};
 			const token = user?.token;
 			const organizerId = user?.id;
-			const organizerName = user?.name;
+			const organizerName = user?.username;
 
-			if (!token) {
-				setError(
-					"⚠️ Authentication error: No token found. Please log in."
-				);
+			if (!token || !organizerId || !organizerName) {
+				setError("⚠️ Authentication error. Please log in again.");
 				setLoading(false);
 				return;
 			}
 
-			if (!organizerId || !organizerName) {
-				setError("⚠️ Organizer details missing. Please log in again.");
+			// ✅ Step 1: Upload image to Cloudinary
+			let publicId;
+			try {
+				publicId = await uploadImageToCloudinary(image);
+			} catch (uploadError) {
+				setError(uploadError.message);
 				setLoading(false);
 				return;
 			}
 
-			// ✅ Convert date fields to valid format
+			// ✅ Step 2: Convert date fields
 			const eventDate = new Date(formData.date).toISOString();
 			const startTime = new Date(
 				`${formData.date}T${formData.startTime}:00`
@@ -73,33 +96,35 @@ const CreateEvents = () => {
 				`${formData.date}T${formData.endTime}:00`
 			).toISOString();
 
-			const eventData = new FormData();
-			eventData.append("title", formData.title);
-			eventData.append("description", formData.description);
-			eventData.append("date", eventDate);
-			eventData.append("startTime", startTime);
-			eventData.append("endTime", endTime);
-			eventData.append("location", formData.location);
-			eventData.append("capacity", formData.capacity);
-			eventData.append("category", formData.category || "General"); // Default category if empty
-			eventData.append("image", image);
-			eventData.append("organizerId", organizerId);
-			eventData.append("organizerName", organizerName);
+			// ✅ Step 3: Prepare event data with Cloudinary image
+			const eventData = {
+				title: formData.title,
+				description: formData.description,
+				date: eventDate,
+				startTime,
+				endTime,
+				location: formData.location,
+				capacity: formData.capacity,
+				category: formData.category || "General",
+				image: publicId, // ✅ Ensure image is included
+				organizerId,
+				organizerName,
+			};
 
-			const apiUrl = import.meta.env.VITE_API_URL
-				? `${import.meta.env.VITE_API_URL}/events`
-				: "http://localhost:5000/api/events";
+			console.log("📤 Event Data Sent to Backend:", eventData);
 
-			await axios.post(apiUrl, eventData, {
+			// ✅ Step 4: Send event data to backend
+			
+			await axios.post(`${API_URL}/events`, eventData, {
 				headers: {
-					"Content-Type": "multipart/form-data",
+					"Content-Type": "application/json",
 					Authorization: `Bearer ${token}`,
 				},
 			});
 
 			navigate("/events");
 		} catch (err) {
-			setError(err.response?.data?.message || "Error creating event");
+			setError(err.response?.data?.message || "Error creating event.");
 		} finally {
 			setLoading(false);
 		}

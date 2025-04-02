@@ -2,18 +2,20 @@ import { Link, useNavigate } from "react-router-dom";
 import { User, LogOut } from "lucide-react";
 import logo from "../assets/images/logo.png";
 import { useContext } from "react";
-import { AuthContext } from "../context/AuthContext"; 
+import { AuthContext } from "../context/AuthContext";
 
 export default function Navbar() {
-	const { user, logout } = useContext(AuthContext);
+	const authContext = useContext(AuthContext) || {}; // ✅ Ensure AuthContext is not null
+	const { user, logout } = authContext;
 	const navigate = useNavigate();
 
 	const handleLogout = () => {
-		logout(); 
-		navigate("/"); 
+		logout();
+		navigate("/login"); // Move navigation here
 	};
 
-	const isLoggedIn = !!user; // Check if user exists
+	const isLoggedIn = !!user; // ✅ Check if user exists safely
+
 	return (
 		<section className="hidden-section sticky top-0 w-full z-50 bg-[rgb(250, 247, 232)] backdrop-blur-lg hover:bg-[rgba(255,255,255,1)]">
 			<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -54,14 +56,18 @@ export default function Navbar() {
 									className="flex items-center space-x-2 nav-link btn-secondary"
 								>
 									<User className="h-5 w-5" />
-									<span className="max-sm:hidden">{user.name || "Profile"}</span>
+									<span className="max-sm:hidden">
+										{user?.name || "Profile"}
+									</span>
 								</Link>
 								<button
 									onClick={handleLogout}
 									className="flex items-center space-x-2 nav-link btn-secondary"
 								>
 									<LogOut className="h-5 w-5" />
-									<span className="max-md:hidden">Logout</span>
+									<span className="max-md:hidden">
+										Logout
+									</span>
 								</button>
 							</>
 						) : (
