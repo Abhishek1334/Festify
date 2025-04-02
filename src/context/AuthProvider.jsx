@@ -96,8 +96,10 @@ export const AuthProvider = ({ children }) => {
 	// ✅ Book a Ticket
 	const bookTicket = async (eventId) => {
 		if (!user) {
-			toast.error("You must be logged in to book a ticket.");
-			return;
+			return {
+				error: true,
+				message: "You must be logged in to book a ticket.",
+			};
 		}
 
 		// Check if user already has a ticket for this event
@@ -105,34 +107,52 @@ export const AuthProvider = ({ children }) => {
 			(ticket) => ticket.eventId === eventId
 		);
 		if (alreadyBooked) {
-			toast.info("🎟️ You already have a ticket for this event.");
-			return;
+			return {
+				error: true,
+				message: "🎟️ You already have a ticket for this event.",
+			};
 		}
 
 		try {
 			// Call the API to book the ticket
 			const response = await bookTicketAPI(eventId, user.token);
 
-			// ✅ Ensure the API response has the correct format
-			if (response?.success && response?.ticket) {
-				setTickets((prevTickets) => [...prevTickets, response.ticket]);
-				toast.success("🎟️ Ticket booked successfully!");
-				return response; // Return successful response
+			// ✅ Check if response contains expected fields
+			if (response?.eventId && response?.userId && response?.qrCode) {
+				// Treat this as a valid booking response
+				const ticketData = {
+					eventId: response.eventId,
+					userId: response.userId,
+					rfid: response.rfid,
+					userName: response.userName,
+					qrCode: response.qrCode,
+				};
+
+				// Add to state
+				setTickets((prevTickets) => [...prevTickets, ticketData]);
+
+				return { success: true, ticket: ticketData }; // Ensure correct return format
 			}
 
-			// ❌ Handle unexpected API response (no success flag or missing data)
+			// ❌ Handle unexpected API response
 			console.error("Unexpected API response:", response);
-			toast.error("An error occurred while booking. Please try again.");
-			return { error: true };
+			return {
+				error: true,
+				message: "An unexpected error occurred while booking.",
+			};
 		} catch (error) {
 			console.error("Failed to book ticket:", error.response?.data);
-			toast.error(
-				error.response?.data?.message ||
-					"Failed to book ticket. Please try again."
-			);
-			return { error: true };
+			return {
+				error: true,
+				message:
+					error.response?.data?.message ||
+					"Failed to book ticket. Please try again.",
+			};
 		}
 	};
+
+
+
 
 	// ✅ Cancel a Ticket
 	const cancelTicket = async (ticketId) => {
