@@ -130,9 +130,9 @@ const TicketCheckInPage = () => {
 			</Link>
 
 			{event ? (
-				<div className="flex flex-wrap gap-5">
+				<div className="flex flex-wrap gap-5 max-lg:flex-col ">
 					{/* Event Details */}
-					<div className="flex-1 p-5 border max-w-[25%] border-gray-300 space-y-3 max-h-[80vh]">
+					<div className="flex-1 p-5 border  border-gray-300 space-y-3 max-h-[80vh]">
 						<h2 className="font-bold">{event.title}</h2>
 						<p className="text-sm">Event ID: {event._id}</p>
 
@@ -201,7 +201,7 @@ const TicketCheckInPage = () => {
 					</div>
 
 					{/* Tickets Table */}
-					<div className="flex-1 place-self-start w-full p-5 border border-gray-300">
+					<div className="flex-1 place-self-start w-full p-5 border border-gray-300 ">
 						<h6 className="mb-3 text-lg font-bold">Tickets Sold</h6>
 
 						{/* ✅ Verified Tickets Filter */}
@@ -240,10 +240,10 @@ const TicketCheckInPage = () => {
 						<table className="w-full border-collapse">
 							<thead>
 								<tr>
-									<th className="p-3 border border-gray-300">
+									<th className="p-3 border  border-gray-300">
 										Ticket ID
 									</th>
-									<th className="p-3 border border-gray-300">
+									<th className="p-3 border  border-gray-300 ">
 										QR Code
 									</th>
 									<th className="p-3 border border-gray-300">
@@ -255,20 +255,20 @@ const TicketCheckInPage = () => {
 								{filteredTickets.length > 0 ? (
 									filteredTickets.map((ticket) => (
 										<tr key={ticket._id}>
-											<td className="p-3 border border-gray-300">
+											<td className="p-3 border border-gray-300 max-w-21 overflow-auto">
 												{ticket._id}
 											</td>
-											<td className="p-3 border border-gray-300">
+											<td className="p-2 border border-gray-300 ">
 												<img
 													src={
 														ticket.qrCode ||
 														"https://via.placeholder.com/100"
 													}
 													alt={`QR Code for ${ticket._id}`}
-													className="w-24 h-auto"
+													className="max-w-20 h-auto"
 												/>
 											</td>
-											<td className="p-3 border border-gray-300">
+											<td className="p-3 border border-gray-300 ">
 												{ticket.checkedIn
 													? "✅ Verified"
 													: "❌ Not Verified"}
