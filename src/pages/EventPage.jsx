@@ -69,33 +69,35 @@ const handleTicketBooking = async () => {
 	}
 
 	try {
-		// Attempt to book the ticket via API request
+		// ✅ Attempt to book the ticket via API request
 		const response = await bookTicket(event._id);
+		console.log("API Response:", response); // Debugging log
 
-		// Handle possible backend errors
-		if (!response || response.error) {
-			console.error("Backend error:", response);
-			toast.error(
-				response?.message ||
-					"An error occurred while booking. Please try again."
+		// ✅ Ensure response is successful before showing success message
+		if (response?.success && response?.ticket) {
+			toast.success(
+				"🎟️ Ticket booked successfully! Check your profile for details."
 			);
 			return;
 		}
 
-		// Success message
-		toast.success(
-			"🎟️ Ticket booked successfully! Check your profile for details."
+		// ❌ Handle unexpected API response (no success flag or missing ticket data)
+		console.error("Unexpected API response:", response);
+		toast.error(
+			response?.message ||
+				"An error occurred while booking. Please try again."
 		);
 	} catch (error) {
 		console.error("Error booking ticket:", error);
 
-		// Handle different error response scenarios
+		// ❌ Handle backend errors properly
 		const errorMessage =
 			error?.response?.data?.message ||
 			"Failed to book ticket. Please try again.";
 		toast.error(errorMessage);
 	}
 };
+
 
 
 

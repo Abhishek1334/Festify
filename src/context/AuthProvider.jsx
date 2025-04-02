@@ -110,20 +110,29 @@ export const AuthProvider = ({ children }) => {
 		}
 
 		try {
-			const ticket = await bookTicketAPI(eventId, user.token);
-			setTickets((prevTickets) => [...prevTickets, ticket]);
+			// Call the API to book the ticket
+			const response = await bookTicketAPI(eventId, user.token);
 
-			toast.success("🎟️ Ticket booked successfully!");
+			// ✅ Ensure the API response has the correct format
+			if (response?.success && response?.ticket) {
+				setTickets((prevTickets) => [...prevTickets, response.ticket]);
+				toast.success("🎟️ Ticket booked successfully!");
+				return response; // Return successful response
+			}
+
+			// ❌ Handle unexpected API response (no success flag or missing data)
+			console.error("Unexpected API response:", response);
+			toast.error("An error occurred while booking. Please try again.");
+			return { error: true };
 		} catch (error) {
 			console.error("Failed to book ticket:", error.response?.data);
 			toast.error(
 				error.response?.data?.message ||
 					"Failed to book ticket. Please try again."
 			);
+			return { error: true };
 		}
 	};
-
-
 
 	// ✅ Cancel a Ticket
 	const cancelTicket = async (ticketId) => {
