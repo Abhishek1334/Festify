@@ -4,6 +4,7 @@ import axios from "axios";
 import { useAuth } from "../context/AuthContext";
 import moment from "moment-timezone";
 import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 const API_URL = import.meta.env.VITE_API_URL + "/api";
 const CLOUDINARY_CLOUD_NAME = "dmgyx29ou";
 const getCloudinaryImageUrl = (publicId) =>
