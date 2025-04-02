@@ -1,16 +1,19 @@
 import { useEffect, useState, useContext } from "react";
 import axios from "axios";
 import PropTypes from "prop-types";
-import { AuthContext } from "../context/AuthContext"; // ✅ Use AuthContext for token
+import { AuthContext } from "../context/AuthContext";
+import {toast, ToastContainer} from "react-toastify";
+const API_URL = import.meta.env.VITE_API_URL + "/api";
 
 const TicketCard = ({ ticket, onCancel }) => {
-	const { user } = useContext(AuthContext); // ✅ Get token from context
+	const { user } = useContext(AuthContext) || {};
 	const [event, setEvent] = useState(null);
 	const [isCancelling, setIsCancelling] = useState(false);
 	const [successMessage, setSuccessMessage] = useState("");
-
-	// ✅ Ensure eventId is correctly extracted
-	const eventId = ticket.eventId?._id || ticket.eventId;
+	const [errorMessage, setErrorMessage] = useState("");
+console.log(event);
+	// Extract eventId safely
+	const eventId = ticket?.eventId?._id || ticket?.eventId;
 
 	// Fetch event details
 	useEffect(() => {
@@ -18,12 +21,13 @@ const TicketCard = ({ ticket, onCancel }) => {
 			if (!eventId) return;
 
 			try {
-				const response = await axios.get(
-					`http://localhost:5000/api/events/${eventId}`
+				const { data } = await axios.get(
+					`${API_URL}/events/${eventId}`
 				);
-				setEvent(response.data);
+				setEvent(data);
 			} catch (error) {
 				console.error("❌ Error fetching event details:", error);
+				setErrorMessage("⚠️ Failed to load event details.");
 			}
 		};
 
@@ -32,30 +36,25 @@ const TicketCard = ({ ticket, onCancel }) => {
 
 	// Cancel ticket function
 	const handleCancelTicket = async () => {
+		if (!user?.token) {
+			toast.error("You are not logged in. Please log in again.");
+			return;
+		}
+
 		if (!window.confirm("Are you sure you want to cancel this ticket?")) {
 			return;
 		}
 
 		setIsCancelling(true);
 		setSuccessMessage("");
+		setErrorMessage("");
 
-		// ✅ Immediately remove ticket from UI before API request completes
+		// Immediately remove ticket from UI before API request completes
 		onCancel(ticket._id);
 
 		try {
-			if (!user?.token) {
-				alert(
-					"⚠️ Authentication token is missing. Please log in again."
-				);
-				setIsCancelling(false);
-				return;
-			}
-
-			console.log(`🎟️ Cancelling Ticket ID: ${ticket._id}`);
-			console.log("📡 Sending Token:", user.token);
-
 			const response = await axios.delete(
-				`http://localhost:5000/api/tickets/cancel/${ticket._id}`,
+				`${API_URL}/tickets/cancel/${ticket._id}`,
 				{
 					headers: {
 						Authorization: `Bearer ${user.token}`,
@@ -64,19 +63,14 @@ const TicketCard = ({ ticket, onCancel }) => {
 				}
 			);
 
-			console.log("✅ API Response:", response.data);
-
 			if (response.status === 200 || response.status === 204) {
 				setSuccessMessage("✅ Ticket cancelled successfully!");
 			} else {
-				console.error("❌ Unexpected Response:", response);
-				alert("⚠️ Failed to cancel ticket. Please try again.");
+				throw new Error("Unexpected response from server.");
 			}
 		} catch (error) {
 			console.error("❌ Error cancelling ticket:", error);
-			console.log("📡 API Error Response:", error.response?.data);
-
-			alert(
+			setErrorMessage(
 				error.response?.data?.message ||
 					"⚠️ Failed to cancel ticket. Please try again."
 			);
@@ -90,19 +84,21 @@ const TicketCard = ({ ticket, onCancel }) => {
 		}
 	};
 
-
-
-	// Display loading message until event data is fetched
-	if (!event) return <p>Loading event details...</p>;
-
+	if (!event)
+		return <p className="text-gray-500">Loading event details...</p>;
+	console.log(event.image)
 	return (
-		<div className="bg-white shadow-md w-[30%] rounded-lg overflow-hidden p-4">
+		<div className="bg-white shadow-md w-[30%] rounded-lg overflow-hidden p-4 min-w-[300px] flex-1">
+			{/* Event Image */}
+			<div className="fixed top-0 right-0 z-50">
+				<ToastContainer />
+			</div>
 			<img
-				src={`http://localhost:5000/${event.image}`}
-				alt={event.title}
-				className="w-full h-40 object-cover"
-				onError={(e) => (e.target.src = "/default-placeholder.jpg")}
+				src={`https://res.cloudinary.com/dmgyx29ou/image/upload/${event.image}`}
+				alt={event.title || "Event"}
+				className="w-full h-40 object-cover rounded-lg"
 			/>
+
 			<h3 className="text-lg font-semibold mt-2">
 				{event.title || "No Title"}
 			</h3>
@@ -117,6 +113,8 @@ const TicketCard = ({ ticket, onCancel }) => {
 			<p className="text-sm text-gray-500">
 				<strong>Ticket ID:</strong> {ticket._id}
 			</p>
+
+			{/* QR Code */}
 			{ticket.qrCode && (
 				<img
 					src={ticket.qrCode}
@@ -124,6 +122,8 @@ const TicketCard = ({ ticket, onCancel }) => {
 					className="mt-3 w-24 h-24 mx-auto"
 				/>
 			)}
+
+			{/* Cancel Button */}
 			<button
 				className="px-6 py-3 bg-red-500 text-white font-semibold rounded-lg hover:bg-red-700 transition-all duration-200 shadow-md hover:shadow-lg focus:ring-2 focus:ring-red-500 focus:ring-offset-2 flex place-self-center mt-3 disabled:opacity-50"
 				onClick={handleCancelTicket}
@@ -132,8 +132,12 @@ const TicketCard = ({ ticket, onCancel }) => {
 				{isCancelling ? "Cancelling..." : "Cancel Ticket"}
 			</button>
 
+			{/* Messages */}
 			{successMessage && (
 				<div className="mt-4 text-green-500">{successMessage}</div>
+			)}
+			{errorMessage && (
+				<div className="mt-4 text-red-500">{errorMessage}</div>
 			)}
 		</div>
 	);

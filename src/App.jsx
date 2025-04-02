@@ -11,7 +11,6 @@ import Footer from "./components/Footer";
 import ScrollToTop from "./components/ScrollToTop";
 import CreateEvents from "./pages/CreateEvents";
 import { AuthProvider } from "./context/AuthProvider";
-import OrganizerAdmin from "./pages/OrganizerPanel";
 import EventDetails from "./pages/EventDetails";
 import PrivateRoute from "./components/Auth/PrivateRoute";
 import TicketCheckIn from "./pages/TicketCheckIn";
@@ -38,10 +37,7 @@ export default function App() {
 
 						{/* Protected Routes */}
 						<Route element={<PrivateRoute />}>
-							<Route
-								path="/organizer"
-								element={<OrganizerAdmin />}
-							/>
+							
 							<Route
 								path="/organizer/:eventId"
 								element={<EventDetails />}

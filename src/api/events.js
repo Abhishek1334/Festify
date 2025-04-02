@@ -1,6 +1,7 @@
 import axios from "axios";
+import process from "process";
+const API_URL = import.meta.env.VITE_API_URL + "/api";
 
-const API_URL = import.meta.env.VITE_API_URL; // http://localhost:5000/api
 // Fetch all events
 export const fetchEvents = async (token) => {
 	try {
@@ -48,7 +49,7 @@ export const createEvent = async (eventData, imageFile, token) => {
 		formData.append("category", eventData.category);
 		formData.append("image", imageFile); // Image file should be included here
 
-		const response = await axios.post(`${API_URL}/events`, formData, {
+		const response = await axios.post(`${API_URL}/`, formData, {
 			headers: {
 				Authorization: `Bearer ${token}`,
 				"Content-Type": "multipart/form-data",

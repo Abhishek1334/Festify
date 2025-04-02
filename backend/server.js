@@ -7,11 +7,17 @@ import connectDB from "./config/db.js";
 import authRoutes from "./routes/authRoutes.js";
 import eventRoutes from "./routes/eventRoutes.js";
 import ticketRoutes from "./routes/ticketRoutes.js";
-import path from "path";
 import { errorHandler, notFoundHandler } from "./middleware/errorMiddleware.js";
-
+import cloudinary from "cloudinary";
 dotenv.config();
 connectDB();
+
+// ✅ Configure Cloudinary
+cloudinary.config({
+	cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+	api_key: process.env.CLOUDINARY_API_KEY,
+	api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
 const app = express();
 
@@ -19,10 +25,6 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 app.use(morgan("dev"));
-
-// Static folder for uploads
-const __dirname = path.resolve();
-app.use("/uploads", express.static(path.join(__dirname, "backend/uploads")));
 
 // API Routes
 app.use("/api/auth", authRoutes);
@@ -34,6 +36,7 @@ app.use(notFoundHandler);
 
 // Global error handler
 app.use(errorHandler);
+console.log("Cloudinary API Key Loaded:", !!process.env.CLOUDINARY_API_KEY);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

@@ -1,17 +1,34 @@
 import { useState, useEffect, useCallback } from "react";
-import { useLocation, useParams } from "react-router-dom";
+import { useLocation, useParams, Link } from "react-router-dom";
 import axios from "axios";
-import dayjs from "dayjs"; // Required for DateTimePicker
+import dayjs from "dayjs";
 import { toast, ToastContainer } from "react-toastify";
-import {Link} from "react-router-dom";
 import { StepBack } from "lucide-react";
+const API_URL = import.meta.env.VITE_API_URL + "/api";
+const getCloudinaryImageUrl = (publicId) => {
+	// ✅ Return placeholder if no image is provided
+	if (!publicId) return "https://via.placeholder.com/300";
+
+	// ✅ If the image is already a full URL, return it as-is
+	if (publicId.startsWith("http") || publicId.startsWith("https"))
+		return publicId;
+
+	// ✅ Ensure we clean up any unwanted Cloudinary URL prefixes
+	const cleanPublicId = publicId.replace(
+		/^https:\/\/res\.cloudinary\.com\/[^/]+\/image\/upload\//,
+		""
+	);
+
+	// ✅ Construct a valid Cloudinary URL
+	return `https://res.cloudinary.com/dmgyx29ou/image/upload/${cleanPublicId}`;
+};
 
 const TicketCheckInPage = () => {
 	const { eventId } = useParams();
 	const { state } = useLocation();
 	const [event, setEvent] = useState(state?.event || null);
 	const [tickets, setTickets] = useState([]);
-	const [ticketId, setTicketId] = useState(""); // ✅ Removed RFID
+	const [ticketId, setTicketId] = useState("");
 	const [filterVerified, setFilterVerified] = useState(false);
 
 	const user = JSON.parse(localStorage.getItem("user"));
@@ -22,7 +39,7 @@ const TicketCheckInPage = () => {
 		if (!event && eventId) {
 			try {
 				const { data } = await axios.get(
-					`http://localhost:5000/api/events/${eventId}`,
+					`${API_URL}/events/${eventId}`,
 					{ headers: { Authorization: `Bearer ${token}` } }
 				);
 				setEvent(data);
@@ -38,7 +55,7 @@ const TicketCheckInPage = () => {
 		if (!eventId) return;
 		try {
 			const { data } = await axios.get(
-				`http://localhost:5000/api/tickets/event/${eventId}`,
+				`${API_URL}/tickets/event/${eventId}`,
 				{ headers: { Authorization: `Bearer ${token}` } }
 			);
 			setTickets(data);
@@ -53,34 +70,46 @@ const TicketCheckInPage = () => {
 		fetchTickets();
 	}, [fetchEventDetails, fetchTickets]);
 
-	// ✅ Ticket Verification Handler (Only Ticket ID)
+	// ✅ Ticket Verification Handler
 	const handleVerifyTicket = async (e) => {
 		e.preventDefault();
 
+		// 🛑 Ensure Ticket ID is entered
 		if (!ticketId) {
 			toast.warn("⚠️ Please enter a Ticket ID.");
 			return;
 		}
 
 		try {
-			await axios.post(
-				`http://localhost:5000/api/tickets/verify`,
-				{ ticketId, eventId }, // ✅ Removed RFID from request
+			// 🔹 Send request to verify ticket
+			const response = await axios.post(
+				`${API_URL}/tickets/verify`,
+				{ ticketId, eventId },
 				{ headers: { Authorization: `Bearer ${token}` } }
 			);
 
-			toast.success("✅ Ticket Verified Successfully.");
-			setTicketId(""); // ✅ Clear input after success
+			// ✅ Handle different response messages
+			if (response.data.message === "Ticket already verified.") {
+				toast.info("🔄 This ticket is already verified.");
+			} else {
+				toast.success("✅ Ticket Verified Successfully!");
+			}
+
+			// ✅ Clear input and refresh ticket data
+			setTicketId("");
 			fetchTickets();
 		} catch (err) {
 			console.error("Error verifying ticket:", err);
+
+			// ❌ Handle verification errors
 			toast.error(
 				err.response?.data?.message || "❌ Ticket Verification Failed."
 			);
 		}
 	};
 
-	// ✅ Filtering Tickets Based on Checkbox
+
+	// ✅ Filtering Tickets
 	const filteredTickets = filterVerified
 		? tickets.filter((ticket) => ticket.checkedIn)
 		: tickets;
@@ -92,80 +121,82 @@ const TicketCheckInPage = () => {
 				autoClose={3000}
 				hideProgressBar={false}
 			/>
-			<Link to={`/organizer/${eventId}`} className="">
+
+			<Link to={`/user-profile`}>
 				<button className="btn-primary mb-3 flex gap-2">
 					<StepBack className="size-6" />
 					Go Back
 				</button>
 			</Link>
+
 			{event ? (
 				<div className="flex flex-wrap gap-5">
 					{/* Event Details */}
-
 					<div className="flex-1 p-5 border max-w-[25%] border-gray-300 space-y-3 max-h-[80vh]">
-						<h2 className="font-bold">{event.title} </h2>
+						<h2 className="font-bold">{event.title}</h2>
 						<p className="text-sm">Event ID: {event._id}</p>
-						{/* Showing live icon if the event has started*/}
-						{dayjs(event.startTime).isBefore(dayjs()) && (
-							<div className="flex items-center gap-1">
-								<span className="text-green-500">🟢</span>
-								<span>Live</span>
-							</div>
-						)}
 
-						{/* Showing ended icon if the event has ended*/}
-						{dayjs(event.endTime).isBefore(dayjs()) && (
-							<div className="flex items-center gap-1">
-								<span className="text-red-500">🔴</span>
-								<span>Ended</span>
-							</div>
-						)}
-						{/* Event Image */}
+						{/* Live, Upcoming, or Ended Status */}
+						<div className="flex items-center gap-1">
+							{dayjs().isBefore(dayjs(event.startTime)) ? (
+								<>
+									<span className="text-blue-500">🔵</span>
+									<span>Upcoming</span>
+								</>
+							) : dayjs().isBefore(dayjs(event.endTime)) ? (
+								<>
+									<span className="text-green-500">🟢</span>
+									<span>Live</span>
+								</>
+							) : (
+								<>
+									<span className="text-red-500">🔴</span>
+									<span>Ended</span>
+								</>
+							)}
+						</div>
+
+						{/* ✅ Event Image (Cloudinary) */}
 						<img
-							src={`http://localhost:5000/${event.image}`}
+							src={getCloudinaryImageUrl(event.image)}
 							alt={`Event Image for ${event.title}`}
 							className="w-full h-64 object-cover rounded-lg mb-4"
 						/>
+
 						<p className="text-lg">
 							<b>Description:</b> {event.description}
 						</p>
 
-						{/* Event Date */}
+						{/* Event Info */}
 						<div className="mt-5 grid grid-cols-2 gap-2 gap-x-4">
 							<p>
 								<b>Category:</b> {event.category}
 							</p>
-							<div>
+							<p>
 								<b>Event Date:</b>{" "}
 								{dayjs(event.date).format("MMMM D, YYYY")}
-							</div>
-							<div>
+							</p>
+							<p>
 								<b>Start Time:</b>{" "}
 								{dayjs(event.startTime).format("h:mm A")}
-							</div>
-							<div>
+							</p>
+							<p>
 								<b>End Time:</b>{" "}
 								{dayjs(event.endTime).format("h:mm A")}
-							</div>
-							<div>
+							</p>
+							<p>
 								<b>Location:</b> {event.location}
-							</div>
-							<div>
+							</p>
+							<p>
 								<b>Capacity:</b> {event.capacity}
-							</div>
-							<div>
-								<b>Ticket Sold:</b> {event.ticketsSold}
-							</div>
-							<div>
-								<b>Ticket Available:</b>{" "}
+							</p>
+							<p>
+								<b>Tickets Sold:</b> {event.ticketsSold}
+							</p>
+							<p>
+								<b>Available Tickets:</b>{" "}
 								{event.capacity - event.ticketsSold}
-							</div>
-							<div>
-								<b>Created at:</b>{" "}
-								{dayjs(event.createdAt).format(
-									"MMMM D, YYYY h:mm A"
-								)}
-							</div>
+							</p>
 						</div>
 					</div>
 
@@ -173,7 +204,7 @@ const TicketCheckInPage = () => {
 					<div className="flex-1 place-self-start w-full p-5 border border-gray-300">
 						<h6 className="mb-3 text-lg font-bold">Tickets Sold</h6>
 
-						{/* ✅ Verification Checkbox */}
+						{/* ✅ Verified Tickets Filter */}
 						<div className="mb-3">
 							<input
 								type="checkbox"
@@ -188,7 +219,7 @@ const TicketCheckInPage = () => {
 							</label>
 						</div>
 
-						{/* ✅ Ticket Verification Form (Only Ticket ID) */}
+						{/* ✅ Ticket Verification Form */}
 						<form onSubmit={handleVerifyTicket} className="mb-5">
 							<input
 								type="text"
@@ -229,7 +260,10 @@ const TicketCheckInPage = () => {
 											</td>
 											<td className="p-3 border border-gray-300">
 												<img
-													src={ticket.qrCode}
+													src={
+														ticket.qrCode ||
+														"https://via.placeholder.com/100"
+													}
 													alt={`QR Code for ${ticket._id}`}
 													className="w-24 h-auto"
 												/>

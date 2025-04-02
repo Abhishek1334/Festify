@@ -3,17 +3,25 @@ import { Calendar, Clock, MapPin, Users, User } from "lucide-react";
 import { format } from "date-fns";
 import PropTypes from "prop-types";
 
-export default function EventCard({ event, organizer }) {
+const getCloudinaryImageUrl = (publicId) => {
+	if (!publicId) return "/default-placeholder.png"; // Handle missing image
+	return `https://res.cloudinary.com/dmgyx29ou/image/upload/v1743509002/${publicId}.jpg`;
+};
 
+
+export default function EventCard({ event, organizer }) {
 	return (
 		<div className="card hidden-section border-1 border-gray-200 rounded-xl overflow-hidden cursor-pointer">
 			<div className="relative overflow-hidden">
 				<img
-					src={`http://localhost:5000/${event.image}`}
+					src={
+						event.image
+							? getCloudinaryImageUrl(event.image)
+							: "/default-placeholder.png"
+					}
 					alt={event.title}
 					className="w-full h-48 object-cover transform hover:scale-105 transition-transform duration-300"
 				/>
-				
 			</div>
 			<Link
 				to={
@@ -47,7 +55,7 @@ export default function EventCard({ event, organizer }) {
 									? format(
 											new Date(event.date),
 											"MMMM d, yyyy"
-									)
+									  )
 									: "No date"}
 							</span>
 						</div>
