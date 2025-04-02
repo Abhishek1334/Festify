@@ -79,14 +79,27 @@ export const bookTicket = async (req, res) => {
 		// ✅ Generate Unique RFID (Retry if Duplicate)
 		let rfid;
 		let isUnique = false;
-		while (!isUnique) {
+		let attempts = 0;
+		const maxAttempts = 5;
+		while (!isUnique && attempts < maxAttempts) {
 			rfid = generateRFID();
 			const existingRFID = await Ticket.findOne({ rfid });
 			if (!existingRFID) isUnique = true;
+			attempts++;
+		}
+		if (!isUnique) {
+			return res
+				.status(500)
+				.json({ message: "Failed to generate a unique RFID." });
 		}
 
+
 		// ✅ Generate QR Code with Embedded RFID & Ticket ID
-		const qrCode = `https://api.qrserver.com/v1/create-qr-code/?data=${req.user.id}-${eventId}-RFID:${rfid}`;
+		const qrData = `${req.user.id}-${eventId}-RFID:${rfid}`;
+		const qrCode = `https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(
+			qrData
+		)}`;
+
 
 		// ✅ Create Ticket with RFID
 		const ticket = await Ticket.create({
@@ -98,14 +111,23 @@ export const bookTicket = async (req, res) => {
 		});
 
 		// ✅ Increase ticket count
-		event.ticketsSold += 1;
-		await event.save();
+		const totalTickets = await Ticket.countDocuments({ eventId });
+		if (totalTickets >= event.capacity) {
+			return res
+				.status(400)
+				.json({ message: "No more tickets available." });
+		}
+
 
 		res.status(201).json(ticket);
 	} catch (error) {
-		console.error("Ticket booking error:", error);
-		res.status(500).json({ message: "Internal server error." });
-	}
+	console.error("Ticket booking error:", error);
+
+	res.status(500).json({
+		error: true,
+		message: error.message || "Internal server error.",
+	});
+}
 };
 
 

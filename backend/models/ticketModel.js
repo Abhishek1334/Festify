@@ -34,14 +34,18 @@ const ticketSchema = new mongoose.Schema(
 );
 
 // Middleware to set expiration status
-ticketSchema.pre("save", function (next) {
-	if (this.eventId && this.eventId.endTime) {
-		const eventEndTime = new Date(this.eventId.endTime);
-		const currentTime = new Date();
-		this.expired = currentTime > eventEndTime;
+ticketSchema.pre("save", async function (next) {
+	try {
+		const event = await mongoose.model("Event").findById(this.eventId);
+		if (event) {
+			this.expired = new Date() > new Date(event.endTime);
+		}
+	} catch (error) {
+		console.error("Error in ticket expiration middleware:", error);
 	}
 	next();
 });
+
 
 const Ticket = mongoose.model("Ticket", ticketSchema);
 export default Ticket;
