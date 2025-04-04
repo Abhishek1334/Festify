@@ -44,15 +44,12 @@ export const registerUser = async (req, res) => {
 			}
 		}
 
-		// Hash password
-		const salt = await bcrypt.genSalt(10);
-		const hashedPassword = await bcrypt.hash(password, salt);
-
+		
 		// Create new user
 		const user = new User({
 			name,
 			email: normalizedEmail, // Store in lowercase
-			password: hashedPassword,
+			password,
 		});
 
 		await user.save();

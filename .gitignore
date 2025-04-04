@@ -13,7 +13,8 @@ dist-ssr
 *.local
 backend/.env
 .env
-
+test.py
+test.json
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
