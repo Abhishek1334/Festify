@@ -1,7 +1,7 @@
 
 # 🎉 Festify - Local Event Aggregator App
 
-Live Site : [🌐 Live Demo](https://festify-tau.vercel.app/)
+Live Site : [🎉 Festify](https://festify-tau.vercel.app/)
 
 Festify is a **local event aggregator platform** where users can **discover, create, RSVP, and manage events**. It supports **QR code-based ticketing**, a complete **check-in system for organizers**, and a clean, modern user interface.
 
