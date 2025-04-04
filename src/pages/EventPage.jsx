@@ -5,6 +5,8 @@ import { useAuth } from "../context/AuthContext";
 import moment from "moment-timezone";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { Users } from "lucide-react";
+
 
 const API_URL = import.meta.env.VITE_API_URL + "/api";
 const CLOUDINARY_CLOUD_NAME = "dmgyx29ou";
@@ -95,7 +97,16 @@ const EventPage = () => {
 	};
 
 
-	if (loading) return <p>Loading event details...</p>;
+if (loading) {
+	return (
+		<div className="flex justify-center items-center h-[70vh] ">
+			<div className="w-10 h-10 border-4 border-gray-300 border-t-blue-500 rounded-full animate-spin"></div>
+		</div>
+	);
+}
+
+
+
 	if (error) return <p className="text-red-600">{error}</p>;
 
 	const eventDate = moment(event.date).tz("Asia/Kolkata");
@@ -160,6 +171,10 @@ const EventPage = () => {
 					) : hasEventStarted ? (
 						<p className="text-yellow-500 font-bold mt-4">
 							⚠ Event has started.
+						</p>
+					) : event.ticketsSold >= event.capacity ? (
+						<p className="text-gray-500 font-bold mt-4">
+							🚫 Tickets are sold out.
 						</p>
 					) : (
 						user &&

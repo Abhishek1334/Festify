@@ -3,6 +3,7 @@ import { AuthContext } from "../context/AuthContext";
 import EventCard from "../components/EventCard";
 import TicketCard from "../components/TicketCard";
 import axios from "axios";
+import { toast,ToastContainer } from "react-toastify";
 const API_URL = import.meta.env.VITE_API_URL + "/api";
 const getCloudinaryImageUrl = (publicId) => {
 	if (!publicId) return "https://via.placeholder.com/300x200?text=No+Image";
@@ -39,11 +40,10 @@ const UserProfile = () => {
 
 	const fetchRSVPEvents = async () => {
 		try {
-			const response = await axios.get(
-				`${API_URL}/tickets/my-tickets`,
-				{ headers: { Authorization: `Bearer ${user.token}` } }
-			);
-			console.log("🎟️ RSVP Tickets:", response.data);
+			const response = await axios.get(`${API_URL}/tickets/my-tickets`, {
+				headers: { Authorization: `Bearer ${user.token}` },
+			});
+
 
 			const formattedTickets = response.data
 				.map((ticket) => ({
@@ -54,7 +54,7 @@ const UserProfile = () => {
 								image: getCloudinaryImageUrl(
 									ticket.eventId.image
 								),
-						  }
+						}
 						: null,
 				}))
 				.filter((ticket) => ticket.event);
@@ -69,27 +69,24 @@ const UserProfile = () => {
 
 	const handleCancelTicket = async (ticketId) => {
 		if (!user?.token) {
-			alert("You are not logged in. Please log in again.");
+			toast.error("❌ You are not logged in.");
 			return;
 		}
 
+		// Optimistically remove ticket from state
 		setRsvpEvents((prev) =>
 			prev.filter((ticket) => ticket._id !== ticketId)
 		);
-		try {
-			await axios.delete(
-				`${API_URL}/tickets/cancel/${ticketId}`,
-				{ headers: { Authorization: `Bearer ${user.token}` } }
-			);
-			alert("✅ Ticket canceled successfully!");
-		} catch (error) {
-			console.error("❌ Error canceling ticket:", error);
-			alert("⚠️ Failed to cancel ticket. Please try again.");
-		}
+
+		toast.success("✅ Ticket cancelled successfully!");
 	};
+
 
 	return (
 		<div className="max-w-7xl mx-auto py-10 px-5">
+			<div>
+				<ToastContainer className={"toast-container"} />
+			</div>
 			<h2 className="text-3xl font-bold mb-4">User Profile</h2>
 			<div className="flex justify-between bg-white shadow-md rounded-lg p-6">
 				<div>

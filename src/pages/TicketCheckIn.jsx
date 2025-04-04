@@ -3,23 +3,29 @@ import { useLocation, useParams, Link } from "react-router-dom";
 import axios from "axios";
 import dayjs from "dayjs";
 import { toast, ToastContainer } from "react-toastify";
-import { StepBack } from "lucide-react";
-const API_URL = import.meta.env.VITE_API_URL + "/api";
-const getCloudinaryImageUrl = (publicId) => {
-	// ✅ Return placeholder if no image is provided
-	if (!publicId) return "https://via.placeholder.com/300";
+import {
+	StepBack,
+	Calendar,
+	Clock,
+	MapPin,
+	Users,
+	Tag,
+	Search,
+	CheckCircle2,
+	XCircle,
+} from "lucide-react";
+import QRScanner from "../components/QRScanner";
 
-	// ✅ If the image is already a full URL, return it as-is
+const API_URL = import.meta.env.VITE_API_URL + "/api";
+
+const getCloudinaryImageUrl = (publicId) => {
+	if (!publicId) return "https://via.placeholder.com/300";
 	if (publicId.startsWith("http") || publicId.startsWith("https"))
 		return publicId;
-
-	// ✅ Ensure we clean up any unwanted Cloudinary URL prefixes
 	const cleanPublicId = publicId.replace(
 		/^https:\/\/res\.cloudinary\.com\/[^/]+\/image\/upload\//,
 		""
 	);
-
-	// ✅ Construct a valid Cloudinary URL
 	return `https://res.cloudinary.com/dmgyx29ou/image/upload/${cleanPublicId}`;
 };
 
@@ -34,15 +40,23 @@ const TicketCheckInPage = () => {
 	const user = JSON.parse(localStorage.getItem("user"));
 	const token = user?.token;
 
-	// ✅ Fetch Event Details
 	const fetchEventDetails = useCallback(async () => {
 		if (!event && eventId) {
 			try {
 				const { data } = await axios.get(
 					`${API_URL}/events/${eventId}`,
-					{ headers: { Authorization: `Bearer ${token}` } }
+					{
+						headers: { Authorization: `Bearer ${token}` },
+					}
 				);
 				setEvent(data);
+
+				const now = dayjs();
+				if (now.isAfter(dayjs(data.endTime))) {
+					toast.info("⚠️ This event has already ended.");
+				} else if (data.ticketsSold >= data.capacity) {
+					toast.warn("🎟️ Event is sold out!");
+				}
 			} catch (err) {
 				console.error("Error fetching event details:", err);
 				toast.error("⚠️ Error fetching event details!");
@@ -50,13 +64,14 @@ const TicketCheckInPage = () => {
 		}
 	}, [event, eventId, token]);
 
-	// ✅ Fetch Tickets
 	const fetchTickets = useCallback(async () => {
 		if (!eventId) return;
 		try {
 			const { data } = await axios.get(
 				`${API_URL}/tickets/event/${eventId}`,
-				{ headers: { Authorization: `Bearer ${token}` } }
+				{
+					headers: { Authorization: `Bearer ${token}` },
+				}
 			);
 			setTickets(data);
 		} catch (err) {
@@ -70,228 +85,251 @@ const TicketCheckInPage = () => {
 		fetchTickets();
 	}, [fetchEventDetails, fetchTickets]);
 
-	// ✅ Ticket Verification Handler
 	const handleVerifyTicket = async (e) => {
 		e.preventDefault();
 
-		// 🛑 Ensure Ticket ID is entered
 		if (!ticketId) {
 			toast.warn("⚠️ Please enter a Ticket ID.");
 			return;
 		}
 
 		try {
-			// 🔹 Send request to verify ticket
 			const response = await axios.post(
 				`${API_URL}/tickets/verify`,
 				{ ticketId, eventId },
 				{ headers: { Authorization: `Bearer ${token}` } }
 			);
 
-			// ✅ Handle different response messages
-			if (response.data.message === "Ticket already verified.") {
+			if (
+				response.data.status === "already_verified" ||
+				response.data.message === "ALREADY_VERIFIED"
+			) {
 				toast.info("🔄 This ticket is already verified.");
 			} else {
 				toast.success("✅ Ticket Verified Successfully!");
 			}
-
-			// ✅ Clear input and refresh ticket data
+			
 			setTicketId("");
 			fetchTickets();
 		} catch (err) {
 			console.error("Error verifying ticket:", err);
-
-			// ❌ Handle verification errors
 			toast.error(
 				err.response?.data?.message || "❌ Ticket Verification Failed."
 			);
 		}
 	};
 
-
-	// ✅ Filtering Tickets
 	const filteredTickets = filterVerified
 		? tickets.filter((ticket) => ticket.checkedIn)
 		: tickets;
 
+	const getEventStatus = () => {
+		const now = dayjs();
+		if (now.isBefore(dayjs(event.startTime))) return "Upcoming";
+		if (now.isBefore(dayjs(event.endTime))) return "Live";
+		return "Ended";
+	};
+
+	const isSoldOut = event?.ticketsSold >= event?.capacity;
+
+	const getStatusTagColor = () => {
+		const status = getEventStatus();
+		switch (status) {
+			case "Upcoming":
+				return "bg-blue-100 text-blue-700";
+			case "Live":
+				return "bg-green-100 text-green-700";
+			default:
+				return "bg-red-100 text-red-700";
+		}
+	};
+console.log(event)
 	return (
-		<div className="p-5">
+		<div className="min-h-screen bg-gray-50 p-4 md:p-6">
 			<ToastContainer
 				position="top-right"
 				autoClose={3000}
 				hideProgressBar={false}
 			/>
 
-			<Link to={`/user-profile`}>
-				<button className="btn-primary mb-3 flex gap-2">
-					<StepBack className="size-6" />
-					Go Back
-				</button>
-			</Link>
+			<div className="max-w-7xl mx-auto">
+				<Link
+					to={`/organizer/${eventId}`}
+					className="inline-flex items-center space-x-2 text-purple-600 hover:text-purple-700 mb-6"
+				>
+					<StepBack className="h-5 w-5" />
+					<span>Back to Event</span>
+				</Link>
 
-			{event ? (
-				<div className="flex flex-wrap gap-5 max-lg:flex-col ">
-					{/* Event Details */}
-					<div className="flex-1 p-5 border  border-gray-300 space-y-3 min-h-[30vh">
-						<h2 className="font-bold">{event.title}</h2>
-						<p className="text-sm">Event ID: {event._id}</p>
+				{event ? (
+					<div className="grid lg:grid-cols-2 gap-6 ">
+						{/* Event Details Card */}
+						<div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+							<div className="relative h-48">
+								<img
+									src={getCloudinaryImageUrl(event.image)}
+									alt={event.title}
+									className="w-full h-full object-cover"
+								/>
+								<div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+								<div className="absolute bottom-4 left-4 right-4">
+									<h1 className="text-2xl font-bold text-white mb-2">
+										{event.title}
+									</h1>
+									<span
+										className={`inline-flex px-3 py-1 rounded-full text-sm font-medium ${getStatusTagColor()}`}
+									>
+										{isSoldOut
+											? "Sold Out"
+											: getEventStatus()}
+									</span>
+								</div>
+							</div>
 
-						{/* Live, Upcoming, or Ended Status */}
-						<div className="flex items-center gap-1 ">
-							{dayjs().isBefore(dayjs(event.startTime)) ? (
-								<>
-									<span className="text-blue-500">🔵</span>
-									<span>Upcoming</span>
-								</>
-							) : dayjs().isBefore(dayjs(event.endTime)) ? (
-								<>
-									<span className="text-green-500">🟢</span>
-									<span>Live</span>
-								</>
-							) : (
-								<>
-									<span className="text-red-500">🔴</span>
-									<span>Ended</span>
-								</>
-							)}
+							<div className="p-6">
+								<p className="text-gray-600 mb-6">
+									{event.description}
+								</p>
+
+								<div className="grid grid-cols-2 gap-4">
+									<div className="flex items-center space-x-2 text-gray-600">
+										<Calendar className="h-5 w-5 text-purple-500" />
+										<span>
+											{dayjs(event.date).format(
+												"MMMM D, YYYY"
+											)}
+										</span>
+									</div>
+									<div className="flex items-center space-x-2 text-gray-600">
+										<Clock className="h-5 w-5 text-purple-500" />
+										<span>
+											{dayjs(event.startTime).format(
+												"h:mm A"
+											)}
+										</span>
+									</div>
+									
+									<div className="flex items-center space-x-2 text-gray-600">
+										<MapPin className="h-5 w-5 text-purple-500" />
+										<span>{event.location}</span>
+									</div>
+									<div className="flex items-center space-x-2 text-gray-600">
+										<Users className="h-5 w-5 text-purple-500" />
+										<span>
+											{event.ticketsSold} /{" "}
+											{event.capacity} tickets sold
+										</span>
+									</div>
+								</div>
+							</div>
 						</div>
 
-						{/* ✅ Event Image (Cloudinary) */}
-						<img
-							src={getCloudinaryImageUrl(event.image)}
-							alt={`Event Image for ${event.title}`}
-							className="w-full h-64 object-cover rounded-lg mb-4"
-						/>
-
-						<p className="text-lg">
-							<b>Description:</b> {event.description}
-						</p>
-
-						{/* Event Info */}
-						<div className="mt-5 grid grid-cols-2 gap-2 gap-x-4">
-							<p>
-								<b>Category:</b> {event.category}
-							</p>
-							<p>
-								<b>Event Date:</b>{" "}
-								{dayjs(event.date).format("MMMM D, YYYY")}
-							</p>
-							<p>
-								<b>Start Time:</b>{" "}
-								{dayjs(event.startTime).format("h:mm A")}
-							</p>
-							<p>
-								<b>End Time:</b>{" "}
-								{dayjs(event.endTime).format("h:mm A")}
-							</p>
-							<p>
-								<b>Location:</b> {event.location}
-							</p>
-							<p>
-								<b>Capacity:</b> {event.capacity}
-							</p>
-							<p>
-								<b>Tickets Sold:</b> {event.ticketsSold}
-							</p>
-							<p>
-								<b>Available Tickets:</b>{" "}
-								{event.capacity - event.ticketsSold}
-							</p>
-						</div>
-					</div>
-
-					{/* Tickets Table */}
-					<div className="flex-1 place-self-start w-full p-5 border border-gray-300 ">
-						<h6 className="mb-3 text-lg font-bold">Tickets Sold</h6>
-
-						{/* ✅ Verified Tickets Filter */}
-						<div className="mb-3">
-							<input
-								type="checkbox"
-								id="verifiedFilter"
-								checked={filterVerified}
-								onChange={() =>
-									setFilterVerified((prev) => !prev)
-								}
-							/>
-							<label htmlFor="verifiedFilter" className="ml-2">
-								Show Verified Tickets Only
-							</label>
-						</div>
-
-						{/* ✅ Ticket Verification Form */}
-						<form onSubmit={handleVerifyTicket} className="mb-5">
-							<input
-								type="text"
-								placeholder="Enter Ticket ID"
-								value={ticketId}
-								onChange={(e) => setTicketId(e.target.value)}
-								className="border p-2 mr-2"
-							/>
-							<button
-								type="submit"
-								className="p-2 bg-blue-500 text-white"
-							>
-								Verify Ticket
-							</button>
-						</form>
-
-						{/* Tickets Table */}
-						<table className="w-full border-collapse">
-							<thead>
-								<tr>
-									<th className="p-3 border  border-gray-300">
-										Ticket ID
-									</th>
-									<th className="p-3 border  border-gray-300 ">
-										QR Code
-									</th>
-									<th className="p-3 border border-gray-300">
-										Status
-									</th>
-								</tr>
-							</thead>
-							<tbody>
-								{filteredTickets.length > 0 ? (
-									filteredTickets.map((ticket) => (
-										<tr key={ticket._id}>
-											<td className="p-3 border border-gray-300 max-w-21 overflow-auto">
-												{ticket._id}
-											</td>
-											<td className="p-2 border border-gray-300 ">
-												<img
-													src={
-														ticket.qrCode ||
-														"https://via.placeholder.com/100"
-													}
-													alt={`QR Code for ${ticket._id}`}
-													className="max-w-20 h-auto"
-												/>
-											</td>
-											<td className="p-3 border border-gray-300 ">
-												{ticket.checkedIn
-													? "✅ Verified"
-													: "❌ Not Verified"}
-											</td>
-										</tr>
-									))
-								) : (
-									<tr>
-										<td
-											colSpan={3}
-											className="p-3 text-center"
+						{/* Ticket Verification Section */}
+						<div className="space-y-6">
+							<div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+								<div className="flex items-center justify-between mb-6">
+									<h2 className="text-xl font-bold text-gray-900">
+										Verify Tickets
+									</h2>
+									<div className="flex items-center space-x-2">
+										<input
+											type="checkbox"
+											id="verifiedFilter"
+											checked={filterVerified}
+											onChange={() =>
+												setFilterVerified(
+													(prev) => !prev
+												)
+											}
+											className="rounded text-purple-600 focus:ring-purple-500"
+										/>
+										<label
+											htmlFor="verifiedFilter"
+											className="text-sm text-gray-600"
 										>
+											Show verified only
+										</label>
+									</div>
+								</div>
+
+								<form
+									onSubmit={handleVerifyTicket}
+									className="mb-6"
+								>
+									<div className="relative">
+										<Search className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+										<input
+											type="text"
+											placeholder="Enter Ticket ID"
+											value={ticketId}
+											onChange={(e) =>
+												setTicketId(e.target.value)
+											}
+											className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+										/>
+										<button
+											type="submit"
+											className="absolute right-2 top-2 px-4 py-1 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors"
+										>
+											Verify
+										</button>
+									</div>
+								</form>
+
+								<QRScanner
+									eventId={event?._id}
+									onScanSuccess={fetchTickets}
+								/>
+							</div>
+
+							{/* Tickets List */}
+							<div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+								<h3 className="text-lg font-bold text-gray-900 mb-4">
+									Recent Tickets
+								</h3>
+								<div className="space-y-3">
+									{filteredTickets.length > 0 ? (
+										filteredTickets
+											.slice(0, 5)
+											.map((ticket) => (
+												<div
+													key={ticket._id}
+													className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+												>
+													<div className="flex items-center space-x-3">
+														<Tag className="h-5 w-5 text-purple-500" />
+														<span className="text-sm font-medium text-gray-600">
+															{ticket._id}
+														</span>
+													</div>
+													{ticket.checkedIn ? (
+														<CheckCircle2 className="h-5 w-5 text-green-500" />
+													) : (
+														<XCircle className="h-5 w-5 text-red-500" />
+													)}
+												</div>
+											))
+									) : (
+										<p className="text-center text-gray-500 py-4">
 											No tickets available
-										</td>
-									</tr>
-								)}
-							</tbody>
-						</table>
+										</p>
+									)}
+								</div>
+							</div>
+						</div>
 					</div>
-				</div>
-			) : (
-				<p>Loading event details...</p>
-			)}
+				) : (
+					<div className="flex items-center justify-center h-64">
+						<div className="animate-pulse flex space-x-4">
+							<div className="rounded-full bg-gray-200 h-12 w-12"></div>
+							<div className="space-y-4">
+								<div className="h-4 bg-gray-200 rounded w-32"></div>
+								<div className="h-4 bg-gray-200 rounded w-24"></div>
+							</div>
+						</div>
+					</div>
+				)}
+			</div>
 		</div>
 	);
 };

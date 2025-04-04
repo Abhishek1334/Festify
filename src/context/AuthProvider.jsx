@@ -92,7 +92,7 @@ export const AuthProvider = ({ children }) => {
 		localStorage.removeItem("user");
 	};
 
-	// ✅ Book a Ticket
+	// 📦 Book a Ticket
 	const bookTicket = async (eventId) => {
 		if (!user) {
 			return {
@@ -101,10 +101,10 @@ export const AuthProvider = ({ children }) => {
 			};
 		}
 
-		// Check if user already has a ticket for this event
 		const alreadyBooked = tickets.some(
-			(ticket) => ticket.eventId === eventId
+			(ticket) => ticket.eventId === eventId && ticket.userId === user.id
 		);
+
 		if (alreadyBooked) {
 			return {
 				error: true,
@@ -113,31 +113,17 @@ export const AuthProvider = ({ children }) => {
 		}
 
 		try {
-			// Call the API to book the ticket
 			const response = await bookTicketAPI(eventId, user.token);
 
-			// ✅ Check if response contains expected fields
-			if (response?.eventId && response?.userId && response?.qrCode) {
-				// Treat this as a valid booking response
-				const ticketData = {
-					eventId: response.eventId,
-					userId: response.userId,
-					rfid: response.rfid,
-					userName: response.userName,
-					qrCode: response.qrCode,
-				};
-
-				// Add to state
-				setTickets((prevTickets) => [...prevTickets, ticketData]);
-
-				return { success: true, ticket: ticketData }; // Ensure correct return format
+			if (response?._id) {
+				setTickets((prevTickets) => [...prevTickets, response]);
+				return { success: true, ticket: response };
 			}
 
-			// ❌ Handle unexpected API response
-			console.error("Unexpected API response:", response);
+			console.error("Unexpected booking response:", response);
 			return {
 				error: true,
-				message: "An unexpected error occurred while booking.",
+				message: "Unexpected response from server during booking.",
 			};
 		} catch (error) {
 			console.error("Failed to book ticket:", error.response?.data);
@@ -150,7 +136,7 @@ export const AuthProvider = ({ children }) => {
 		}
 	};
 
-	// ✅ Cancel a Ticket
+	// ❌ Cancel a Ticket
 	const cancelTicket = async (ticketId) => {
 		try {
 			await axios.delete(`${API_URL}/tickets/cancel/${ticketId}`, {
@@ -159,8 +145,14 @@ export const AuthProvider = ({ children }) => {
 			setTickets((prevTickets) =>
 				prevTickets.filter((t) => t._id !== ticketId)
 			);
+			return { success: true };
 		} catch (error) {
 			console.error("Error canceling ticket:", error.response?.data);
+			return {
+				success: false,
+				message:
+					error.response?.data?.message || "Failed to cancel ticket.",
+			};
 		}
 	};
 

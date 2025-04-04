@@ -6,16 +6,18 @@ import categories from "../categories.json";
 import dayjs from "dayjs";
 import timezone from "dayjs/plugin/timezone";
 import utc from "dayjs/plugin/utc";
-import { toast, ToastContainer } from "react-toastify"; // Import toast
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+
 const API_URL = import.meta.env.VITE_API_URL + "/api";
-// Extend dayjs with the plugins
-dayjs.extend(utc); // You need both UTC and timezone plugins for `.tz` to work
+
+// Extend dayjs with UTC and timezone plugins
+dayjs.extend(utc);
 dayjs.extend(timezone);
 
 const CLOUDINARY_UPLOAD_PRESET = "festify";
 const CLOUDINARY_CLOUD_NAME = "dmgyx29ou";
 
-// ✅ Helper function to get Cloudinary image URL
 const getCloudinaryImageUrl = (publicId) =>
 	`https://res.cloudinary.com/${CLOUDINARY_CLOUD_NAME}/image/upload/${publicId}`;
 
@@ -32,6 +34,17 @@ const EventDetail = () => {
 	const [imagePreview, setImagePreview] = useState(null);
 	const [isUploadingImage, setIsUploadingImage] = useState(false);
 
+	const now = dayjs().utc(); // Always use UTC for consistency
+
+	// ✅ Avoid accessing event.startTime when event is still null
+	const start = event ? dayjs(event.startTime) : null;
+	const end = event ? dayjs(event.endTime) : null;
+
+	const isSoldOut = event ? event.ticketsSold >= event.capacity : false;
+	const isUpcoming = event ? now.isBefore(start) : false;
+	const isLive = event ? now.isAfter(start) && now.isBefore(end) : false;
+	const isExpired = event ? now.isAfter(end) : false;
+
 	useEffect(() => {
 		const fetchEventDetails = async () => {
 			if (!user) {
@@ -44,14 +57,17 @@ const EventDetail = () => {
 				setLoading(true);
 				const { data } = await axios.get(
 					`${API_URL}/events/${eventId}`,
-					{ headers: { Authorization: `Bearer ${user.token}` } }
+					{
+						headers: { Authorization: `Bearer ${user.token}` },
+					}
 				);
+
 				setEvent(data);
 				setEditEvent({
 					...data,
 					date: dayjs(data.date).format("YYYY-MM-DD"),
-					startTime: dayjs(data.startTime).format("HH:mm"), // 24-hour format for input
-					endTime: dayjs(data.endTime).format("HH:mm"), // 24-hour format for input
+					startTime: dayjs(data.startTime).format("HH:mm"),
+					endTime: dayjs(data.endTime).format("HH:mm"),
 				});
 
 				if (data.image) {
@@ -67,13 +83,11 @@ const EventDetail = () => {
 		fetchEventDetails();
 	}, [eventId, user]);
 
-	// ✅ Handle input changes
 	const handleChange = (e) => {
 		const { name, value } = e.target;
 		setEditEvent((prev) => ({ ...prev, [name]: value }));
 	};
 
-	// ✅ Handle image upload
 	const handleImageChange = async (e) => {
 		const file = e.target.files[0];
 		if (file) {
@@ -82,7 +96,7 @@ const EventDetail = () => {
 			formData.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
 
 			try {
-				setIsUploadingImage(true); // Set uploading state to true
+				setIsUploadingImage(true);
 				const uploadRes = await axios.post(
 					`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`,
 					formData
@@ -99,14 +113,12 @@ const EventDetail = () => {
 				console.error("Error uploading image:", err);
 				setError("Image upload failed. Please try again.");
 			} finally {
-				setIsUploadingImage(false); // Set uploading state to false after upload
+				setIsUploadingImage(false);
 			}
 		}
 	};
 
-	// ✅ Save event changes
 	const handleSave = async () => {
-		// Validate that endTime is after startTime
 		if (new Date(editEvent.startTime) >= new Date(editEvent.endTime)) {
 			setError("End time must be after start time.");
 			return;
@@ -126,7 +138,6 @@ const EventDetail = () => {
 			return;
 		}
 
-		// Ensure the times are correctly set as UTC
 		const startTimeInUTC = dayjs(`${editEvent.date}T${editEvent.startTime}`)
 			.utc()
 			.format();
@@ -134,7 +145,6 @@ const EventDetail = () => {
 			.utc()
 			.format();
 
-		// Prepare updated event data with UTC times
 		const updatedEvent = {
 			...editEvent,
 			startTime: startTimeInUTC,
@@ -153,44 +163,38 @@ const EventDetail = () => {
 				}
 			);
 
-			setEvent(data); // Update the event state
-			setIsEditing(false); // Exit editing mode
-			toast.success("Event updated successfully."); // Success toast
+			setEvent(data);
+			setIsEditing(false);
+			toast.success("Event updated successfully.");
 		} catch (err) {
 			setError(err.response?.data?.message || "Update failed");
 			toast.error(
 				err.response?.data?.message || "Failed to update event."
-			); // Error toast
+			);
 		}
 	};
 
-	// ✅ Delete event
 	const handleDelete = async () => {
 		if (!window.confirm("Are you sure you want to delete this event?"))
 			return;
 
 		try {
-			// Send DELETE request with Authorization header containing the JWT token
 			const response = await axios.delete(
 				`${API_URL}/events/${eventId}`,
 				{
-					headers: {
-						Authorization: `Bearer ${user.token}`,
-					},
+					headers: { Authorization: `Bearer ${user.token}` },
 				}
 			);
 
 			if (response.status === 200) {
-				toast.success("Event deleted successfully."); // Success toast
-
-				// Use useNavigate to redirect after successful deletion
-				navigate("/user-profile"); // Redirect to event panel after deletion
+				toast.success("Event deleted successfully.");
+				navigate("/user-profile");
 			}
 		} catch (err) {
 			console.error("Delete event error:", err);
 			toast.error(
 				err.response?.data?.message || "Failed to delete event."
-			); // Error toast
+			);
 		}
 	};
 
@@ -204,9 +208,8 @@ const EventDetail = () => {
 		);
 
 	return (
-		<div className="max-w-4xl mx-auto py-10 px-5 bg-gray-100 rounded-lg shadow-lg">
-			{/* Toastify Container */}
-			<ToastContainer /> {/* Add this line to display the toasts */}
+		<div className=" max-w-4xl mx-auto py-10 px-5 bg-gray-100 rounded-lg shadow-lg my-10">
+			<ToastContainer />
 			<div className="flex gap-5 mb-4">
 				<Link to="/user-profile" className="btn-primary">
 					Return to Event Panel
@@ -215,14 +218,36 @@ const EventDetail = () => {
 					Check-in Panel
 				</Link>
 			</div>
-			{/* Event Image */}
+
 			<img
 				src={imagePreview || getCloudinaryImageUrl(event.image)}
 				alt={event.title}
 				className="w-full h-64 object-cover rounded-lg mb-4"
 			/>
-			{/* Displaying all fields */}
+
 			<div className="space-y-2">
+				<div className="my-4 flex gap-4">
+					{isSoldOut && (
+						<span className="inline-block bg-red-200 text-red-800 px-3 py-1 rounded-lg text-sm font-semibold">
+							🎟️ Sold Out
+						</span>
+					)}
+					{isUpcoming && !isSoldOut && (
+						<span className="inline-block bg-blue-200 text-blue-800 px-3 py-1 rounded-lg text-sm font-semibold">
+							⏳ Upcoming
+						</span>
+					)}
+					{isLive && (
+						<span className="inline-block bg-green-200 text-green-800 px-3 py-1 rounded-lg text-sm font-semibold animate-pulse">
+							🟢 Live Now
+						</span>
+					)}
+					{isExpired && (
+						<span className="inline-block bg-gray-300 text-gray-700 px-3 py-1 rounded-lg text-sm font-semibold">
+							📅 Event Ended
+						</span>
+					)}
+				</div>
 				<p>
 					<strong>Title:</strong> {event.title}
 				</p>
@@ -233,47 +258,52 @@ const EventDetail = () => {
 					<strong>Category:</strong> {event.category}
 				</p>
 				<p>
-					<strong>Date:</strong>{" "}
-					{dayjs(event.date).format("MMMM D, YYYY")}
-				</p>
-				<p>
-					<strong>Start Time (IST):</strong>{" "}
-					{dayjs(event.startTime).tz("Asia/Kolkata").format("h:mm A")}
-				</p>
-				<p>
-					<strong>End Time (IST):</strong>{" "}
-					{dayjs(event.endTime).tz("Asia/Kolkata").format("h:mm A")}
-				</p>
-
-				<p>
 					<strong>Location:</strong> {event.location}
 				</p>
 				<p>
 					<strong>Capacity:</strong> {event.capacity}
 				</p>
+				{event?.startTime && (
+					<p>
+						<strong>Start Time (IST):</strong>{" "}
+						{dayjs(event.startTime)
+							.tz("Asia/Kolkata")
+							.format("h:mm A")}
+					</p>
+				)}
+				{event?.endTime && (
+					<p>
+						<strong>End Time (IST):</strong>{" "}
+						{dayjs(event.endTime)
+							.tz("Asia/Kolkata")
+							.format("h:mm A")}
+					</p>
+				)}
 			</div>
+
 			<div className="flex gap-5 mt-4">
-				<button
-					onClick={() => setIsEditing(true)}
-					className="btn-primary"
-				>
-					Edit Event
-				</button>
+				{!isExpired && (
+					<button
+						onClick={() => setIsEditing(true)}
+						className="btn-primary"
+					>
+						Edit Event
+					</button>
+				)}
 				<button
 					onClick={handleDelete}
-					className="bg-red-500 text-white font-semibold px-4 py-2 rounded-lg "
+					className="bg-red-500 text-white font-semibold px-4 py-2 rounded-lg"
 				>
 					Delete Event
 				</button>
 			</div>
-			{/* Edit Form */}
+
 			{isEditing && (
 				<div className="fixed inset-0 flex justify-center items-center bg-gray-100 bg-opacity-50">
 					<div className="bg-white p-6 rounded-lg shadow-xl max-w-lg">
 						<h2 className="text-xl font-semibold mb-4">
 							Edit Event
 						</h2>
-
 						<input
 							name="title"
 							value={editEvent.title}
@@ -301,7 +331,6 @@ const EventDetail = () => {
 								</option>
 							))}
 						</select>
-
 						<input
 							type="date"
 							name="date"
@@ -323,7 +352,6 @@ const EventDetail = () => {
 							onChange={handleChange}
 							className="input-field"
 						/>
-
 						<input
 							name="location"
 							value={editEvent.location}
@@ -343,7 +371,6 @@ const EventDetail = () => {
 							onChange={handleImageChange}
 							className="input-field"
 						/>
-
 						<div className="flex justify-end gap-4 mt-4">
 							<button
 								onClick={() => setIsEditing(false)}

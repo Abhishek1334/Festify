@@ -64,7 +64,7 @@ export default function Navbar() {
 									className="flex items-center space-x-2 nav-link btn-secondary"
 								>
 									<User className="h-5 w-5" />
-									<span>{user?.name || "Profile"}</span>
+									<span>{user?.username || "Profile"}</span>
 								</Link>
 								<button
 									onClick={handleLogout}

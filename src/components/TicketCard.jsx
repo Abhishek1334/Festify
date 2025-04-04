@@ -1,56 +1,40 @@
-import { useEffect, useState, useContext } from "react";
-import axios from "axios";
 import PropTypes from "prop-types";
+import { useContext, useState } from "react";
 import { AuthContext } from "../context/AuthContext";
-import {toast, ToastContainer} from "react-toastify";
+import { toast,ToastContainer } from "react-toastify";
+import axios from "axios";
+import Swal from "sweetalert2";
+import withReactContent from "sweetalert2-react-content";
+const MySwal = withReactContent(Swal);
 const API_URL = import.meta.env.VITE_API_URL + "/api";
 
 const TicketCard = ({ ticket, onCancel }) => {
 	const { user } = useContext(AuthContext) || {};
-	const [event, setEvent] = useState(null);
 	const [isCancelling, setIsCancelling] = useState(false);
-	const [successMessage, setSuccessMessage] = useState("");
-	const [errorMessage, setErrorMessage] = useState("");
-console.log(event);
-	// Extract eventId safely
-	const eventId = ticket?.eventId?._id || ticket?.eventId;
 
-	// Fetch event details
-	useEffect(() => {
-		const fetchEventDetails = async () => {
-			if (!eventId) return;
+	const event = ticket.event;
 
-			try {
-				const { data } = await axios.get(
-					`${API_URL}/events/${eventId}`
-				);
-				setEvent(data);
-			} catch (error) {
-				console.error("❌ Error fetching event details:", error);
-				setErrorMessage("⚠️ Failed to load event details.");
-			}
-		};
-
-		fetchEventDetails();
-	}, [eventId]);
-
-	// Cancel ticket function
 	const handleCancelTicket = async () => {
 		if (!user?.token) {
-			toast.error("You are not logged in. Please log in again.");
+			toast.error("❌ You are not logged in. Please log in again.");
 			return;
 		}
 
-		if (!window.confirm("Are you sure you want to cancel this ticket?")) {
-			return;
-		}
+		const result = await MySwal.fire({
+			title: "Are you sure?",
+			text: "You won't be able to undo this action!",
+			icon: "warning",
+			showCancelButton: true,
+			confirmButtonColor: "#d33",
+			cancelButtonColor: "#3085d6",
+			confirmButtonText: "Yes, cancel it!",
+			background: "#fff",
+			allowOutsideClick: false,
+		});
+
+		if (!result.isConfirmed) return;
 
 		setIsCancelling(true);
-		setSuccessMessage("");
-		setErrorMessage("");
-
-		// Immediately remove ticket from UI before API request completes
-		onCancel(ticket._id);
 
 		try {
 			const response = await axios.delete(
@@ -58,87 +42,88 @@ console.log(event);
 				{
 					headers: {
 						Authorization: `Bearer ${user.token}`,
-						"Content-Type": "application/json",
 					},
 				}
 			);
 
 			if (response.status === 200 || response.status === 204) {
-				setSuccessMessage("✅ Ticket cancelled successfully!");
+				toast.success("✅ Ticket cancelled successfully!");
+				onCancel(ticket._id);
 			} else {
-				throw new Error("Unexpected response from server.");
+				throw new Error("Unexpected server response");
 			}
 		} catch (error) {
-			console.error("❌ Error cancelling ticket:", error);
-			setErrorMessage(
+			console.error("❌ Ticket cancel error:", error);
+			toast.error(
 				error.response?.data?.message ||
 					"⚠️ Failed to cancel ticket. Please try again."
 			);
 		} finally {
 			setIsCancelling(false);
-
-			// Hide success message after 3 seconds
-			setTimeout(() => {
-				setSuccessMessage("");
-			}, 3000);
 		}
 	};
 
-	if (!event)
-		return <p className="text-gray-500">Loading event details...</p>;
-	console.log(event.image)
+	if (!event) return <p className="text-gray-500">⚠️ Event data missing</p>;
+
 	return (
-		<div className="bg-white shadow-md w-[30%] rounded-lg overflow-hidden p-4 min-w-[300px] flex-1">
-			{/* Event Image */}
-			<div className="fixed top-0 right-0 z-50">
-				<ToastContainer />
+		<div className="bg-white shadow-md w-full md:w-[30%] rounded-lg overflow-hidden p-5 flex flex-col gap-4 border border-gray-200">
+			<div>
+				<ToastContainer className="fixed top-0 right-0 z-50" />
 			</div>
+			{/* Event Image */}
 			<img
-				src={`https://res.cloudinary.com/dmgyx29ou/image/upload/${event.image}`}
+				src={event.image || "/placeholder.jpg"}
 				alt={event.title || "Event"}
-				className="w-full h-40 object-cover rounded-lg"
+				className="w-full h-44 object-cover rounded-lg"
 			/>
 
-			<h3 className="text-lg font-semibold mt-2">
-				{event.title || "No Title"}
-			</h3>
-			<p className="text-gray-600">
-				{event.date
-					? new Date(event.date).toLocaleString()
-					: "No Date Available"}
-			</p>
-			<p className="text-gray-600">
-				{event.location || "Location not specified"}
-			</p>
-			<p className="text-sm text-gray-500">
-				<strong>Ticket ID:</strong> {ticket._id}
-			</p>
+			{/* Event Details */}
+			<div className="flex flex-col gap-1 border-b border-gray-200 pb-3">
+				<h3 className="text-xl font-bold text-gray-800">
+					{event.title}
+				</h3>
+				<p className="text-gray-600">
+					📅{" "}
+					{event.date
+						? new Date(event.date).toLocaleString()
+						: "Date not available"}
+				</p>
+				<p className="text-gray-600">
+					📍 {event.location || "No location provided"}
+				</p>
+			</div>
+
+			{/* Ticket Info */}
+			<div className="text-sm border-b border-gray-200 pb-3">
+				<p className="text-gray-500">
+					<strong>🎟 Ticket ID:</strong> {ticket._id}
+				</p>
+				{ticket.rfid && (
+					<p className="text-gray-500">
+						<strong>🔗 RFID:</strong> {ticket.rfid}
+					</p>
+				)}
+			</div>
 
 			{/* QR Code */}
 			{ticket.qrCode && (
-				<img
-					src={ticket.qrCode}
-					alt="QR Code"
-					className="mt-3 w-24 h-24 mx-auto"
-				/>
+				<div className="flex justify-center">
+					<img
+						src={ticket.qrCode}
+						alt="QR Code"
+						className="mt-2 w-28 h-28 border border-gray-300 rounded-md shadow-sm"
+					/>
+				</div>
 			)}
 
 			{/* Cancel Button */}
 			<button
-				className="px-6 py-3 bg-red-500 text-white font-semibold rounded-lg hover:bg-red-700 transition-all duration-200 shadow-md hover:shadow-lg focus:ring-2 focus:ring-red-500 focus:ring-offset-2 flex place-self-center mt-3 disabled:opacity-50"
+				className="px-6 py-3 bg-red-500 text-white font-semibold rounded-lg hover:bg-red-600 transition-all duration-200 shadow hover:shadow-lg disabled:opacity-50 mt-2"
 				onClick={handleCancelTicket}
 				disabled={isCancelling}
 			>
 				{isCancelling ? "Cancelling..." : "Cancel Ticket"}
 			</button>
-
-			{/* Messages */}
-			{successMessage && (
-				<div className="mt-4 text-green-500">{successMessage}</div>
-			)}
-			{errorMessage && (
-				<div className="mt-4 text-red-500">{errorMessage}</div>
-			)}
 		</div>
 	);
 };
