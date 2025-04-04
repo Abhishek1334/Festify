@@ -10,13 +10,11 @@ Festify is a **local event aggregator platform** where users can **discover, cre
 ## 🚀 Features
 
 - 🔐 **JWT Authentication** for secure login/signup
-- 👤 **Role-based Access**: Organizers vs Regular Users
 - 🗓️ **Event Management**: Create, Edit, Delete Events (Organizers)
 - 🎟️ **Ticketing System** with **QR Code Generation**
 - 📸 **Image Uploads** via **Multer + Cloudinary**
 - 🔍 **Event Search & Filter** by category
-- 📍 **Location-based Event Discovery**
-- 📊 **Organizer Dashboard** with real-time check-ins
+- 📊 **Organizer Dashboard** with check-ins details
 - ✅ **QR Code Scanner** using `Html5Qrcode` for attendee verification
 - 🧾 **RSVP Management** in user profile
 
@@ -200,9 +198,9 @@ npm run dev
 - ✅ Ticket Check-in History for Organizers
 - 🔔 In-App & Email Notifications
 - 📆 Filter Events by Date/Time
-- 🔁 Cancel RSVP
 - 🛡️ Admin Reporting/Moderation Tools
-
+- 📍 Location-based Event Discovery
+- 
 ---
 
 ## 🤝 Contributing
