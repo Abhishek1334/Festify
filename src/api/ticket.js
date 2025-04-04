@@ -10,15 +10,16 @@ export const bookTicket = async (eventId, token) => {
 			{
 				headers: {
 					Authorization: `Bearer ${token}`,
+					"Content-Type": "application/json",
 				},
 			}
 		);
+
+		// ✅ Return full ticket object with updated QR Code and organizerId
 		return response.data;
 	} catch (error) {
-		console.error(
-			"Error booking ticket:",
-			error.response?.data || error.message
-		);
-		throw error;
+		const errData = error.response?.data || { message: "Unknown error" };
+		console.error("Error booking ticket:", errData);
+		throw new Error(errData.message || "Ticket booking failed");
 	}
 };

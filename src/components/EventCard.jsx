@@ -94,15 +94,25 @@ export default function EventCard({ event, organizer }) {
 							</span>
 						</div>
 
+						
 						{/* Capacity */}
-						<div className="flex items-center text-gray-600">
-							<Users className="h-5 w-5 mr-2 text-purple-500" />
-							<span>
-								{event.capacity
-									? `${event.capacity} spots available`
-									: "Capacity not specified"}
-							</span>
-						</div>
+						
+
+						{/* ✅ Live Tickets Left */}
+						{typeof event.ticketsSold === "number" &&
+							typeof event.capacity === "number" && (
+								<div className="flex items-center font-semibold text-red-600">
+									<Users className="h-5 w-5 mr-2 text-purple-500" />
+									<span>
+										{event.capacity - event.ticketsSold > 0
+											? `${
+													event.capacity -
+													event.ticketsSold
+											} tickets left`
+											: "🚫 Sold out"}
+									</span>
+								</div>
+							)}
 					</div>
 				</div>
 			</Link>

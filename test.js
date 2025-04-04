@@ -2,7 +2,7 @@ import bcrypt from "bcryptjs";
 
 const enteredPassword = "test1234"; // The password you're testing
 const storedHash =
-	"$2b$10$kzTcjFSKuPWAJcOx5MB5tu8p8NrMVpMbR4wpxbpue9j/Orwy58wo."; // The stored hash
+	"$2b$10$Ny6UFAqYodcgsJ0oH6iqEOf2ZKtO8pAyA1podIOk004nMBNN1ck6a"; // The stored hash
 
 bcrypt
 	.compare(enteredPassword, storedHash)

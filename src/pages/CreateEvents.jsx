@@ -43,7 +43,6 @@ const CreateEvents = () => {
 				"https://api.cloudinary.com/v1_1/dmgyx29ou/image/upload",
 				formData
 			);
-			console.log("✅ Cloudinary Response:", response.data);
 
 			return response.data.public_id; // Return public_id of uploaded image
 		} catch (error) {
@@ -131,7 +130,7 @@ const CreateEvents = () => {
 	};
 
 	return (
-		<div className="bg-gradient-to-br from-purple-500 to-indigo-300 min-h-[82vh] flex items-center justify-center py-8">
+		<div className="bg-gradient-to-r from-purple-600 to-indigo-700 min-h-[82vh] flex items-center justify-center py-8">
 			<div className="max-w-3xl mx-auto p-8 shadow-xl rounded-lg bg-white">
 				<h2 className="text-3xl font-semibold text-center mb-6">
 					Create Event

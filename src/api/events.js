@@ -110,7 +110,6 @@ export const fetchUserEvents = async (token) => {
 				Authorization: `Bearer ${token}`,
 			},
 		});
-		console.log("API Response:", response.data); // Debugging
 		return response.data || []; // Ensure it returns an array
 	} catch (error) {
 		console.error("Error fetching user events:", error);
