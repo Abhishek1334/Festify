@@ -12,6 +12,7 @@ const QRScanner = ({ eventId, onScanSuccess }) => {
 	const [scannerEnabled, setScannerEnabled] = useState(false);
 	const [isScanning, setIsScanning] = useState(false);
 	const [scannerInstance, setScannerInstance] = useState(null);
+	const [lastScanTime, setLastScanTime] = useState(0);
 
 	const handleVerification = useCallback(
 		async (ticketId) => {
@@ -64,8 +65,21 @@ const QRScanner = ({ eventId, onScanSuccess }) => {
 			setScannerInstance(scanner);
 
 			const onScanSuccess = async (decodedText) => {
+				// Check if enough time has passed since the last scan
+				const currentTime = Date.now();
+				if (currentTime - lastScanTime < 1000) {
+					// If less than 1 second has passed, ignore the scan
+					return;
+				}
+
 				setIsScanning(true);
+				setLastScanTime(currentTime); // Update the last scan time
+
 				await handleVerification(decodedText.trim());
+
+				// Stop the scanner after a successful scan
+				scanner.clear().catch(console.error);
+				setScannerEnabled(false); // Disable scanner after scan
 				setIsScanning(false);
 			};
 
@@ -77,7 +91,7 @@ const QRScanner = ({ eventId, onScanSuccess }) => {
 				scanner.clear().catch(console.error);
 			}
 		};
-	}, [scannerEnabled, handleVerification]);
+	}, [scannerEnabled, handleVerification, lastScanTime]);
 
 	const toggleScanner = () => {
 		if (scannerEnabled) {
