@@ -4,12 +4,7 @@ import { PropTypes } from "prop-types";
 import { useNavigate } from "react-router-dom";
 import { bookTicket as bookTicketAPI } from "../api/ticket";
 import { AuthContext } from "./AuthContext";
-import { toast } from "react-toastify";
-<<<<<<< HEAD
-const API_URL = import.meta.env.VITE_API_URL+"/api";
-=======
 const API_URL = import.meta.env.VITE_API_URL + "/api";
->>>>>>> 7e06766 (updating repo)
 import "react-toastify/dist/ReactToastify.css";
 export const AuthProvider = ({ children }) => {
 	const [user, setUser] = useState(() => {
