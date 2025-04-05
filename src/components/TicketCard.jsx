@@ -5,6 +5,8 @@ import { toast,ToastContainer } from "react-toastify";
 import axios from "axios";
 import Swal from "sweetalert2";
 import withReactContent from "sweetalert2-react-content";
+import dayjs from "dayjs";
+
 const MySwal = withReactContent(Swal);
 const API_URL = import.meta.env.VITE_API_URL + "/api";
 
@@ -115,15 +117,21 @@ const TicketCard = ({ ticket, onCancel }) => {
 					/>
 				</div>
 			)}
+{dayjs(event.endTime).isBefore(dayjs()) ? (
+  <p className="text-sm text-gray-500">
+    ⚠️ This ticket has expired.
+  </p>
+) : (
+  // Cancel Button
+  <button
+    className="px-6 py-3 bg-red-500 text-white font-semibold rounded-lg hover:bg-red-600 transition-all duration-200 shadow hover:shadow-lg disabled:opacity-50 mt-2"
+    onClick={handleCancelTicket}
+    disabled={isCancelling}
+  >
+    {isCancelling ? "Cancelling..." : "Cancel Ticket"}
+  </button>
+)}
 
-			{/* Cancel Button */}
-			<button
-				className="px-6 py-3 bg-red-500 text-white font-semibold rounded-lg hover:bg-red-600 transition-all duration-200 shadow hover:shadow-lg disabled:opacity-50 mt-2"
-				onClick={handleCancelTicket}
-				disabled={isCancelling}
-			>
-				{isCancelling ? "Cancelling..." : "Cancel Ticket"}
-			</button>
 		</div>
 	);
 };
