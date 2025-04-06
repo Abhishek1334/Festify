@@ -117,24 +117,26 @@ const TicketCard = ({ ticket, onCancel }) => {
 					/>
 				</div>
 			)}
-{dayjs(event.endTime).isBefore(dayjs()) ? (
-  <p className="text-sm text-gray-500">
-    ⚠️ This ticket has expired.
-  </p>
-) : (
-  // Cancel Button
-  <button
-    className="px-6 py-3 bg-red-500 text-white font-semibold rounded-lg hover:bg-red-600 transition-all duration-200 shadow hover:shadow-lg disabled:opacity-50 mt-2"
-    onClick={handleCancelTicket}
-    disabled={isCancelling}
-  >
-    {isCancelling ? "Cancelling..." : "Cancel Ticket"}
-  </button>
-)}
-
+		{dayjs(event.endTime).isBefore(dayjs()) ? (
+		<p className="text-sm text-gray-500">
+			⚠️ This ticket has expired.
+		</p>
+		) : (
+		// Cancel Button
+		!ticket.checkIn && (
+			<button
+			className="px-6 py-3 bg-red-500 text-white font-semibold rounded-lg hover:bg-red-600 transition-all duration-200 shadow hover:shadow-lg disabled:opacity-50 mt-2"
+			onClick={handleCancelTicket}
+			disabled={isCancelling}
+			>
+			{isCancelling ? "Cancelling..." : "Cancel Ticket"}
+			</button>
+		)
+		)}
 		</div>
 	);
-};
+}
+
 
 TicketCard.propTypes = {
 	ticket: PropTypes.object.isRequired,
