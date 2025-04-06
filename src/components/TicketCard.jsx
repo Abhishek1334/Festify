@@ -117,7 +117,7 @@ const TicketCard = ({ ticket, onCancel }) => {
 					/>
 				</div>
 			)}
-		{ticket.checkIn ? (
+		{ticket.checkedIn ? (
   <p className="text-sm text-gray-500">
     ✅ You have already checked in.
   </p>
