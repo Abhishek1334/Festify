@@ -190,7 +190,9 @@ console.log(event)
 								<p className="text-gray-600 mb-6">
 									{event.description}
 								</p>
-
+								<p className="text-gray-600 mb-6">
+									{eventId}
+								</p>
 								<div className="grid grid-cols-2 gap-4">
 									<div className="flex items-center space-x-2 text-gray-600">
 										<Calendar className="h-5 w-5 text-purple-500" />
@@ -201,6 +203,10 @@ console.log(event)
 										</span>
 									</div>
 									<div className="flex items-center space-x-2 text-gray-600">
+										<MapPin className="h-5 w-5 text-purple-500" />
+										<span>{event.location}</span>
+									</div>
+									<div className="flex items-center space-x-2 text-gray-600">
 										<Clock className="h-5 w-5 text-purple-500" />
 										<span>
 											{dayjs(event.startTime).format(
@@ -208,11 +214,15 @@ console.log(event)
 											)}
 										</span>
 									</div>
-									
 									<div className="flex items-center space-x-2 text-gray-600">
-										<MapPin className="h-5 w-5 text-purple-500" />
-										<span>{event.location}</span>
+										<Clock className="h-5 w-5 text-purple-500" />
+										<span>
+											{dayjs(event.endTime).format(
+												"h:mm A"
+											)}
+										</span>
 									</div>
+									
 									<div className="flex items-center space-x-2 text-gray-600">
 										<Users className="h-5 w-5 text-purple-500" />
 										<span>
