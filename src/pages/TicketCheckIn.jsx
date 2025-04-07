@@ -190,8 +190,8 @@ console.log(event)
 								<p className="text-gray-600 mb-6">
 									{event.description}
 								</p>
-								<p className="text-gray-600 mb-6">
-									{eventId}
+								<p className="text-gray-600 text-sm mb-6">
+									EventId: {eventId}
 								</p>
 								<div className="grid grid-cols-2 gap-4">
 									<div className="flex items-center space-x-2 text-gray-600">
