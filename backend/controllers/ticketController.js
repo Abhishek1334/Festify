@@ -249,41 +249,27 @@ export const verifyTicket = async (req, res) => {
 			});
 		}
 
-		// Helper: Convert UTC to IST
-		const toIST = (date) => {
-			const utc = new Date(date);
-			const istOffset = 5.5 * 60 * 60 * 1000; // IST = UTC + 5.5 hrs
-			return new Date(utc.getTime() + istOffset);
-		};
-
-		// Get current IST time
-		const nowIST = toIST(Date.now());
-		// Convert event start & end times to IST
-		const eventStartIST = toIST(event.startTime);
-		const eventEndIST = toIST(event.endTime);
-
-		// Check: Has the event started?
-		if (nowIST < eventStartIST) {
+		// Time checks
+		const now = new Date();
+		if (now < new Date(event.startTime)) {
 			return res.status(400).json({
 				message: "⏳ Event has not started yet. You cannot check in.",
 			});
 		}
-
-		// Optional: Check if event is already over
-		if (nowIST > eventEndIST) {
+		if (now > new Date(event.endTime)) {
 			return res.status(400).json({
-				message: "⛔ Event has already ended. You cannot check in.",
+				message: "⛔ Ticket expired. The event has already ended.",
 			});
 		}
 
 		// Check if ticket is already verified - add debugging
 		console.log("Ticket check-in status:", ticket.checkedIn);
-
+		
 		if (ticket.checkedIn === true) {
 			console.log("Sending 'already verified' response");
 			return res.status(200).json({
-				message: "ALREADY_VERIFIED", // Use a consistent key that's easier to match
-				status: "already_verified", // Add an additional field for clarity
+				message: "ALREADY_VERIFIED",  // Use a consistent key that's easier to match
+				status: "already_verified",   // Add an additional field for clarity
 				ticket,
 			});
 		}
@@ -292,13 +278,13 @@ export const verifyTicket = async (req, res) => {
 		ticket.checkedIn = true;
 		ticket.checkedInAt = now;
 		await ticket.save();
-
+		
 		console.log("Ticket verified successfully");
-
+		
 		// This response is only sent for newly verified tickets
 		res.status(200).json({
-			message: "VERIFIED_SUCCESS", // Use a consistent key
-			status: "success", // Add an additional field
+			message: "VERIFIED_SUCCESS",  // Use a consistent key
+			status: "success",            // Add an additional field
 			ticket,
 		});
 	} catch (error) {
