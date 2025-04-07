@@ -8,7 +8,7 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "start": "node --experimental-json-modules --env-file=backend/.env backend/server.js",
+     "start": "node --experimental-json-modules server.js",
     "server": "node --watch ./backend/server.js"
   },
   "dependencies": {
