@@ -81,7 +81,6 @@ npm run dev
 ### 🔐 Authentication & Authorization
 - JWT-based Auth
 - Protected Routes
-- Role-based Access (Organizers vs Users)
 
 ### 🎫 Event & Ticketing
 - Event Creation & Editing (Organizers)
