@@ -1,13 +1,14 @@
 import { Calendar, MapPin, Users, Search } from "lucide-react";
 import { motion } from "framer-motion";
-import {hero} from "../assets/images/hero.jpeg";
-function Hero() {
+import HeroImg from "../../assets/images/hero.jpeg"
+
+const Hero = () => {
 	return (
 		<section className="relative overflow-hidden bg-gradient-to-r from-purple-600 to-indigo-700 min-h-[70vh]">
 			{/* Background Image & Overlay */}
 			<div className="absolute inset-0">
 				<img
-					src={hero}
+					src={HeroImg}
 					alt="Festival background"
 					className="w-full h-full object-cover opacity-40"
 				/>

@@ -13,6 +13,7 @@ import {
 	Search,
 	CheckCircle2,
 	XCircle,
+	PenBoxIcon,
 } from "lucide-react";
 import QRScanner from "../components/QRScanner";
 
@@ -29,6 +30,12 @@ const getCloudinaryImageUrl = (publicId) => {
 	return `https://res.cloudinary.com/dmgyx29ou/image/upload/${cleanPublicId}`;
 };
 
+const validateRFID = (rfid) => {
+	// Validate format: SS 5S E9 55 (uppercase letters and numbers with spaces)
+	const regex = /^[A-Z0-9]{2}\s[A-Z0-9]{2}\s[A-Z0-9]{2}\s[A-Z0-9]{2}$/;
+	return regex.test(rfid);
+};
+
 const TicketCheckInPage = () => {
 	const { eventId } = useParams();
 	const { state } = useLocation();
@@ -36,6 +43,10 @@ const TicketCheckInPage = () => {
 	const [tickets, setTickets] = useState([]);
 	const [ticketId, setTicketId] = useState("");
 	const [filterVerified, setFilterVerified] = useState(false);
+	const [showRfidModal, setShowRfidModal] = useState(false);
+	const [currentTicket, setCurrentTicket] = useState(null);
+	const [rfidInput, setRfidInput] = useState("");
+	const [isUpdating, setIsUpdating] = useState(false);
 
 	const user = JSON.parse(localStorage.getItem("user"));
 	const token = user?.token;
@@ -58,7 +69,6 @@ const TicketCheckInPage = () => {
 					toast.warn("🎟️ Event is sold out!");
 				}
 			} catch (err) {
-				console.error("Error fetching event details:", err);
 				toast.error("⚠️ Error fetching event details!");
 			}
 		}
@@ -75,7 +85,6 @@ const TicketCheckInPage = () => {
 			);
 			setTickets(data);
 		} catch (err) {
-			console.error("Error fetching tickets:", err);
 			toast.error("⚠️ Error fetching tickets!");
 		}
 	}, [eventId, token]);
@@ -108,15 +117,60 @@ const TicketCheckInPage = () => {
 			} else {
 				toast.success("✅ Ticket Verified Successfully!");
 			}
-			
+
 			setTicketId("");
 			fetchTickets();
 		} catch (err) {
-			console.error("Error verifying ticket:", err);
+
 			toast.error(
 				err.response?.data?.message || "❌ Ticket Verification Failed."
 			);
 		}
+	};
+
+	const handleRfidUpdate = async () => {
+		if (!currentTicket?._id) {
+			toast.warn("⚠️ No ticket selected for RFID update");
+			return;
+		}
+
+		if (!validateRFID(rfidInput)) {
+			toast.error(
+				"❌ Invalid RFID format. Please use format: SS 5S E9 55"
+			);
+			return;
+		}
+
+		setIsUpdating(true);
+		try {
+			const response = await axios.put(
+				`${API_URL}/tickets/update/${currentTicket._id}`,
+				{ rfid: rfidInput },
+				{ headers: { Authorization: `Bearer ${token}` } }
+			);
+
+
+			toast.success(
+				response.data?.message || "✅ RFID Updated Successfully!"
+			);
+			setShowRfidModal(false);
+			setRfidInput("");
+			fetchTickets();
+		} catch (err) {
+			console.error("Error updating RFID:", err);
+			toast.error(
+				err.response ||
+					"❌ RFID Update Failed. Please try again."
+			);
+		} finally {
+			setIsUpdating(false);
+		}
+	};
+
+	const openRfidModal = (ticket) => {
+		setCurrentTicket(ticket);
+		setRfidInput(ticket.rfid || "");
+		setShowRfidModal(true);
 	};
 
 	const filteredTickets = filterVerified
@@ -143,7 +197,7 @@ const TicketCheckInPage = () => {
 				return "bg-red-100 text-red-700";
 		}
 	};
-console.log(event)
+
 	return (
 		<div className="min-h-screen bg-gray-50 p-4 md:p-6">
 			<ToastContainer
@@ -151,6 +205,94 @@ console.log(event)
 				autoClose={3000}
 				hideProgressBar={false}
 			/>
+
+			{/* RFID Update Modal */}
+			{showRfidModal && (
+				<div className="fixed inset-0 z-50 overflow-y-auto">
+					<div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+						<div
+							className="fixed inset-0 transition-opacity"
+							onClick={() => setShowRfidModal(false)}
+						>
+							<div className="absolute inset-0 bg-gray-500 opacity-75"></div>
+						</div>
+
+						<span className="hidden sm:inline-block sm:align-middle sm:h-screen">
+							&#8203;
+						</span>
+
+						<div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+							<div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+								<div className="sm:flex sm:items-start">
+									<div className="mt-3 text-center sm:mt-0 sm:text-left w-full">
+										<h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">
+											Update RFID Tag for Ticket
+										</h3>
+										<div className="space-y-4">
+											<div>
+												<label className="block text-sm font-medium text-gray-700 mb-1">
+													RFID Tag (Format: SS 5S E9
+													55)
+												</label>
+												<input
+													type="text"
+													value={rfidInput}
+													onChange={(e) =>
+														setRfidInput(
+															e.target.value.toUpperCase()
+														)
+													}
+													placeholder="Enter RFID in SS 5S E9 55 format"
+													className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+												/>
+												{rfidInput &&
+													!validateRFID(
+														rfidInput
+													) && (
+														<p className="mt-1 text-sm text-red-600">
+															Invalid format.
+															Please use SS 5S E9
+															55 format.
+														</p>
+													)}
+											</div>
+											<div className="flex justify-end space-x-3">
+												<button
+													onClick={() =>
+														setShowRfidModal(false)
+													}
+													className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
+												>
+													Cancel
+												</button>
+												<button
+													onClick={handleRfidUpdate}
+													disabled={
+														!validateRFID(
+															rfidInput
+														) || isUpdating
+													}
+													className={`px-4 py-2 text-sm font-medium text-white rounded-md ${
+														validateRFID(
+															rfidInput
+														) && !isUpdating
+															? "bg-purple-600 hover:bg-purple-700"
+															: "bg-purple-300 cursor-not-allowed"
+													}`}
+												>
+													{isUpdating
+														? "Updating..."
+														: "Update RFID"}
+												</button>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			)}
 
 			<div className="max-w-7xl mx-auto">
 				<Link
@@ -162,7 +304,7 @@ console.log(event)
 				</Link>
 
 				{event ? (
-					<div className="grid lg:grid-cols-2 gap-6 ">
+					<div className="grid lg:grid-cols-2 gap-6">
 						{/* Event Details Card */}
 						<div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
 							<div className="relative h-48">
@@ -208,7 +350,14 @@ console.log(event)
 											)}
 										</span>
 									</div>
-									
+									<div className="flex items-center space-x-2 text-gray-600">
+										<Clock className="h-5 w-5 text-purple-500" />
+										<span>
+											{dayjs(event.endTime).format(
+												"h:mm A"
+											)}
+										</span>
+									</div>
 									<div className="flex items-center space-x-2 text-gray-600">
 										<MapPin className="h-5 w-5 text-purple-500" />
 										<span>{event.location}</span>
@@ -298,15 +447,35 @@ console.log(event)
 												>
 													<div className="flex items-center space-x-3">
 														<Tag className="h-5 w-5 text-purple-500" />
-														<span className="text-sm font-medium text-gray-600">
-															{ticket._id}
-														</span>
+														<div>
+															<span className="text-sm font-medium text-gray-600 block">
+																{ticket._id}
+															</span>
+															{ticket.rfid && (
+																<span className="text-xs text-gray-500 block">
+																	RFID:{" "}
+																	{
+																		ticket.rfid
+																	}
+																</span>
+															)}
+														</div>
 													</div>
-													{ticket.checkedIn ? (
-														<CheckCircle2 className="h-5 w-5 text-green-500" />
-													) : (
-														<XCircle className="h-5 w-5 text-red-500" />
-													)}
+													<div className="flex items-center space-x-2">
+														{ticket.checkedIn ? (
+															<CheckCircle2 className="h-5 w-5 text-green-500" />
+														) : (
+															<XCircle className="h-5 w-5 text-red-500" />
+														)}
+														<PenBoxIcon
+															className="h-5 w-5 text-gray-500 cursor-pointer hover:text-purple-600"
+															onClick={() =>
+																openRfidModal(
+																	ticket
+																)
+															}
+														/>
+													</div>
 												</div>
 											))
 									) : (

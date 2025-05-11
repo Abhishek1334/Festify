@@ -5,7 +5,8 @@ import {
 	getEventTickets,
 	checkInTicket,
 	cancelTicket,
-	verifyTicket
+	verifyTicket,
+	UpdateRfid
 } from "../controllers/ticketController.js";
 import { protect } from "../middleware/authMiddleware.js";
 
@@ -26,5 +27,7 @@ router.post("/checkInTicket", checkInTicket); // ✅ Match this path exactly
 router.delete("/cancel/:ticketId", protect, cancelTicket);
 
 router.post("/verify", protect, verifyTicket);
+
+router.put("/update/:ticketId", protect, UpdateRfid);
 
 export default router;

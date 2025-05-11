@@ -292,3 +292,33 @@ export const verifyTicket = async (req, res) => {
 		res.status(500).json({ message: "❌ Internal Server Error." });
 	}
 };
+
+
+export const UpdateRfid = async(req,res) => {
+	
+	const { ticketId } = req.params;
+	const { rfid } = req.body;
+
+	if(!ticketId) {
+		return res.status(400).json({ message: "Ticket ID is required." });
+	}
+	if(!rfid) {
+		return res.status(400).json({ message: "RFID is required." });
+	}
+
+
+	try{
+		const ticket = await Ticket.findById(ticketId);
+		if(!ticket) {
+			return res.status(404).json({ message: "Ticket not found." });
+		}
+
+		ticket.rfid = rfid;
+		await ticket.save();
+
+		return res.status(200).json({ message: "RFID updated successfully.", ticket });
+	} catch (error) {
+		console.error("🚨 Update RFID Error:", error);
+		res.status(500).json({ message: "❌ Internal Server Error." });
+	}
+}

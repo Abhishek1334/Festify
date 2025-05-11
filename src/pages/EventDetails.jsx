@@ -177,7 +177,6 @@ const EventDetail = () => {
 	const handleDelete = async () => {
 		if (!window.confirm("Are you sure you want to delete this event?"))
 			return;
-
 		try {
 			const response = await axios.delete(
 				`${API_URL}/events/${eventId}`,
