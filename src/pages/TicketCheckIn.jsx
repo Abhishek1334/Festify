@@ -332,7 +332,9 @@ const TicketCheckInPage = () => {
 								<p className="text-gray-600 mb-6">
 									{event.description}
 								</p>
-
+								<p className="text-gray-600 text-sm mb-6">
+									EventId: {eventId}
+								</p>
 								<div className="grid grid-cols-2 gap-4">
 									<div className="flex items-center space-x-2 text-gray-600">
 										<Calendar className="h-5 w-5 text-purple-500" />
@@ -343,6 +345,10 @@ const TicketCheckInPage = () => {
 										</span>
 									</div>
 									<div className="flex items-center space-x-2 text-gray-600">
+										<MapPin className="h-5 w-5 text-purple-500" />
+										<span>{event.location}</span>
+									</div>
+									<div className="flex items-center space-x-2 text-gray-600">
 										<Clock className="h-5 w-5 text-purple-500" />
 										<span>
 											{dayjs(event.startTime).format(
@@ -350,6 +356,7 @@ const TicketCheckInPage = () => {
 											)}
 										</span>
 									</div>
+<<<<<<< HEAD
 									<div className="flex items-center space-x-2 text-gray-600">
 										<Clock className="h-5 w-5 text-purple-500" />
 										<span>
@@ -358,10 +365,17 @@ const TicketCheckInPage = () => {
 											)}
 										</span>
 									</div>
+=======
+>>>>>>> 3b5495c51e582c9b527c7009fe9ae2b9b01020f6
 									<div className="flex items-center space-x-2 text-gray-600">
-										<MapPin className="h-5 w-5 text-purple-500" />
-										<span>{event.location}</span>
+										<Clock className="h-5 w-5 text-purple-500" />
+										<span>
+											{dayjs(event.endTime).format(
+												"h:mm A"
+											)}
+										</span>
 									</div>
+									
 									<div className="flex items-center space-x-2 text-gray-600">
 										<Users className="h-5 w-5 text-purple-500" />
 										<span>
