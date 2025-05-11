@@ -356,7 +356,6 @@ const TicketCheckInPage = () => {
 											)}
 										</span>
 									</div>
-<<<<<<< HEAD
 									<div className="flex items-center space-x-2 text-gray-600">
 										<Clock className="h-5 w-5 text-purple-500" />
 										<span>
@@ -365,8 +364,6 @@ const TicketCheckInPage = () => {
 											)}
 										</span>
 									</div>
-=======
->>>>>>> 3b5495c51e582c9b527c7009fe9ae2b9b01020f6
 									<div className="flex items-center space-x-2 text-gray-600">
 										<Clock className="h-5 w-5 text-purple-500" />
 										<span>
