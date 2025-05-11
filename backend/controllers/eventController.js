@@ -4,6 +4,7 @@ import axios from "axios";
 const cloudinaryApiKey = process.env.CLOUDINARY_API_KEY;
 const cloudinaryApiSecret = process.env.CLOUDINARY_API_SECRET;
 const cloudinaryCloudName = process.env.CLOUDINARY_CLOUD_NAME;
+import Ticket from "../models/ticketModel.js";
 
 
 // Get all events
@@ -174,65 +175,75 @@ export const updateEvent = async (req, res) => {
 // Delete Event Controller
 export const deleteEvent = async (req, res) => {
 	try {
-		// Find event by ID
-		const event = await Event.findById(req.params.id);
-		if (!event) return res.status(404).json({ message: "Event not found" });
+		const eventId = req.params.id;
+		const event = await Event.findById(eventId);
 
-		// Check if the event has an image and delete it from Cloudinary
-		if (event.image) {
-			// Extract public ID from image URL (assuming it's stored as a full URL)
-			const publicId = event.image.split("/").pop().split(".")[0]; // Extract public ID
-
-			// Generate a timestamp
-			const timestamp = Math.round(new Date().getTime() / 1000);
-
-			// Create a signature using Cloudinary API secret
-			const signature = crypto
-				.createHash("sha1")
-				.update(
-					`public_id=${publicId}&timestamp=${timestamp}${cloudinaryApiSecret}`
-				)
-				.digest("hex");
-
-			// Call Cloudinary API to delete the image
-			const response = await axios.post(
-				`https://api.cloudinary.com/v1_1/${cloudinaryCloudName}/image/destroy`,
-				new URLSearchParams({
-					public_id: publicId,
-					api_key: cloudinaryApiKey,
-					timestamp: timestamp,
-					signature: signature,
-				})
-			);
-
-			// Check Cloudinary response
-			if (response.data.result !== "ok") {
-				console.error("Cloudinary error:", response.data);
-				return res.status(500).json({
-					message: "Failed to delete image from Cloudinary",
-					error: response.data,
-				});
-			}
-
-			console.log("Image deleted from Cloudinary.");
+		if (!event) {
+			return res
+				.status(404)
+				.json({ message: "Event not found or not authorized" });
 		}
 
-		// Proceed with deleting the event from the database
-		await event.deleteOne();
+		// Delete image from Cloudinary if exists
+		if (event.image) {
+			try {
+				// More robust public ID extraction
+				const urlParts = event.image.split("/");
+				const uploadIndex = urlParts.findIndex(
+					(part) => part === "upload"
+				);
+				const publicIdWithExtension = urlParts
+					.slice(uploadIndex + 2)
+					.join("/");
+				const publicId = publicIdWithExtension.split(".")[0];
+
+				console.log("Extracted Public ID:", publicId);
+
+				const timestamp = Math.round(Date.now() / 1000);
+				const paramsToSign = {
+					public_id: publicId,
+					timestamp: timestamp,
+				};
+
+				// Using Cloudinary SDK is more reliable than manual signing
+				const result = await cloudinary.uploader.destroy(publicId, {
+					invalidate: true,
+				});
+
+				if (result.result !== "ok") {
+					console.error("Cloudinary deletion failed:", result);
+					throw new Error("Failed to delete image from Cloudinary");
+				}
+
+				console.log("Successfully deleted image from Cloudinary");
+			} catch (cloudinaryError) {
+				console.error("Cloudinary deletion error:", cloudinaryError);
+				// Don't fail the entire deletion if image deletion fails
+				// Continue with event deletion but log the issue
+			}
+		}
+
+		// Delete event and associated tickets
+		await Promise.all([
+			event.deleteOne(),
+			Ticket.deleteMany({ eventId: req.params.id }),
+		]);
+
 		res.json({ message: "Event deleted successfully" });
 	} catch (error) {
 		console.error("Error deleting event:", error);
 
-		// Handle Cloudinary API authentication errors
-		if (error.response && error.response.status === 401) {
+		if (error.response?.status === 401) {
 			return res.status(401).json({
-				message:
-					"Unauthorized request, please check your Cloudinary API credentials",
+				message: "Authentication failed",
+				error: error.response.data,
 			});
 		}
 
-		// Handle general server errors
-		res.status(500).json({ message: "Server error" });
+		res.status(500).json({
+			message: error.message || "Server error during deletion",
+			error: error.response?.data || error.message,
+		});
 	}
 };
 
