@@ -108,6 +108,14 @@ npm run dev
 
 ---
 
+VIDEO DEMO
+
+https://github.com/user-attachments/assets/f9a34c16-8557-4085-854f-82331d2da0bb
+
+---
+
+
+
 ## 🖼️ Screenshots
 
 <table>
