@@ -108,7 +108,11 @@ npm run dev
 
 ---
 
-VIDEO DEMO
+# VIDEO DEMO
+
+
+https://github.com/user-attachments/assets/85308566-21fa-486d-8124-13ad2575e04b
+
 
 https://github.com/user-attachments/assets/f9a34c16-8557-4085-854f-82331d2da0bb
 
