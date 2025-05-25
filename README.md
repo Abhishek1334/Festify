@@ -1,9 +1,26 @@
-
 # [🎉 Festify - Local Event Aggregator App](https://festify-tau.vercel.app/)
 
 Live Site : [🎉 Festify](https://festify-tau.vercel.app/)
 
 Festify is a **local event aggregator platform** where users can **discover, create, RSVP, and manage events**. It supports **QR code-based ticketing**, a complete **check-in system for organizers**, and a clean, modern user interface.
+
+---
+
+## 📋 Table of Contents
+
+| Section | Description |
+|---------|-------------|
+| [🚀 Features](#-features) | Core functionality and capabilities |
+| [🏗️ Tech Stack](#-tech-stack) | Technologies and frameworks used |
+| [📦 Installation & Setup](#-installation--setup) | How to run the project locally |
+| [✅ Completed Features](#-completed-features) | Detailed breakdown of implemented features |
+| [🌍 Deployment](#-deployment) | Hosting platforms and services |
+| [🎬 Video Demos](#-video-demos) | Live demonstrations of the app |
+| [🖼️ Screenshots](#-screenshots) | Visual overview of the interface |
+| [📡 API Documentation](#-api-documentation) | Complete API reference |
+| [📌 Upcoming Features](#-upcoming-features) | Planned enhancements |
+| [🤝 Contributing](#-contributing) | How to contribute to the project |
+| [📬 Contact](#-contact) | Support and communication |
 
 ---
 
@@ -24,7 +41,7 @@ Festify is a **local event aggregator platform** where users can **discover, cre
 
 | Technology                | Purpose                            |
 |---------------------------|-------------------------------------|
-| **React.js + Vite**       | Frontend SPA                        |
+| **React.js + Vite + Context API**       | Frontend SPA                        |
 | **Tailwind CSS**          | Modern UI Styling                   |
 | **Node.js + Express.js**  | REST API Backend                    |
 | **MongoDB + Mongoose**    | Cloud-based NoSQL Database          |
@@ -108,17 +125,18 @@ npm run dev
 
 ---
 
-# VIDEO DEMO
+## 🎬 Video Demos
 
-
+### Festify Walkthrough
 https://github.com/user-attachments/assets/85308566-21fa-486d-8124-13ad2575e04b
 
+### QR Code Ticket Verification DEMO
+https://github.com/user-attachments/assets/c9fe9f42-945a-41ee-9662-485db62ea4b1
 
+### RFID-Based Ticket Verification using ESP8266 and RFID READER 522 (IoT)
 https://github.com/user-attachments/assets/f9a34c16-8557-4085-854f-82331d2da0bb
 
 ---
-
-
 
 ## 🖼️ Screenshots
 
@@ -163,6 +181,7 @@ https://github.com/user-attachments/assets/f9a34c16-8557-4085-854f-82331d2da0bb
     <td><img src="./Screenshots/festify-userprofile-2.png" alt="User Profile 2" width="300"/></td>
   </tr>
 </table>
+
 ---
 
 ## 📡 API Documentation
@@ -178,7 +197,7 @@ https://github.com/user-attachments/assets/f9a34c16-8557-4085-854f-82331d2da0bb
 
 ### 👤 User Routes
 - `GET /api/users/:id` – Get user by ID
-- `GET /api/users/:id/rsvps` – Get events RSVP’d by the user
+- `GET /api/users/:id/rsvps` – Get events RSVP'd by the user
 
 ---
 
@@ -189,7 +208,7 @@ https://github.com/user-attachments/assets/f9a34c16-8557-4085-854f-82331d2da0bb
 - `PUT /api/events/:id` – Update an event (Organizer only)
 - `DELETE /api/events/:id` – Delete an event (Organizer only)
 - `GET /api/events/my-events` – Get events created by current user
-- `GET /api/events/user` – Alias to get user’s own events
+- `GET /api/events/user` – Alias to get user's own events
 - `GET /api/events/category/:category` – Filter events by category
 
 ---
@@ -211,7 +230,7 @@ https://github.com/user-attachments/assets/f9a34c16-8557-4085-854f-82331d2da0bb
 - 📆 Filter Events by Date/Time
 - 🛡️ Admin Reporting/Moderation Tools
 - 📍 Location-based Event Discovery
-- 
+
 ---
 
 ## 🤝 Contributing
