@@ -95,3 +95,8 @@ ENV/
 *.swp
 *.swo
 *~
+
+# Large files
+*.zip
+backend.zip
+src.zip
