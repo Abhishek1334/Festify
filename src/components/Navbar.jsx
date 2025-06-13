@@ -1,8 +1,8 @@
 import { Menu, X } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
-import { User, LogOut } from "lucide-react";
+import { User, LogOut, LayoutDashboard } from "lucide-react";
 import logo from "../assets/images/logo.png";
-import { useContext, useState } from "react";
+import { useContext, useState, useEffect } from "react";
 import { AuthContext } from "../context/AuthContext";
 
 export default function Navbar() {
@@ -18,8 +18,21 @@ export default function Navbar() {
 	};
 
 	const isLoggedIn = !!user;
+	const isAdmin = user?.role === "admin";
 
 	const closeMenu = () => setIsMenuOpen(false);
+
+	// Close menu when clicking outside
+	useEffect(() => {
+		const handleClickOutside = (event) => {
+			if (isMenuOpen && !event.target.closest(".mobile-menu")) {
+				setIsMenuOpen(false);
+			}
+		};
+
+		document.addEventListener("mousedown", handleClickOutside);
+		return () => document.removeEventListener("mousedown", handleClickOutside);
+	}, [isMenuOpen]);
 
 	return (
 		<section className="hidden-section sticky top-0 w-full z-50 bg-[rgb(250, 247, 232)] backdrop-blur-lg hover:bg-[rgba(255,255,255,1)]">
@@ -44,7 +57,7 @@ export default function Navbar() {
 					</div>
 
 					{/* Desktop Navigation */}
-					<div className="hidden md:flex items-center space-x-8">
+					<div className="hidden lg:flex items-center space-x-8">
 						<Link
 							to="/events"
 							className="text-gray-700 transform hover:-translate-y-0.5 transition-all duration-200"
@@ -59,6 +72,15 @@ export default function Navbar() {
 						</Link>
 						{isLoggedIn ? (
 							<>
+								{isAdmin && (
+									<Link
+										to="/admin"
+										className="flex items-center space-x-2 nav-link btn-secondary"
+									>
+										<LayoutDashboard className="h-5 w-5" />
+										<span>Admin Dashboard</span>
+									</Link>
+								)}
 								<Link
 									to="/user-profile"
 									className="flex items-center space-x-2 nav-link btn-secondary"
@@ -89,7 +111,8 @@ export default function Navbar() {
 					{/* Mobile Menu Button */}
 					<button
 						onClick={() => setIsMenuOpen(!isMenuOpen)}
-						className="md:hidden p-2 rounded-md text-gray-700 hover:bg-gray-100 focus:outline-none"
+						className="lg:hidden p-2 rounded-md text-gray-700 hover:bg-gray-100 focus:outline-none"
+						aria-label="Toggle menu"
 					>
 						{isMenuOpen ? (
 							<X className="h-6 w-6" />
@@ -100,62 +123,76 @@ export default function Navbar() {
 				</div>
 
 				{/* Mobile Navigation */}
-				{isMenuOpen && (
-					<div className="md:hidden absolute top-16 left-0 right-0 bg-white shadow-lg rounded-b-lg border-t border-gray-100">
-						<div className="flex flex-col space-y-4 px-4 py-6">
-							<Link
-								to="/events"
-								className="flex items-center space-x-2 text-gray-700 hover:text-purple-600 transition-colors"
-								onClick={closeMenu}
-							>
-								<span>Events</span>
-							</Link>
-							<Link
-								to="/events/create-event"
-								className="flex items-center space-x-2 text-gray-700 hover:text-purple-600 transition-colors"
-								onClick={closeMenu}
-							>
-								<span>Create Event</span>
-							</Link>
-							{isLoggedIn ? (
-								<>
+				<div
+					className={`mobile-menu lg:hidden absolute left-0 right-0 bg-white shadow-lg rounded-b-lg border-t border-gray-100 transition-all duration-300 ease-in-out ${
+						isMenuOpen
+							? "opacity-100 translate-y-0"
+							: "opacity-0 -translate-y-2 pointer-events-none"
+					}`}
+				>
+					<div className="flex flex-col space-y-4 px-4 py-6">
+						<Link
+							to="/events"
+							className="flex items-center space-x-2 text-gray-700 hover:text-purple-600 transition-colors"
+							onClick={closeMenu}
+						>
+							<span>Events</span>
+						</Link>
+						<Link
+							to="/events/create-event"
+							className="flex items-center space-x-2 text-gray-700 hover:text-purple-600 transition-colors"
+							onClick={closeMenu}
+						>
+							<span>Create Event</span>
+						</Link>
+						{isLoggedIn ? (
+							<>
+								{isAdmin && (
 									<Link
-										to="/user-profile"
+										to="/admin"
 										className="flex items-center space-x-2 text-gray-700 hover:text-purple-600 transition-colors"
 										onClick={closeMenu}
 									>
-										<User className="h-5 w-5" />
-										<span>{user?.name || "Profile"}</span>
+										<LayoutDashboard className="h-5 w-5" />
+										<span>Admin Dashboard</span>
 									</Link>
-									<button
-										onClick={handleLogout}
-										className="flex items-center space-x-2 text-gray-700 hover:text-purple-600 transition-colors"
-									>
-										<LogOut className="h-5 w-5" />
-										<span>Logout</span>
-									</button>
-								</>
-							) : (
-								<div className="flex flex-col space-y-2">
-									<Link
-										to="/login"
-										className="w-full py-2 px-4 text-center rounded-md bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors"
-										onClick={closeMenu}
-									>
-										Login
-									</Link>
-									<Link
-										to="/signup"
-										className="w-full py-2 px-4 text-center rounded-md bg-purple-600 text-white hover:bg-purple-700 transition-colors"
-										onClick={closeMenu}
-									>
-										Sign Up
-									</Link>
-								</div>
-							)}
-						</div>
+								)}
+								<Link
+									to="/user-profile"
+									className="flex items-center space-x-2 text-gray-700 hover:text-purple-600 transition-colors"
+									onClick={closeMenu}
+								>
+									<User className="h-5 w-5" />
+									<span>{user?.name || "Profile"}</span>
+								</Link>
+								<button
+									onClick={handleLogout}
+									className="flex items-center space-x-2 text-gray-700 hover:text-purple-600 transition-colors"
+								>
+									<LogOut className="h-5 w-5" />
+									<span>Logout</span>
+								</button>
+							</>
+						) : (
+							<div className="flex flex-col space-y-2">
+								<Link
+									to="/login"
+									className="w-full py-2 px-4 text-center rounded-md bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors"
+									onClick={closeMenu}
+								>
+									Login
+								</Link>
+								<Link
+									to="/signup"
+									className="w-full py-2 px-4 text-center rounded-md bg-purple-600 text-white hover:bg-purple-700 transition-colors"
+									onClick={closeMenu}
+								>
+									Sign Up
+								</Link>
+							</div>
+						)}
 					</div>
-				)}
+				</div>
 			</div>
 		</section>
 	);

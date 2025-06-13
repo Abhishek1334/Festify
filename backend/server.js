@@ -7,6 +7,7 @@ import connectDB from "./config/db.js";
 import authRoutes from "./routes/authRoutes.js";
 import eventRoutes from "./routes/eventRoutes.js";
 import ticketRoutes from "./routes/ticketRoutes.js";
+import adminRoutes from "./routes/adminRoutes.js";
 import { errorHandler, notFoundHandler } from "./middleware/errorMiddleware.js";
 import cloudinary from "cloudinary";
 dotenv.config();
@@ -21,15 +22,27 @@ cloudinary.config({
 
 const app = express();
 
+// CORS Configuration
+const corsOptions = {
+	origin: process.env.NODE_ENV === 'production' 
+		? ['https://festify.up.railway.app', 'https://festify.vercel.app'] 
+		: 'http://localhost:5173',
+	methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+	allowedHeaders: ['Content-Type', 'Authorization'],
+	credentials: true,
+	maxAge: 86400 // 24 hours
+};
+
 // Middleware
 app.use(express.json());
-app.use(cors());
+app.use(cors(corsOptions));
 app.use(morgan("dev"));
 
 // API Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/events", eventRoutes);
 app.use("/api/tickets", ticketRoutes);
+app.use("/api/admin", adminRoutes);
 
 // Handle 404 errors
 app.use(notFoundHandler);

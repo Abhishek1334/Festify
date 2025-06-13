@@ -120,6 +120,7 @@ export const getUserTickets = async (req, res) => {
 			.populate("eventId", "title date startTime endTime location image") // ✅ added date
 			.select("eventId userId userName rfid qrCode checkedIn createdAt");
 
+		
 		res.status(200).json(tickets);
 	} catch (error) {
 		console.error("❌ Failed to get user tickets:", error);

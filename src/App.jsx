@@ -14,6 +14,7 @@ import { AuthProvider } from "./context/AuthProvider";
 import EventDetails from "./pages/EventDetails";
 import PrivateRoute from "./components/Auth/PrivateRoute";
 import TicketCheckIn from "./pages/TicketCheckIn";
+import AdminDashboard from "./pages/AdminDashboard";
 
 export default function App() {
 
@@ -54,6 +55,10 @@ export default function App() {
 							<Route 
 								path="/events/checkin/:eventId"
 								element={<TicketCheckIn/>}
+							/>
+							<Route
+								path="/admin"
+								element={<AdminDashboard />}
 							/>
 						</Route>
 
