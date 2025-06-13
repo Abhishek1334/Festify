@@ -6,6 +6,7 @@ import { bookTicket as bookTicketAPI } from "../api/ticket";
 import { AuthContext } from "./AuthContext";
 const API_URL = import.meta.env.VITE_API_URL + "/api";
 import "react-toastify/dist/ReactToastify.css";
+
 export const AuthProvider = ({ children }) => {
 	const [user, setUser] = useState(() => {
 		const storedUser = localStorage.getItem("user");
@@ -72,8 +73,8 @@ export const AuthProvider = ({ children }) => {
 				password,
 			});
 
-			const { id, name: username, email: userEmail, token } = res.data;
-			setUser({ id, username, email: userEmail, token });
+			const { id, name: username, email: userEmail,role: userRole, token } = res.data;
+			setUser({ id, username, email: userEmail, role: userRole, token });
 
 			return { success: true };
 		} catch (error) {
