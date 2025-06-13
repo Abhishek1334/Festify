@@ -25,12 +25,18 @@ const app = express();
 // CORS Configuration
 const corsOptions = {
 	origin: process.env.NODE_ENV === 'production' 
-		? ['https://festify.up.railway.app', 'https://festify.vercel.app'] 
+		? [
+			'https://festify-tau.vercel.app',
+			'https://festify.vercel.app',
+			'https://festify.up.railway.app'
+		] 
 		: 'http://localhost:5173',
 	methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
 	allowedHeaders: ['Content-Type', 'Authorization'],
 	credentials: true,
-	maxAge: 86400 // 24 hours
+	maxAge: 86400, // 24 hours
+	preflightContinue: false,
+	optionsSuccessStatus: 204
 };
 
 // Middleware
