@@ -15,12 +15,14 @@ import EventDetails from "./pages/EventDetails";
 import PrivateRoute from "./components/Auth/PrivateRoute";
 import TicketCheckIn from "./pages/TicketCheckIn";
 import AdminDashboard from "./pages/AdminDashboard";
+import BackendDelayNotification from "./components/BackendDelayNotification";
 
 export default function App() {
 
 	return (
 		<AuthProvider>
 			<div className="min-h-screen flex flex-col">
+				<BackendDelayNotification />
 				<Navbar />
 				<ScrollToTop />
 				<main className="flex-grow">
