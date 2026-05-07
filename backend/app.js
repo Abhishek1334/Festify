@@ -21,23 +21,24 @@ cloudinary.v2.config({
 
 const app = express();
 
-const DEFAULT_PROD_ORIGINS = [
-	'https://festify-tau.vercel.app',
-	'https://festify.vercel.app',
-];
-
 const buildAllowedOrigins = () => {
-	if (process.env.NODE_ENV !== 'production') {
-		return ['http://localhost:5173', 'http://127.0.0.1:5173'];
-	}
+	const base = [
+		'https://festify-tau.vercel.app',
+		'https://festify.vercel.app',
+		'http://localhost:5173',
+		'http://127.0.0.1:5173',
+	];
 	const fromEnv = (process.env.FRONTEND_URLS || '')
 		.split(',')
 		.map((s) => s.trim())
 		.filter(Boolean);
-	return [...new Set([...DEFAULT_PROD_ORIGINS, ...fromEnv])];
+	return [...new Set([...base, ...fromEnv])];
 };
 
 const allowedOrigins = buildAllowedOrigins();
+// Also allow any *.vercel.app preview deploy of this project
+const isVercelPreview = (origin) =>
+	/^https:\/\/festify-[\w-]+\.vercel\.app$/.test(origin);
 
 app.use(
 	cors({
@@ -45,6 +46,7 @@ app.use(
 			// Same-origin requests (Vercel API) have no origin header — allow
 			if (!origin) return cb(null, true);
 			if (allowedOrigins.includes(origin)) return cb(null, true);
+			if (isVercelPreview(origin)) return cb(null, true);
 			return cb(new Error(`CORS blocked: ${origin}`));
 		},
 		methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
