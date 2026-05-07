@@ -142,43 +142,39 @@ https://github.com/user-attachments/assets/f9a34c16-8557-4085-854f-82331d2da0bb
 
 <table>
   <tr>
-    <td><b>Homepage</b></td>
-    <td><b>Login Page</b></td>
-    <td><b>Signup Page</b></td>
+    <td align="center"><b>Homepage</b></td>
+    <td align="center"><b>Events Listing</b></td>
   </tr>
   <tr>
-    <td><img src="./Screenshots/festify-homepage.png" alt="Homepage" width="300"/></td>
-    <td><img src="./Screenshots/festify-loginpage.png" alt="Login" width="300"/></td>
-    <td><img src="./Screenshots/festify-signuppage.png" alt="Signup" width="300"/></td>
+    <td><img src="./Screenshots/festify-homepage.png" alt="Homepage" width="420"/></td>
+    <td><img src="./Screenshots/festify-eventspage.png" alt="Events Page" width="420"/></td>
   </tr>
 
   <tr>
-    <td><b>Events Page</b></td>
-    <td><b>Event Details</b></td>
-    <td><b>Single Event (Event ID)</b></td>
+    <td align="center"><b>Event Detail</b></td>
+    <td align="center"><b>Host an Event</b></td>
   </tr>
   <tr>
-    <td><img src="./Screenshots/festify-eventspage.png" alt="Events Page" width="300"/></td>
-    <td><img src="./Screenshots/festify-eventsdetailpage.png" alt="Event Details" width="300"/></td>
-    <td><img src="./Screenshots/festify-eventidpage.png" alt="Event ID" width="300"/></td>
+    <td><img src="./Screenshots/festify-eventidpage.png" alt="Event Detail" width="420"/></td>
+    <td><img src="./Screenshots/festify-createeventpage.png" alt="Create Event" width="420"/></td>
   </tr>
 
   <tr>
-    <td><b>Create Event</b></td>
-    <td><b>Check-in Panel</b></td>
-    <td><b>User Profile 1</b></td>
+    <td align="center"><b>Log In</b></td>
+    <td align="center"><b>Sign Up</b></td>
   </tr>
   <tr>
-    <td><img src="./Screenshots/festify-createeventpage.png" alt="Create Event" width="300"/></td>
-    <td><img src="./Screenshots/festify-checkinpanelpage.png" alt="Check-in" width="300"/></td>
-    <td><img src="./Screenshots/festify-userprofile.png" alt="User Profile 1" width="300"/></td>
+    <td><img src="./Screenshots/festify-loginpage.png" alt="Login" width="420"/></td>
+    <td><img src="./Screenshots/festify-signuppage.png" alt="Signup" width="420"/></td>
   </tr>
 
   <tr>
-    <td><b>User Profile 2</b></td>
+    <td align="center"><b>User Profile</b></td>
+    <td></td>
   </tr>
   <tr>
-    <td><img src="./Screenshots/festify-userprofile-2.png" alt="User Profile 2" width="300"/></td>
+    <td><img src="./Screenshots/festify-userprofile.png" alt="User Profile" width="420"/></td>
+    <td></td>
   </tr>
 </table>
 
