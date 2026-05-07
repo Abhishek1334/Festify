@@ -1,14 +1,15 @@
-import Hero from "../components/Homepage/Hero";
-import EventListing from "../components/Homepage/EventListing";
-import GetStarted from "../components/Homepage/GetStarted";
+import Hero from '../components/Homepage/Hero';
+import EventListing from '../components/Homepage/EventListing';
+import HowItWorks from '../components/Homepage/HowItWorks';
+import Stats from '../components/Homepage/Stats';
 
 export default function Homepage() {
 	return (
 		<div>
 			<Hero />
-
-			<EventListing isHomepage={true}/>
-			<GetStarted />
+			<EventListing isHomepage />
+			<HowItWorks />
+			<Stats />
 		</div>
 	);
 }

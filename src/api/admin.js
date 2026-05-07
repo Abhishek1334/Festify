@@ -47,7 +47,7 @@ export const fetchUsers = async (token) => {
 	}
 };
 
-export const fetchEvents = async (token) => {
+export const fetchEvents = async () => {
 	try {
 		const response = await adminApi.get('/admin/events');
 		return response.data;

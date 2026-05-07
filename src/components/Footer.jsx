@@ -1,157 +1,115 @@
-import { Link } from "react-router-dom";
-import { FiFacebook, FiTwitter, FiInstagram } from "react-icons/fi";
-import logo from "../assets/images/logo-white.png";
+import { Link } from 'react-router-dom';
+import { FiInstagram, FiTwitter, FiGithub } from 'react-icons/fi';
 
 export default function Footer() {
 	return (
-		<section>
-			<footer className=" bg-gray-900 text-gray-300 hidden-section">
-				<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-					<div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-						<div>
-							<Link
-								to="/"
-								className="flex items-center space-x-2"
+		<footer className="bg-ink text-paper mt-12">
+			<div className="max-w-[1280px] mx-auto px-5 sm:px-8 lg:px-12 py-16 sm:py-20">
+				<div className="grid md:grid-cols-12 gap-10">
+					<div className="md:col-span-5">
+						<Link to="/" className="inline-block mb-5">
+							<span className="font-display text-3xl font-semibold tracking-tight text-paper">
+								Festify
+							</span>
+						</Link>
+						<p className="font-sans text-base text-paper/70 leading-relaxed max-w-sm mb-7">
+							Local events, real tickets. Discover what's on near you and walk in.
+						</p>
+						<div className="flex gap-2">
+							<a
+								href="https://github.com/Abhishek1334/Festify"
+								target="_blank"
+								rel="noreferrer"
+								aria-label="GitHub"
+								className="size-10 grid place-items-center rounded-full bg-paper/10 hover:bg-accent text-paper hover:text-paper transition-colors"
 							>
-								<img
-									src={logo}
-									alt="Festify Logo"
-									className="h-8 w-8"
-								/>
-								<span className="text-xl font-bold text-white">
-									Festify
-								</span>
-							</Link>
-							<p className="mt-4 text-gray-400">
-								Discover and book the best local events
-								happening in your area.
-							</p>
-							<div className="flex space-x-4 mt-6">
-								<a
-									href="#"
-									className="text-gray-400 hover:text-white transition-colors"
-								>
-									<FiFacebook className="h-6 w-6" />
-								</a>
-								<a
-									href="#"
-									className="text-gray-400 hover:text-white transition-colors"
-								>
-									<FiTwitter className="h-6 w-6" />
-								</a>
-								<a
-									href="#"
-									className="text-gray-400 hover:text-white transition-colors"
-								>
-									<FiInstagram className="h-6 w-6" />
-								</a>
-							</div>
-						</div>
-
-						<div>
-							<h3 className="text-white font-semibold mb-4">
-								Quick Links
-							</h3>
-							<ul className="space-y-2">
-								<li>
-									<Link
-										to="/events"
-										className="hover:text-white transition-colors"
-									>
-										Browse Events
-									</Link>
-								</li>
-								<li>
-									<Link
-										to="/create-event"
-										className="hover:text-white transition-colors"
-									>
-										Create Event
-									</Link>
-								</li>
-								<li>
-									<Link
-										to="/Login"
-										className="hover:text-white transition-colors"
-									>
-										Login
-									</Link>
-								</li>
-							</ul>
-						</div>
-
-						<div>
-							<h3 className="text-white font-semibold mb-4">
-								Support
-							</h3>
-							<ul className="space-y-2">
-								<li>
-									<Link
-										to="/help"
-										className="hover:text-white transition-colors"
-									>
-										Help Center
-									</Link>
-								</li>
-								<li>
-									<Link
-										to="/contact"
-										className="hover:text-white transition-colors"
-									>
-										Contact Us
-									</Link>
-								</li>
-								<li>
-									<Link
-										to="/faq"
-										className="hover:text-white transition-colors"
-									>
-										FAQs
-									</Link>
-								</li>
-								<li>
-									<Link
-										to="/terms"
-										className="hover:text-white transition-colors"
-									>
-										Terms of Service
-									</Link>
-								</li>
-							</ul>
-						</div>
-
-						<div>
-							<h3 className="text-white font-semibold mb-4">
-								Subscribe
-							</h3>
-							<p className="text-gray-400 mb-4">
-								Get the latest updates about new events and
-								special offers.
-							</p>
-							<form className="space-y-4">
-								<input
-									type="email"
-									placeholder="Enter your email"
-									className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
-								/>
-								<button
-									type="submit"
-									className="w-full px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors"
-								>
-									Subscribe
-								</button>
-							</form>
+								<FiGithub className="size-4" />
+							</a>
+							<a
+								href="#"
+								aria-label="Twitter"
+								className="size-10 grid place-items-center rounded-full bg-paper/10 hover:bg-accent text-paper transition-colors"
+							>
+								<FiTwitter className="size-4" />
+							</a>
+							<a
+								href="#"
+								aria-label="Instagram"
+								className="size-10 grid place-items-center rounded-full bg-paper/10 hover:bg-accent text-paper transition-colors"
+							>
+								<FiInstagram className="size-4" />
+							</a>
 						</div>
 					</div>
 
-					<div className="border-t border-gray-800 mt-12 pt-8 text-center text-gray-400">
-						<p>
-							&copy; {new Date().getFullYear()} Festify. All
-							rights reserved.
+					<div className="md:col-span-2">
+						<h3 className="font-sans text-sm font-semibold text-paper mb-4">Browse</h3>
+						<ul className="space-y-3 font-sans text-sm">
+							<li>
+								<Link to="/events" className="text-paper/65 hover:text-paper transition-colors">
+									All events
+								</Link>
+							</li>
+							<li>
+								<Link to="/events?status=live" className="text-paper/65 hover:text-paper transition-colors">
+									Live now
+								</Link>
+							</li>
+							<li>
+								<Link to="/events?status=upcoming" className="text-paper/65 hover:text-paper transition-colors">
+									Upcoming
+								</Link>
+							</li>
+						</ul>
+					</div>
+
+					<div className="md:col-span-2">
+						<h3 className="font-sans text-sm font-semibold text-paper mb-4">Account</h3>
+						<ul className="space-y-3 font-sans text-sm">
+							<li>
+								<Link to="/login" className="text-paper/65 hover:text-paper transition-colors">
+									Log in
+								</Link>
+							</li>
+							<li>
+								<Link to="/signup" className="text-paper/65 hover:text-paper transition-colors">
+									Sign up
+								</Link>
+							</li>
+							<li>
+								<Link to="/events/create-event" className="text-paper/65 hover:text-paper transition-colors">
+									Host an event
+								</Link>
+							</li>
+						</ul>
+					</div>
+
+					<div className="md:col-span-3">
+						<h3 className="font-sans text-sm font-semibold text-paper mb-4">Built for</h3>
+						<p className="font-sans text-sm text-paper/65 leading-relaxed">
+							Crafted by{' '}
+							<a
+								href="https://github.com/Abhishek1334"
+								target="_blank"
+								rel="noreferrer"
+								className="text-accent hover:text-paper transition-colors"
+							>
+								Abhishek Rajoria
+							</a>
+							. Available for landing-page commissions.
 						</p>
 					</div>
 				</div>
-			</footer>
-		</section>
+
+				<div className="border-t border-paper/15 mt-14 pt-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+					<p className="font-sans text-xs text-paper/45">
+						© {new Date().getFullYear()} Festify. All rights reserved.
+					</p>
+					<p className="font-sans text-xs text-paper/45">
+						Made in India 🇮🇳
+					</p>
+				</div>
+			</div>
+		</footer>
 	);
 }

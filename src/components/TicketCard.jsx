@@ -1,148 +1,141 @@
-import PropTypes from "prop-types";
-import { useContext, useState } from "react";
-import { AuthContext } from "../context/AuthContext";
-import { toast,ToastContainer } from "react-toastify";
-import axios from "axios";
-import Swal from "sweetalert2";
-import withReactContent from "sweetalert2-react-content";
-import dayjs from "dayjs";
+import PropTypes from 'prop-types';
+import { useContext, useState } from 'react';
+import axios from 'axios';
+import dayjs from 'dayjs';
+import { toast } from 'react-toastify';
+import { MapPin, Calendar } from 'lucide-react';
+import { AuthContext } from '../context/AuthContext';
+import { Button } from './ui/Button';
+import { Modal } from './ui/Modal';
+import { Stamp } from './ui/Stamp';
+import { cloudinaryThumb } from '../lib/cloudinary';
 
-const MySwal = withReactContent(Swal);
-const API_URL = import.meta.env.VITE_API_URL + "/api";
+const API_URL = import.meta.env.VITE_API_URL + '/api';
 
-const TicketCard = ({ ticket, onCancel }) => {
+export default function TicketCard({ ticket, onCancel }) {
 	const { user } = useContext(AuthContext) || {};
-	const [isCancelling, setIsCancelling] = useState(false);
+	const [confirmOpen, setConfirmOpen] = useState(false);
+	const [cancelling, setCancelling] = useState(false);
 
-	const event = ticket.event;
+	const event = ticket.eventId;
+	if (!event) return null;
 
-	const handleCancelTicket = async () => {
-		if (!user?.token) {
-			toast.error("❌ You are not logged in. Please log in again.");
-			return;
-		}
+	const isExpired = event.endTime && dayjs(event.endTime).isBefore(dayjs());
+	const isCheckedIn = ticket.checkedIn;
 
-		const result = await MySwal.fire({
-			title: "Are you sure?",
-			text: "You won't be able to undo this action!",
-			icon: "warning",
-			showCancelButton: true,
-			confirmButtonColor: "#d33",
-			cancelButtonColor: "#3085d6",
-			confirmButtonText: "Yes, cancel it!",
-			background: "#fff",
-			allowOutsideClick: false,
-		});
-
-		if (!result.isConfirmed) return;
-
-		setIsCancelling(true);
-
+	const handleConfirmCancel = async () => {
+		setCancelling(true);
 		try {
-			const response = await axios.delete(
-				`${API_URL}/tickets/cancel/${ticket._id}`,
-				{
-					headers: {
-						Authorization: `Bearer ${user.token}`,
-					},
-				}
-			);
-
-			if (response.status === 200 || response.status === 204) {
-				toast.success("✅ Ticket cancelled successfully!");
-				onCancel(ticket._id);
-			} else {
-				throw new Error("Unexpected server response");
-			}
-		} catch (error) {
-			console.error("❌ Ticket cancel error:", error);
-			toast.error(
-				error.response?.data?.message ||
-					"⚠️ Failed to cancel ticket. Please try again."
-			);
+			const res = await axios.delete(`${API_URL}/tickets/cancel/${ticket._id}`, {
+				headers: { Authorization: `Bearer ${user.token}` },
+			});
+			if (res.status === 200 || res.status === 204) {
+				toast.success('Ticket cancelled.');
+				onCancel?.(ticket._id);
+				setConfirmOpen(false);
+			} else throw new Error('Unexpected response');
+		} catch (err) {
+			toast.error(err.response?.data?.message || 'Could not cancel ticket.');
 		} finally {
-			setIsCancelling(false);
+			setCancelling(false);
 		}
 	};
 
-	if (!event) return <p className="text-gray-500">⚠️ Event data missing</p>;
-
 	return (
-		<div className="bg-white shadow-md w-full md:w-[30%] rounded-lg overflow-hidden p-5 flex flex-col gap-4 border border-gray-200">
-			<div>
-				<ToastContainer className="fixed top-0 right-0 z-50" />
+		<div className="bg-paper-card rounded-[var(--radius-lg)] overflow-hidden shadow-[var(--shadow-card)] border border-line/60">
+			<div className="relative aspect-[5/3] bg-paper-dim overflow-hidden">
+				{event.image ? (
+					<img
+						src={cloudinaryThumb(event.image, 720, 432)}
+						alt=""
+						className="w-full h-full object-cover"
+						loading="lazy"
+					/>
+				) : (
+					<div className="w-full h-full grid place-items-center text-muted-soft text-sm">
+						No image
+					</div>
+				)}
+				<div className="absolute top-3 left-3">
+					{isCheckedIn ? (
+						<Stamp label="Checked in" variant="live" dot />
+					) : isExpired ? (
+						<Stamp label="Expired" variant="warn" />
+					) : (
+						<Stamp label="Active" variant="success" />
+					)}
+				</div>
 			</div>
-			{/* Event Image */}
-			<img
-				src={event.image || "/placeholder.jpg"}
-				alt={event.title || "Event"}
-				className="w-full h-44 object-cover rounded-lg"
-			/>
 
-			{/* Event Details */}
-			<div className="flex flex-col gap-1 border-b border-gray-200 pb-3">
-				<h3 className="text-xl font-bold text-gray-800">
+			<div className="p-5">
+				<h3 className="font-display text-xl font-medium leading-snug tracking-tight mb-3 line-clamp-1">
 					{event.title}
 				</h3>
-				<p className="text-gray-600">
-					📅{" "}
-					{event.date
-						? new Date(event.date).toLocaleString()
-						: "Date not available"}
-				</p>
-				<p className="text-gray-600">
-					📍 {event.location || "No location provided"}
-				</p>
-			</div>
+				<div className="space-y-1.5 text-sm text-muted">
+					{event.date && (
+						<div className="flex items-center gap-2">
+							<Calendar className="size-3.5 text-accent shrink-0" strokeWidth={1.75} />
+							<span>{dayjs(event.date).format('ddd, MMM D')} · {dayjs(event.startTime).format('HH:mm')}</span>
+						</div>
+					)}
+					{event.location && (
+						<div className="flex items-center gap-2">
+							<MapPin className="size-3.5 text-accent shrink-0" strokeWidth={1.75} />
+							<span className="line-clamp-1">{event.location}</span>
+						</div>
+					)}
+				</div>
 
-			{/* Ticket Info */}
-			<div className="text-sm border-b border-gray-200 pb-3">
-				<p className="text-gray-500">
-					<strong>🎟 Ticket ID:</strong> {ticket._id}
-				</p>
-				{ticket.rfid && (
-					<p className="text-gray-500">
-						<strong>🔗 RFID:</strong> {ticket.rfid}
-					</p>
+				{ticket.qrCode && (
+					<div className="mt-5 pt-5 border-t border-line flex items-center gap-4">
+						<img
+							src={ticket.qrCode}
+							alt="Ticket QR"
+							className="size-20 rounded-md border border-line"
+						/>
+						<div className="flex-1">
+							<div className="font-sans text-xs font-medium text-muted mb-1">Ticket ID</div>
+							<div className="font-mono text-xs text-ink break-all">
+								{String(ticket._id || '').slice(-12).toUpperCase()}
+							</div>
+							{ticket.rfid && (
+								<div className="font-mono text-xs text-muted mt-1">RFID · {ticket.rfid}</div>
+							)}
+						</div>
+					</div>
+				)}
+
+				{!isCheckedIn && !isExpired && (
+					<button
+						onClick={() => setConfirmOpen(true)}
+						className="mt-5 font-sans text-sm font-medium text-stamp hover:underline underline-offset-4"
+					>
+						Cancel ticket
+					</button>
 				)}
 			</div>
 
-			{/* QR Code */}
-			{ticket.qrCode && (
-				<div className="flex justify-center">
-					<img
-						src={ticket.qrCode}
-						alt="QR Code"
-						className="mt-2 w-28 h-28 border border-gray-300 rounded-md shadow-sm"
-					/>
+			<Modal open={confirmOpen} onClose={() => setConfirmOpen(false)} title="Cancel ticket?" size="sm">
+				<p className="font-sans text-base text-ink mb-1">
+					Cancel your ticket to <span className="font-medium">{event.title}</span>?
+				</p>
+				<p className="font-sans text-sm text-muted mb-7">
+					This cannot be undone. Your seat goes back to the pool.
+				</p>
+				<div className="flex justify-end gap-3">
+					<Button variant="secondary" onClick={() => setConfirmOpen(false)}>
+						Keep ticket
+					</Button>
+					<Button variant="stamp" onClick={handleConfirmCancel} disabled={cancelling}>
+						{cancelling ? 'Cancelling…' : 'Cancel ticket'}
+					</Button>
 				</div>
-			)}
-		{ticket.checkedIn ? (
-  <p className="text-sm text-gray-500">
-    ✅ You have already checked in.
-  </p>
-) : dayjs(event.endTime).isBefore(dayjs()) ? (
-  <p className="text-sm text-gray-500">
-    ⚠️ This ticket has expired.
-  </p>
-) : (
-  <button
-    className="px-6 py-3 bg-red-500 text-white font-semibold rounded-lg hover:bg-red-600 transition-all duration-200 shadow hover:shadow-lg disabled:opacity-50 mt-2"
-    onClick={handleCancelTicket}
-    disabled={isCancelling}
-  >
-    {isCancelling ? "Cancelling..." : "Cancel Ticket"}
-  </button>
-)}
-
+			</Modal>
 		</div>
 	);
 }
 
-
 TicketCard.propTypes = {
 	ticket: PropTypes.object.isRequired,
-	onCancel: PropTypes.func.isRequired,
+	onCancel: PropTypes.func,
 };
-
-export default TicketCard;

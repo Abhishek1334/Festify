@@ -1,157 +1,101 @@
-import { useEffect, useState, useCallback } from "react";
-import { Html5QrcodeScanner } from "html5-qrcode";
-import axios from "axios";
-import { toast } from "react-toastify";
-import { Camera, CameraOff, Loader2, QrCode } from "lucide-react";
+import { useEffect, useState, useCallback, useRef } from 'react';
+import { Html5QrcodeScanner } from 'html5-qrcode';
+import axios from 'axios';
+import { toast } from 'react-toastify';
+import { Camera, CameraOff } from 'lucide-react';
+import { Button } from './ui/Button';
 
-const API_URL = import.meta.env.VITE_API_URL + "/api";
+const API_URL = import.meta.env.VITE_API_URL + '/api';
 
-const QRScanner = ({ eventId, onScanSuccess }) => {
-	const user = JSON.parse(localStorage.getItem("user"));
-	const token = user?.token;
-	const [scannerEnabled, setScannerEnabled] = useState(false);
-	const [isScanning, setIsScanning] = useState(false);
-	const [scannerInstance, setScannerInstance] = useState(null);
-	const [lastScanTime, setLastScanTime] = useState(0);
+export default function QRScanner({ eventId, onScanSuccess }) {
+	const stored = JSON.parse(localStorage.getItem('user') || '{}');
+	const token = stored?.token;
+	const [enabled, setEnabled] = useState(false);
+	const lastScanRef = useRef(0);
 
-	const handleVerification = useCallback(
+	const verify = useCallback(
 		async (ticketId) => {
-			toast.info("⏳ Verifying ticket...");
-
+			toast.info('Verifying…', { autoClose: 1200 });
 			try {
-				const response = await axios.post(
+				const res = await axios.post(
 					`${API_URL}/tickets/checkInTicket`,
 					{ ticketId, eventId },
-					{
-						headers: {
-							Authorization: `Bearer ${token}`,
-						},
-					}
+					{ headers: { Authorization: `Bearer ${token}` } }
 				);
-
-				const message = response.data.message;
-
-				if (message.includes("already checked in")) {
-					toast.warning("⚠️ Ticket already checked in");
-				} else if (message.includes("Event has not started")) {
-					toast.info("🕒 Event has not started yet");
-				} else if (message.includes("event has already ended")) {
-					toast.error("⛔ Event ended - Ticket expired");
-				} else if (message.includes("Check-in successful")) {
-					toast.success("✅ Ticket Verified Successfully!");
-					if (onScanSuccess) onScanSuccess(ticketId);
+				const msg = res.data.message || '';
+				if (msg.includes('already checked in')) toast.warning('Already checked in');
+				else if (msg.includes('not started')) toast.info('Event has not started');
+				else if (msg.includes('ended')) toast.error('Ticket expired');
+				else if (msg.includes('successful')) {
+					toast.success('Checked in.');
+					onScanSuccess?.(ticketId);
 				}
-			} catch (error) {
-				console.error("Verification Error:", error);
-				toast.error(
-					error?.response?.data?.message || "❌ Verification failed"
-				);
+			} catch (err) {
+				toast.error(err?.response?.data?.message || 'Verification failed.');
 			}
 		},
 		[eventId, token, onScanSuccess]
 	);
 
 	useEffect(() => {
-		let scanner = null;
+		if (!enabled) return;
+		const scanner = new Html5QrcodeScanner('qr-reader', {
+			fps: 10,
+			qrbox: { width: 220, height: 220 },
+			aspectRatio: 1,
+			showTorchButtonIfSupported: true,
+		});
 
-		if (scannerEnabled) {
-			scanner = new Html5QrcodeScanner("qr-reader", {
-				fps: 10,
-				qrbox: { width: 200, height: 200 },
-				aspectRatio: 1,
-				showTorchButtonIfSupported: true,
-			});
-
-			setScannerInstance(scanner);
-
-			const onScanSuccess = async (decodedText) => {
-				// Check if enough time has passed since the last scan
-				const currentTime = Date.now();
-				if (currentTime - lastScanTime < 1000) {
-					// If less than 1 second has passed, ignore the scan
-					return;
-				}
-
-				setIsScanning(true);
-				setLastScanTime(currentTime); // Update the last scan time
-
-				await handleVerification(decodedText.trim());
-
-				// Stop the scanner after a successful scan
-				scanner.clear().catch(console.error);
-				setScannerEnabled(false); // Disable scanner after scan
-				setIsScanning(false);
-			};
-
-			scanner.render(onScanSuccess, () => {});
-		}
-
-		return () => {
-			if (scanner) {
-				scanner.clear().catch(console.error);
-			}
+		const onSuccess = async (decodedText) => {
+			const now = Date.now();
+			if (now - lastScanRef.current < 1500) return;
+			lastScanRef.current = now;
+			await verify(decodedText.trim());
+			scanner.clear().catch(() => {});
+			setEnabled(false);
 		};
-	}, [scannerEnabled, handleVerification, lastScanTime]);
 
-	const toggleScanner = () => {
-		if (scannerEnabled) {
-			scannerInstance?.clear().catch(console.error);
-		}
-		setScannerEnabled(!scannerEnabled);
-	};
+		scanner.render(onSuccess, () => {});
+		return () => {
+			scanner.clear().catch(() => {});
+		};
+	}, [enabled, verify]);
 
 	return (
-		<div className="bg-white rounded-lg shadow p-4 max-w-sm mx-auto">
-			<div className="flex items-center justify-between mb-4">
-				<div className="flex items-center space-x-2">
-					<QrCode className="h-5 w-5 text-purple-600" />
-					<h3 className="font-bold text-gray-900">Scan Ticket</h3>
-				</div>
-				<button
-					onClick={toggleScanner}
-					className={`flex items-center space-x-1 px-3 py-1.5 rounded-md text-sm transition-colors ${
-						scannerEnabled
-							? "bg-red-100 text-red-600 hover:bg-red-200"
-							: "bg-purple-100 text-purple-600 hover:bg-purple-200"
-					}`}
+		<div className="bg-paper-card rounded-[var(--radius-lg)] border border-line/60 overflow-hidden shadow-[var(--shadow-card)]">
+			<div className="flex items-center justify-between border-b border-line px-5 py-4">
+				<div className="font-sans text-sm font-medium text-ink">QR scanner</div>
+				<Button
+					size="sm"
+					variant={enabled ? 'stamp' : 'accent'}
+					onClick={() => setEnabled((v) => !v)}
 				>
-					{scannerEnabled ? (
+					{enabled ? (
 						<>
-							<CameraOff className="h-4 w-4" />
-							<span>Stop</span>
+							<CameraOff className="size-3.5" /> Stop
 						</>
 					) : (
 						<>
-							<Camera className="h-4 w-4" />
-							<span>Start</span>
+							<Camera className="size-3.5" /> Start
 						</>
 					)}
-				</button>
+				</Button>
 			</div>
 
-			{scannerEnabled ? (
-				<div className="relative">
-					<div
-						id="qr-reader"
-						className="rounded-md overflow-hidden border border-purple-200 bg-gray-50"
-						style={{ height: "250px" }}
-					/>
-					{isScanning && (
-						<div className="absolute inset-0 bg-black/50 flex items-center justify-center rounded-md">
-							<Loader2 className="h-6 w-6 text-white animate-spin" />
-						</div>
-					)}
-				</div>
+			{enabled ? (
+				<div id="qr-reader" className="relative" style={{ minHeight: '280px' }} />
 			) : (
-				<div className="h-48 border border-dashed border-gray-200 rounded-md flex items-center justify-center">
-					<div className="text-center text-gray-500">
-						<Camera className="h-8 w-8 mx-auto mb-2 text-gray-400" />
-						<p className="text-sm">Click Start to scan</p>
+				<div className="h-56 grid place-items-center text-center px-5">
+					<div>
+						<div className="size-12 rounded-full bg-paper-dim grid place-items-center mx-auto mb-3">
+							<Camera className="size-5 text-muted" strokeWidth={1.75} />
+						</div>
+						<div className="font-sans text-sm text-muted">
+							Press start to scan a ticket
+						</div>
 					</div>
 				</div>
 			)}
 		</div>
 	);
-};
-
-export default QRScanner;
+}

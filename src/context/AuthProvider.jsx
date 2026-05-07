@@ -1,10 +1,9 @@
 import { useState, useEffect, useCallback } from "react";
 import axios from "axios";
 import { PropTypes } from "prop-types";
-import { useNavigate } from "react-router-dom";
 import { bookTicket as bookTicketAPI } from "../api/ticket";
 import { AuthContext } from "./AuthContext";
-const API_URL = import.meta.env.VITE_API_URL + "/api";
+const API_URL = (import.meta.env.VITE_API_URL || "") + "/api";
 import "react-toastify/dist/ReactToastify.css";
 
 export const AuthProvider = ({ children }) => {
@@ -13,7 +12,6 @@ export const AuthProvider = ({ children }) => {
 		return storedUser ? JSON.parse(storedUser) : null;
 	});
 	const [tickets, setTickets] = useState([]);
-	const navigate = useNavigate();
 
 	// ✅ Keep user data in sync with localStorage
 	useEffect(() => {

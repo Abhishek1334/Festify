@@ -1,66 +1,91 @@
-import EventCard from "../EventCard";
-import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
-import { fetchEvents, fetchEventsByCategory } from "../../api/events";
-import Categories from "../Categories";
-import { Link } from "react-router-dom";
-export default function Events() {
-	const { category } = useParams();
-	const [events, setEvents] = useState([]);
-	const [loading, setLoading] = useState(true);
+import { useQuery } from '@tanstack/react-query';
+import { Link } from 'react-router-dom';
+import PropTypes from 'prop-types';
+import { fetchEvents } from '../../api/events';
+import EventCard from '../EventCard';
+import { Skeleton } from '../ui/Skeleton';
+import { Button } from '../ui/Button';
+import { EmptyState } from '../ui/EmptyState';
 
-	useEffect(() => {
-		const loadEvents = async () => {
-			setLoading(true);
-			try {
-				let data;
-				if (category) {
-					data = await fetchEventsByCategory(category);
-				} else {
-					data = await fetchEvents();
-				}
-				if (Array.isArray(data)) {
-					setEvents(data);
-				} else {
-					console.error("API did not return an array:", data);
-					setEvents([]); // Prevent breaking the UI
-				}
-			} catch (err) {
-				console.error("Error fetching events:", err);
-			} finally {
-				setLoading(false);
-			}
-		};
+export default function EventListing({ isHomepage }) {
+	const { data, isLoading, isError } = useQuery({
+		queryKey: ['events', 'list'],
+		queryFn: () => fetchEvents(),
+	});
 
-		loadEvents();
-	}, [category]);
+	const events = Array.isArray(data) ? data : [];
+	const upcoming = events
+		.filter((e) => !e.endTime || new Date(e.endTime).getTime() > Date.now())
+		.sort((a, b) => new Date(a.startTime || a.date) - new Date(b.startTime || b.date));
 
-	const displayEvents = events.length > 0 ? events.slice(0, 6) : [];
+	const visible = isHomepage ? upcoming.slice(0, 6) : upcoming;
+
 	return (
-		<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 hidden-section">
-			<Categories />
-			<h1 className="text-3xl font-bold text-gray-900 mb-8">
-				{category ? `${category} Events` : "All Events"}
-			</h1>
-
-			{loading ? (
-				<div className="flex justify-center items-center h-32">
-					<div className="w-10 h-10 border-4 border-gray-300 border-t-blue-500 rounded-full animate-spin"></div>
+		<section className="max-w-[1280px] mx-auto px-5 sm:px-8 lg:px-12 py-12 sm:py-20">
+			<div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-10 sm:mb-14">
+				<div>
+					<div className="font-sans text-sm font-medium text-accent-deep uppercase tracking-wider mb-3">
+						This week
+					</div>
+					<h2
+						className="font-display font-medium leading-[1.05] tracking-tight"
+						style={{ fontSize: 'clamp(2rem, 4.5vw, 3.5rem)' }}
+					>
+						What's on, near you.
+					</h2>
 				</div>
-			) : events.length > 0 ? (
-				<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-					{displayEvents.map((event) => (
-						<EventCard key={event._id} event={event} />
+				{isHomepage && (
+					<Link to="/events">
+						<Button variant="ghost" size="md">
+							See all events →
+						</Button>
+					</Link>
+				)}
+			</div>
+
+			{isLoading && (
+				<div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-7">
+					{Array.from({ length: 6 }).map((_, i) => (
+						<div key={i} className="space-y-4">
+							<Skeleton variant="image" />
+							<Skeleton lines={2} />
+						</div>
 					))}
 				</div>
-			) : (
-				<p className="text-xl font-light text-gray-900 mb-8">
-					No events found
-				</p>
 			)}
-			<Link to={"/events"}>
-				<button className="btn-primary mx-auto mt-8 grid ">Explore Events</button>
-			</Link>
-		</div>
+
+			{isError && !isLoading && (
+				<EmptyState
+					title="Couldn't load events"
+					description="Try refreshing in a moment."
+					art="search"
+				/>
+			)}
+
+			{!isLoading && !isError && visible.length === 0 && (
+				<EmptyState
+					title="A quiet week"
+					description="No upcoming events yet. Check back soon — or host one yourself."
+					art="events"
+					action={
+						<Link to="/events/create-event">
+							<Button variant="primary">Host an event</Button>
+						</Link>
+					}
+				/>
+			)}
+
+			{!isLoading && visible.length > 0 && (
+				<div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-7">
+					{visible.map((event, i) => (
+						<EventCard key={event._id} event={event} index={i} />
+					))}
+				</div>
+			)}
+		</section>
 	);
 }
+
+EventListing.propTypes = {
+	isHomepage: PropTypes.bool,
+};

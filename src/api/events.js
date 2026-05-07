@@ -1,5 +1,4 @@
 import axios from "axios";
-import process from "process";
 const API_URL = import.meta.env.VITE_API_URL + "/api";
 
 // Fetch all events

@@ -1,148 +1,147 @@
-import { Calendar, MapPin, Users, Search } from "lucide-react";
-import { motion } from "framer-motion";
-import HeroImg from "../../assets/images/hero.jpeg"
+import { motion } from 'framer-motion';
+import { Link } from 'react-router-dom';
+import { ArrowRight, MapPin } from 'lucide-react';
+import { Button } from '../ui/Button';
+import { Stamp } from '../ui/Stamp';
 
-const Hero = () => {
+const reveal = {
+	hidden: { y: 16, opacity: 0 },
+	show: (i = 0) => ({
+		y: 0,
+		opacity: 1,
+		transition: { duration: 0.6, delay: 0.08 * i, ease: [0.16, 1, 0.3, 1] },
+	}),
+};
+
+const HERO_IMAGE =
+	'https://images.unsplash.com/photo-1429962714451-bb934ecdc4ec?auto=format&fit=crop&w=1400&q=80';
+
+export default function Hero() {
 	return (
-		<section className="relative overflow-hidden bg-gradient-to-r from-purple-600 to-indigo-700 min-h-[70vh]">
-			<div className="absolute inset-0">
-				<img
-					src={HeroImg}
-					alt="Festival background"
-					className="w-full h-full object-cover opacity-40"
-				/>
-				<div className="absolute inset-0 bg-gradient-to-br from-purple-500/90 to-indigo-700/50" />
-				<div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-transparent via-purple-500/10 to-indigo-700/20" />
-			</div>
-
-			{/* Content */}
-			<div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-				<div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-					{/* Left Column */}
+		<section className="relative max-w-[1280px] mx-auto px-5 sm:px-8 lg:px-12 pt-10 sm:pt-16 pb-10 sm:pb-16">
+			<div className="grid lg:grid-cols-[minmax(0,1fr)_minmax(0,560px)] gap-10 lg:gap-16 items-center">
+				<div className="relative z-10">
 					<motion.div
-						initial={{ opacity: 0, x: -50 }}
-						animate={{ opacity: 1, x: 0 }}
-						transition={{ duration: 0.8 }}
-						className="space-y-8"
+						initial="hidden"
+						animate="show"
+						variants={reveal}
+						custom={0}
+						className="mb-7"
 					>
-						<motion.h1
-							className="text-5xl md:text-7xl font-bold text-white leading-tight"
-							initial={{ opacity: 0, y: 20 }}
-							animate={{ opacity: 1, y: 0 }}
-							transition={{ delay: 0.2, duration: 0.8 }}
-						>
-							Discover
-							<motion.span
-								className="block bg-clip-text text-transparent bg-gradient-to-r from-purple-200 via-white to-purple-200 bg-[length:200%_100%]"
-								animate={{
-									backgroundPosition: ["0%", "100%", "0%"],
-								}}
-								transition={{
-									duration: 5,
-									repeat: Infinity,
-									ease: "linear",
-								}}
-							>
-								Amazing Events
-							</motion.span>
-						</motion.h1>
-
-						<motion.p
-							className="text-xl text-purple-100 leading-relaxed max-w-xl"
-							initial={{ opacity: 0 }}
-							animate={{ opacity: 1 }}
-							transition={{ delay: 0.4, duration: 0.8 }}
-						>
-							Find and book tickets for the best local events,
-							festivals, and experiences. Join a vibrant community
-							of event enthusiasts near you!
-						</motion.p>
-
-
-						{/* Stats */}
-						<motion.div
-							initial={{ opacity: 0 }}
-							animate={{ opacity: 1 }}
-							transition={{ delay: 0.8, duration: 0.8 }}
-							className="grid grid-cols-3 gap-8"
-						>
-							{[
-								{
-									icon: Calendar,
-									count: "1000+",
-									label: "Events",
-								},
-								{ icon: Users, count: "50k+", label: "Users" },
-								{
-									icon: MapPin,
-									count: "100+",
-									label: "Cities",
-								},
-							].map((stat, index) => (
-								<div
-									key={index}
-									className="flex flex-col items-center gap-2 text-purple-100"
-								>
-									<stat.icon className="w-6 h-6 mb-1" />
-									<div className="text-2xl font-bold">
-										{stat.count}
-									</div>
-									<div className="text-sm opacity-80">
-										{stat.label}
-									</div>
-								</div>
-							))}
-						</motion.div>
+						<Stamp
+							label="Now booking events near you"
+							variant="info"
+							dot
+							size="md"
+						/>
 					</motion.div>
 
-					{/* Right Column */}
-					<motion.div
-						initial={{ opacity: 0, scale: 0.9 }}
-						animate={{ opacity: 1, scale: 1 }}
-						transition={{ delay: 0.4, duration: 0.8 }}
-						className="relative hidden lg:block"
+					<motion.h1
+						initial="hidden"
+						animate="show"
+						variants={reveal}
+						custom={1}
+						className="font-display font-medium text-ink leading-[1.02] tracking-tight"
+						style={{ fontSize: 'clamp(2.75rem, 7vw, 5.5rem)' }}
 					>
-						<div className="relative">
-							<motion.img
-								src="https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&q=80"
-								alt="Featured event"
-								className="rounded-2xl shadow-2xl"
-								initial={{ y: 20 }}
-								animate={{ y: 0 }}
-								transition={{
-									repeat: Infinity,
-									repeatType: "reverse",
-									duration: 2,
-									ease: "easeInOut",
-								}}
-							/>
-							<motion.div
-								className="absolute -bottom-6 -right-6 bg-white/10 backdrop-blur-lg rounded-2xl p-6 shadow-lg"
-								initial={{ x: 20 }}
-								animate={{ x: 0 }}
-								transition={{
-									repeat: Infinity,
-									repeatType: "reverse",
-									duration: 2,
-									delay: 0.5,
-									ease: "easeInOut",
-								}}
-							>
-								<div className="text-white">
-									<p className="font-semibold text-lg">
-										Next Big Event
-									</p>
-									<p className="text-purple-200">
-										This Weekend
-									</p>
-								</div>
-							</motion.div>
-						</div>
+						The events
+						<br />
+						nearest you,
+						<br />
+						<span className="italic text-accent-deep" style={{ fontVariationSettings: '"SOFT" 100' }}>
+							tonight.
+						</span>
+					</motion.h1>
+
+					<motion.p
+						initial="hidden"
+						animate="show"
+						variants={reveal}
+						custom={3}
+						className="mt-7 max-w-[500px] font-sans text-lg text-ink/80 leading-[1.55]"
+					>
+						Discover gigs, food markets, art shows and meetups happening
+						in your city this week. Book a ticket. Walk in.
+					</motion.p>
+
+					<motion.div
+						initial="hidden"
+						animate="show"
+						variants={reveal}
+						custom={5}
+						className="mt-9 flex flex-wrap items-center gap-3"
+					>
+						<Link to="/events">
+							<Button variant="primary" size="lg">
+								Browse events <ArrowRight className="size-4" />
+							</Button>
+						</Link>
+						<Link to="/events/create-event">
+							<Button variant="secondary" size="lg">
+								Host an event
+							</Button>
+						</Link>
+					</motion.div>
+
+					<motion.div
+						initial="hidden"
+						animate="show"
+						variants={reveal}
+						custom={7}
+						className="mt-10 flex items-center gap-3 text-muted text-sm"
+					>
+						<MapPin className="size-4 text-accent" strokeWidth={1.75} />
+						<span>Live in 12+ cities · Bengaluru · Mumbai · Delhi · …</span>
 					</motion.div>
 				</div>
+
+				{/* Photo */}
+				<motion.div
+					initial={{ opacity: 0, scale: 0.96 }}
+					animate={{ opacity: 1, scale: 1 }}
+					transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+					className="relative"
+				>
+					<div className="relative aspect-[4/5] sm:aspect-[5/6] lg:aspect-[4/5] overflow-hidden rounded-[var(--radius-lg)] bg-paper-dim shadow-[var(--shadow-card-hover)]">
+						<img
+							src={HERO_IMAGE}
+							alt="A festival crowd at golden hour"
+							className="w-full h-full object-cover"
+							loading="eager"
+							fetchPriority="high"
+						/>
+						<div className="absolute inset-0 bg-gradient-to-t from-ink/30 via-transparent to-transparent" />
+						<motion.div
+							initial={{ y: 12, opacity: 0 }}
+							animate={{ y: 0, opacity: 1 }}
+							transition={{ delay: 0.7, duration: 0.6 }}
+							className="absolute bottom-5 left-5 right-5 flex items-end justify-between gap-3"
+						>
+							<div className="bg-paper/95 backdrop-blur-sm rounded-[var(--radius)] px-4 py-3 shadow-[var(--shadow-card)]">
+								<div className="font-sans text-xs font-medium text-accent-deep mb-0.5">
+									Featured · this weekend
+								</div>
+								<div className="font-display text-lg font-medium text-ink leading-tight">
+									Kashmere Fest, BLR
+								</div>
+							</div>
+							<div className="bg-accent text-paper rounded-full size-12 grid place-items-center shadow-[var(--shadow-button)] shrink-0">
+								<ArrowRight className="size-5" />
+							</div>
+						</motion.div>
+					</div>
+
+					{/* Floating mini stamp */}
+					<motion.div
+						initial={{ rotate: -8, scale: 0.6, opacity: 0 }}
+						animate={{ rotate: -8, scale: 1, opacity: 1 }}
+						transition={{ delay: 1, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+						className="absolute -top-3 -right-3 sm:-top-4 sm:-right-4"
+					>
+						<Stamp label="Live · 24 events" variant="live" dot size="lg" rotation={-6} />
+					</motion.div>
+				</motion.div>
 			</div>
 		</section>
 	);
 }
-
-export default Hero;

@@ -1,199 +1,148 @@
-import { Menu, X } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
-import { User, LogOut, LayoutDashboard } from "lucide-react";
-import logo from "../assets/images/logo.png";
-import { useContext, useState, useEffect } from "react";
-import { AuthContext } from "../context/AuthContext";
+import { Link, useNavigate, NavLink } from 'react-router-dom';
+import { useContext, useState, useEffect } from 'react';
+import { Menu, X } from 'lucide-react';
+import { AuthContext } from '../context/AuthContext';
+import { Button } from './ui/Button';
+import { cn } from '../lib/cn';
+
+const navLinkClass = ({ isActive }) =>
+	cn(
+		'font-sans text-[15px] font-medium tracking-tight py-2',
+		isActive ? 'text-ink' : 'text-muted hover:text-ink',
+		'transition-colors'
+	);
 
 export default function Navbar() {
-	const authContext = useContext(AuthContext) || {};
-	const { user, logout } = authContext;
+	const { user, logout } = useContext(AuthContext) || {};
 	const navigate = useNavigate();
-	const [isMenuOpen, setIsMenuOpen] = useState(false);
+	const [open, setOpen] = useState(false);
+	const [scrolled, setScrolled] = useState(false);
+
+	useEffect(() => {
+		const onScroll = () => setScrolled(window.scrollY > 4);
+		onScroll();
+		window.addEventListener('scroll', onScroll, { passive: true });
+		return () => window.removeEventListener('scroll', onScroll);
+	}, []);
+
+	useEffect(() => {
+		document.body.style.overflow = open ? 'hidden' : '';
+		return () => {
+			document.body.style.overflow = '';
+		};
+	}, [open]);
 
 	const handleLogout = () => {
-		logout();
-		setIsMenuOpen(false);
-		navigate("/login");
+		logout?.();
+		setOpen(false);
+		navigate('/login');
 	};
 
-	const isLoggedIn = !!user;
-	const isAdmin = user?.role === "admin";
+	const close = () => setOpen(false);
+	const isAdmin = user?.role === 'admin';
 
-	const closeMenu = () => setIsMenuOpen(false);
-
-	// Close menu when clicking outside
-	useEffect(() => {
-		const handleClickOutside = (event) => {
-			if (isMenuOpen && !event.target.closest(".mobile-menu")) {
-				setIsMenuOpen(false);
-			}
-		};
-
-		document.addEventListener("mousedown", handleClickOutside);
-		return () => document.removeEventListener("mousedown", handleClickOutside);
-	}, [isMenuOpen]);
+	const links = (
+		<>
+			<NavLink to="/events" className={navLinkClass} onClick={close}>
+				Events
+			</NavLink>
+			<NavLink to="/events/create-event" className={navLinkClass} onClick={close}>
+				Host
+			</NavLink>
+			{user && (
+				<NavLink to="/user-profile" className={navLinkClass} onClick={close}>
+					Profile
+				</NavLink>
+			)}
+			{isAdmin && (
+				<NavLink to="/admin" className={navLinkClass} onClick={close}>
+					Admin
+				</NavLink>
+			)}
+		</>
+	);
 
 	return (
-		<section className="hidden-section sticky top-0 w-full z-50 bg-[rgb(250, 247, 232)] backdrop-blur-lg hover:bg-[rgba(255,255,255,1)]">
-			<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-				<div className="flex justify-between h-16 items-center">
-					{/* Logo */}
-					<div className="flex items-center">
-						<Link
-							to="/"
-							className="flex items-center space-x-2"
-							onClick={closeMenu}
-						>
-							<img
-								src={logo}
-								alt="Festify Logo"
-								className="h-8 w-8"
-							/>
-							<span className="text-xl font-semibold ml-2 text-gray-900">
-								Festify
-							</span>
-						</Link>
-					</div>
+		<header
+			className={cn(
+				'sticky top-0 z-40 transition-all',
+				scrolled
+					? 'bg-paper/85 backdrop-blur-md border-b border-line'
+					: 'bg-transparent border-b border-transparent'
+			)}
+		>
+			<div className="max-w-[1280px] mx-auto px-5 sm:px-8 lg:px-12">
+				<div className="flex items-center justify-between h-16">
+					<Link to="/" className="flex items-center gap-2" onClick={close}>
+						<span className="font-display text-2xl font-semibold tracking-tight">
+							Festify
+						</span>
+					</Link>
 
-					{/* Desktop Navigation */}
-					<div className="hidden lg:flex items-center space-x-8">
-						<Link
-							to="/events"
-							className="text-gray-700 transform hover:-translate-y-0.5 transition-all duration-200"
-						>
-							Events
-						</Link>
-						<Link
-							to="/events/create-event"
-							className="text-gray-700 transform hover:-translate-y-0.5 transition-all duration-200"
-						>
-							Create Event
-						</Link>
-						{isLoggedIn ? (
-							<>
-								{isAdmin && (
-									<Link
-										to="/admin"
-										className="flex items-center space-x-2 nav-link btn-secondary"
-									>
-										<LayoutDashboard className="h-5 w-5" />
-										<span>Admin Dashboard</span>
-									</Link>
-								)}
-								<Link
-									to="/user-profile"
-									className="flex items-center space-x-2 nav-link btn-secondary"
-								>
-									<User className="h-5 w-5" />
-									<span>{user?.username || "Profile"}</span>
-								</Link>
-								<button
-									onClick={handleLogout}
-									className="flex items-center space-x-2 nav-link btn-secondary"
-								>
-									<LogOut className="h-5 w-5" />
-									<span>Logout</span>
-								</button>
-							</>
+					<nav className="hidden lg:flex items-center gap-9">{links}</nav>
+
+					<div className="hidden lg:flex items-center gap-3">
+						{user ? (
+							<Button variant="secondary" size="sm" onClick={handleLogout}>
+								Log out
+							</Button>
 						) : (
 							<>
-								<Link to="/login" className="btn-secondary">
-									Login
+								<Link to="/login">
+									<Button variant="ghost" size="sm">
+										Log in
+									</Button>
 								</Link>
-								<Link to="/signup" className="btn-primary">
-									Sign Up
+								<Link to="/signup">
+									<Button variant="primary" size="sm">
+										Sign up
+									</Button>
 								</Link>
 							</>
 						)}
 					</div>
 
-					{/* Mobile Menu Button */}
 					<button
-						onClick={() => setIsMenuOpen(!isMenuOpen)}
-						className="lg:hidden p-2 rounded-md text-gray-700 hover:bg-gray-100 focus:outline-none"
+						onClick={() => setOpen((v) => !v)}
 						aria-label="Toggle menu"
+						className="lg:hidden p-2 -mr-2 text-ink"
 					>
-						{isMenuOpen ? (
-							<X className="h-6 w-6" />
-						) : (
-							<Menu className="h-6 w-6" />
-						)}
+						{open ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
 					</button>
 				</div>
+			</div>
 
-				{/* Mobile Navigation */}
-				<div
-					className={`mobile-menu lg:hidden absolute left-0 right-0 bg-white shadow-lg rounded-b-lg border-t border-gray-100 transition-all duration-300 ease-in-out ${
-						isMenuOpen
-							? "opacity-100 translate-y-0"
-							: "opacity-0 -translate-y-2 pointer-events-none"
-					}`}
-				>
-					<div className="flex flex-col space-y-4 px-4 py-6">
-						<Link
-							to="/events"
-							className="flex items-center space-x-2 text-gray-700 hover:text-purple-600 transition-colors"
-							onClick={closeMenu}
-						>
-							<span>Events</span>
-						</Link>
-						<Link
-							to="/events/create-event"
-							className="flex items-center space-x-2 text-gray-700 hover:text-purple-600 transition-colors"
-							onClick={closeMenu}
-						>
-							<span>Create Event</span>
-						</Link>
-						{isLoggedIn ? (
-							<>
-								{isAdmin && (
-									<Link
-										to="/admin"
-										className="flex items-center space-x-2 text-gray-700 hover:text-purple-600 transition-colors"
-										onClick={closeMenu}
-									>
-										<LayoutDashboard className="h-5 w-5" />
-										<span>Admin Dashboard</span>
-									</Link>
-								)}
-								<Link
-									to="/user-profile"
-									className="flex items-center space-x-2 text-gray-700 hover:text-purple-600 transition-colors"
-									onClick={closeMenu}
-								>
-									<User className="h-5 w-5" />
-									<span>{user?.name || "Profile"}</span>
-								</Link>
-								<button
-									onClick={handleLogout}
-									className="flex items-center space-x-2 text-gray-700 hover:text-purple-600 transition-colors"
-								>
-									<LogOut className="h-5 w-5" />
-									<span>Logout</span>
-								</button>
-							</>
-						) : (
-							<div className="flex flex-col space-y-2">
-								<Link
-									to="/login"
-									className="w-full py-2 px-4 text-center rounded-md bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors"
-									onClick={closeMenu}
-								>
-									Login
-								</Link>
-								<Link
-									to="/signup"
-									className="w-full py-2 px-4 text-center rounded-md bg-purple-600 text-white hover:bg-purple-700 transition-colors"
-									onClick={closeMenu}
-								>
-									Sign Up
-								</Link>
-							</div>
-						)}
-					</div>
+			{/* Mobile sheet */}
+			<div
+				className={cn(
+					'lg:hidden fixed inset-x-0 top-16 bottom-0 bg-paper border-t border-line z-30',
+					'transition-transform duration-200',
+					open ? 'translate-y-0' : '-translate-y-[120%] pointer-events-none'
+				)}
+			>
+				<div className="px-6 py-8 flex flex-col gap-6 h-full">
+					{links}
+					<div className="border-t border-line my-2" />
+					{user ? (
+						<Button variant="secondary" onClick={handleLogout} block>
+							Log out
+						</Button>
+					) : (
+						<div className="flex flex-col gap-3">
+							<Link to="/login" onClick={close}>
+								<Button variant="secondary" block>
+									Log in
+								</Button>
+							</Link>
+							<Link to="/signup" onClick={close}>
+								<Button variant="primary" block>
+									Sign up
+								</Button>
+							</Link>
+						</div>
+					)}
 				</div>
 			</div>
-		</section>
+		</header>
 	);
 }

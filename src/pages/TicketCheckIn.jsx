@@ -1,517 +1,355 @@
-import { useState, useEffect, useCallback } from "react";
-import { useLocation, useParams, Link } from "react-router-dom";
-import axios from "axios";
-import dayjs from "dayjs";
-import { toast, ToastContainer } from "react-toastify";
-import {
-	StepBack,
-	Calendar,
-	Clock,
-	MapPin,
-	Users,
-	Tag,
-	Search,
-	CheckCircle2,
-	XCircle,
-	PenBoxIcon,
-} from "lucide-react";
-import QRScanner from "../components/QRScanner";
+import { useState, useMemo } from 'react';
+import { useParams, Link } from 'react-router-dom';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import axios from 'axios';
+import dayjs from 'dayjs';
+import { toast } from 'react-toastify';
+import { ArrowLeft, Calendar, Clock, MapPin, Users, Search, CheckCircle2, XCircle, Edit3 } from 'lucide-react';
+import QRScanner from '../components/QRScanner';
+import { Button } from '../components/ui/Button';
+import { Stamp } from '../components/ui/Stamp';
+import { Modal } from '../components/ui/Modal';
+import { Input } from '../components/ui/Input';
+import { Skeleton } from '../components/ui/Skeleton';
+import { EmptyState } from '../components/ui/EmptyState';
+import { NumberTicker } from '../components/ui/NumberTicker';
+import { cloudinaryThumb } from '../lib/cloudinary';
 
-const API_URL = import.meta.env.VITE_API_URL + "/api";
+const API_URL = import.meta.env.VITE_API_URL + '/api';
 
-const getCloudinaryImageUrl = (publicId) => {
-	if (!publicId) return "https://via.placeholder.com/300";
-	if (publicId.startsWith("http") || publicId.startsWith("https"))
-		return publicId;
-	const cleanPublicId = publicId.replace(
-		/^https:\/\/res\.cloudinary\.com\/[^/]+\/image\/upload\//,
-		""
-	);
-	return `https://res.cloudinary.com/dmgyx29ou/image/upload/${cleanPublicId}`;
-};
+const RFID_REGEX = /^[A-Z0-9]{2}\s[A-Z0-9]{2}\s[A-Z0-9]{2}\s[A-Z0-9]{2}$/;
+const validateRFID = (s) => RFID_REGEX.test(s);
 
-const validateRFID = (rfid) => {
-	// Validate format: SS 5S E9 55 (uppercase letters and numbers with spaces)
-	const regex = /^[A-Z0-9]{2}\s[A-Z0-9]{2}\s[A-Z0-9]{2}\s[A-Z0-9]{2}$/;
-	return regex.test(rfid);
-};
+const fetchEvent = (id, token) =>
+	axios.get(`${API_URL}/events/${id}`, { headers: { Authorization: `Bearer ${token}` } }).then((r) => r.data);
 
-const TicketCheckInPage = () => {
+const fetchTickets = (id, token) =>
+	axios.get(`${API_URL}/tickets/event/${id}`, { headers: { Authorization: `Bearer ${token}` } }).then((r) => r.data);
+
+export default function TicketCheckIn() {
 	const { eventId } = useParams();
-	const { state } = useLocation();
-	const [event, setEvent] = useState(state?.event || null);
-	const [tickets, setTickets] = useState([]);
-	const [ticketId, setTicketId] = useState("");
+	const stored = JSON.parse(localStorage.getItem('user') || '{}');
+	const token = stored.token;
+	const qc = useQueryClient();
+
+	const [ticketId, setTicketId] = useState('');
+	const [rfidModalTicket, setRfidModalTicket] = useState(null);
+	const [rfidInput, setRfidInput] = useState('');
+	const [rfidUpdating, setRfidUpdating] = useState(false);
 	const [filterVerified, setFilterVerified] = useState(false);
-	const [showRfidModal, setShowRfidModal] = useState(false);
-	const [currentTicket, setCurrentTicket] = useState(null);
-	const [rfidInput, setRfidInput] = useState("");
-	const [isUpdating, setIsUpdating] = useState(false);
 
-	const user = JSON.parse(localStorage.getItem("user"));
-	const token = user?.token;
+	const eventQ = useQuery({
+		queryKey: ['event', eventId],
+		queryFn: () => fetchEvent(eventId, token),
+		enabled: !!eventId && !!token,
+	});
 
-	const fetchEventDetails = useCallback(async () => {
-		if (!event && eventId) {
-			try {
-				const { data } = await axios.get(
-					`${API_URL}/events/${eventId}`,
-					{
-						headers: { Authorization: `Bearer ${token}` },
-					}
-				);
-				setEvent(data);
+	const ticketsQ = useQuery({
+		queryKey: ['tickets', eventId],
+		queryFn: () => fetchTickets(eventId, token),
+		enabled: !!eventId && !!token,
+	});
 
-				const now = dayjs();
-				if (now.isAfter(dayjs(data.endTime))) {
-					toast.info("⚠️ This event has already ended.");
-				} else if (data.ticketsSold >= data.capacity) {
-					toast.warn("🎟️ Event is sold out!");
-				}
-			} catch (err) {
-				toast.error("⚠️ Error fetching event details!");
-			}
-		}
-	}, [event, eventId, token]);
+	const event = eventQ.data;
+	const tickets = ticketsQ.data || [];
 
-	const fetchTickets = useCallback(async () => {
-		if (!eventId) return;
-		try {
-			const { data } = await axios.get(
-				`${API_URL}/tickets/event/${eventId}`,
-				{
-					headers: { Authorization: `Bearer ${token}` },
-				}
-			);
-			setTickets(data);
-		} catch (err) {
-			toast.error("⚠️ Error fetching tickets!");
-		}
-	}, [eventId, token]);
+	const stats = useMemo(() => {
+		const total = tickets.length;
+		const checked = tickets.filter((t) => t.checkedIn).length;
+		return { total, checked, pct: total > 0 ? Math.round((checked / total) * 100) : 0 };
+	}, [tickets]);
 
-	useEffect(() => {
-		fetchEventDetails();
-		fetchTickets();
-	}, [fetchEventDetails, fetchTickets]);
+	const filteredTickets = useMemo(
+		() => (filterVerified ? tickets.filter((t) => t.checkedIn) : tickets),
+		[tickets, filterVerified]
+	);
 
-	const handleVerifyTicket = async (e) => {
+	const status = useMemo(() => {
+		if (!event) return null;
+		const now = dayjs();
+		if (now.isBefore(dayjs(event.startTime))) return 'upcoming';
+		if (now.isBefore(dayjs(event.endTime))) return 'live';
+		return 'ended';
+	}, [event]);
+
+	const handleVerify = async (e) => {
 		e.preventDefault();
-
-		if (!ticketId) {
-			toast.warn("⚠️ Please enter a Ticket ID.");
+		if (!ticketId.trim()) {
+			toast.warn('Enter a ticket ID.');
 			return;
 		}
-
 		try {
-			const response = await axios.post(
+			const res = await axios.post(
 				`${API_URL}/tickets/verify`,
-				{ ticketId, eventId },
+				{ ticketId: ticketId.trim(), eventId },
 				{ headers: { Authorization: `Bearer ${token}` } }
 			);
-
-			if (
-				response.data.status === "already_verified" ||
-				response.data.message === "ALREADY_VERIFIED"
-			) {
-				toast.info("🔄 This ticket is already verified.");
-			} else {
-				toast.success("✅ Ticket Verified Successfully!");
-			}
-
-			setTicketId("");
-			fetchTickets();
+			if (res.data.status === 'already_verified') toast.info('Already verified.');
+			else toast.success('Ticket verified.');
+			setTicketId('');
+			qc.invalidateQueries({ queryKey: ['tickets', eventId] });
 		} catch (err) {
-
-			toast.error(
-				err.response?.data?.message || "❌ Ticket Verification Failed."
-			);
-		}
-	};
-
-	const handleRfidUpdate = async () => {
-		if (!currentTicket?._id) {
-			toast.warn("⚠️ No ticket selected for RFID update");
-			return;
-		}
-
-		if (!validateRFID(rfidInput)) {
-			toast.error(
-				"❌ Invalid RFID format. Please use format: SS 5S E9 55"
-			);
-			return;
-		}
-
-		setIsUpdating(true);
-		try {
-			const response = await axios.put(
-				`${API_URL}/tickets/update/${currentTicket._id}`,
-				{ rfid: rfidInput },
-				{ headers: { Authorization: `Bearer ${token}` } }
-			);
-
-
-			toast.success(
-				response.data?.message || "✅ RFID Updated Successfully!"
-			);
-			setShowRfidModal(false);
-			setRfidInput("");
-			fetchTickets();
-		} catch (err) {
-			console.error("Error updating RFID:", err);
-			toast.error(
-				err.response ||
-					"❌ RFID Update Failed. Please try again."
-			);
-		} finally {
-			setIsUpdating(false);
+			toast.error(err.response?.data?.message || 'Verification failed.');
 		}
 	};
 
 	const openRfidModal = (ticket) => {
-		setCurrentTicket(ticket);
-		setRfidInput(ticket.rfid || "");
-		setShowRfidModal(true);
+		setRfidModalTicket(ticket);
+		setRfidInput(ticket.rfid || '');
 	};
 
-	const filteredTickets = filterVerified
-		? tickets.filter((ticket) => ticket.checkedIn)
-		: tickets;
-
-	const getEventStatus = () => {
-		const now = dayjs();
-		if (now.isBefore(dayjs(event.startTime))) return "Upcoming";
-		if (now.isBefore(dayjs(event.endTime))) return "Live";
-		return "Ended";
-	};
-
-	const isSoldOut = event?.ticketsSold >= event?.capacity;
-
-	const getStatusTagColor = () => {
-		const status = getEventStatus();
-		switch (status) {
-			case "Upcoming":
-				return "bg-blue-100 text-blue-700";
-			case "Live":
-				return "bg-green-100 text-green-700";
-			default:
-				return "bg-red-100 text-red-700";
+	const handleRfidSave = async () => {
+		if (!rfidModalTicket) return;
+		if (!validateRFID(rfidInput)) {
+			toast.error('Format must be SS 5S E9 55');
+			return;
+		}
+		setRfidUpdating(true);
+		try {
+			await axios.put(
+				`${API_URL}/tickets/update/${rfidModalTicket._id}`,
+				{ rfid: rfidInput },
+				{ headers: { Authorization: `Bearer ${token}` } }
+			);
+			toast.success('RFID updated.');
+			setRfidModalTicket(null);
+			setRfidInput('');
+			qc.invalidateQueries({ queryKey: ['tickets', eventId] });
+		} catch (err) {
+			toast.error(err.response?.data?.message || 'Update failed.');
+		} finally {
+			setRfidUpdating(false);
 		}
 	};
 
-	return (
-		<div className="min-h-screen bg-gray-50 p-4 md:p-6">
-			<ToastContainer
-				position="top-right"
-				autoClose={3000}
-				hideProgressBar={false}
+	if (eventQ.isLoading) {
+		return (
+			<div className="max-w-[1280px] mx-auto px-5 sm:px-8 lg:px-12 py-12">
+				<Skeleton variant="image" className="aspect-[16/8] mb-8" />
+				<Skeleton lines={4} />
+			</div>
+		);
+	}
+
+	if (!event) {
+		return (
+			<EmptyState
+				title="Event not found"
+				description="Try the organizer panel."
+				art="search"
+				action={
+					<Link to="/user-profile">
+						<Button variant="primary">Back</Button>
+					</Link>
+				}
 			/>
+		);
+	}
 
-			{/* RFID Update Modal */}
-			{showRfidModal && (
-				<div className="fixed inset-0 z-50 overflow-y-auto">
-					<div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-						<div
-							className="fixed inset-0 transition-opacity"
-							onClick={() => setShowRfidModal(false)}
+	return (
+		<div className="max-w-[1280px] mx-auto px-5 sm:px-8 lg:px-12 py-12 sm:py-16">
+			<Link
+				to={`/organizer/${eventId}`}
+				className="inline-flex items-center gap-2 font-sans text-sm font-medium text-muted hover:text-ink mb-6 transition-colors"
+			>
+				<ArrowLeft className="size-4" /> Back to event
+			</Link>
+
+			<div className="font-sans text-sm font-medium text-accent-deep uppercase tracking-wider mb-3">
+				Check-in station
+			</div>
+
+			<EventHeader event={event} status={status} />
+
+			{/* Stats */}
+			<div className="grid grid-cols-3 gap-6 sm:gap-8 mt-10 mb-12 py-10 border-y border-line">
+				<Stat label="Tickets sold" value={stats.total} />
+				<Stat label="Checked in" value={stats.checked} />
+				<Stat label="Floor rate" value={stats.pct} suffix="%" />
+			</div>
+
+			<div className="grid lg:grid-cols-[minmax(0,1fr)_minmax(0,440px)] gap-10">
+				<section>
+					<div className="font-sans text-sm font-medium text-muted mb-4">Manual verify</div>
+					<form onSubmit={handleVerify} className="flex gap-3 mb-10 items-end">
+						<div className="flex-1">
+							<Input
+								name="ticket"
+								placeholder="Paste a ticket ID"
+								value={ticketId}
+								onChange={(e) => setTicketId(e.target.value)}
+							/>
+						</div>
+						<Button type="submit" variant="primary">
+							<Search className="size-4" /> Verify
+						</Button>
+					</form>
+
+					<div className="flex items-center justify-between mb-5">
+						<div className="font-sans text-sm font-medium text-muted">Ticket roll</div>
+						<button
+							onClick={() => setFilterVerified((v) => !v)}
+							className="font-sans text-sm font-medium text-ink hover:text-accent-deep"
 						>
-							<div className="absolute inset-0 bg-gray-500 opacity-75"></div>
-						</div>
-
-						<span className="hidden sm:inline-block sm:align-middle sm:h-screen">
-							&#8203;
-						</span>
-
-						<div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-							<div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-								<div className="sm:flex sm:items-start">
-									<div className="mt-3 text-center sm:mt-0 sm:text-left w-full">
-										<h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">
-											Update RFID Tag for Ticket
-										</h3>
-										<div className="space-y-4">
-											<div>
-												<label className="block text-sm font-medium text-gray-700 mb-1">
-													RFID Tag (Format: SS 5S E9
-													55)
-												</label>
-												<input
-													type="text"
-													value={rfidInput}
-													onChange={(e) =>
-														setRfidInput(
-															e.target.value.toUpperCase()
-														)
-													}
-													placeholder="Enter RFID in SS 5S E9 55 format"
-													className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
-												/>
-												{rfidInput &&
-													!validateRFID(
-														rfidInput
-													) && (
-														<p className="mt-1 text-sm text-red-600">
-															Invalid format.
-															Please use SS 5S E9
-															55 format.
-														</p>
-													)}
-											</div>
-											<div className="flex justify-end space-x-3">
-												<button
-													onClick={() =>
-														setShowRfidModal(false)
-													}
-													className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
-												>
-													Cancel
-												</button>
-												<button
-													onClick={handleRfidUpdate}
-													disabled={
-														!validateRFID(
-															rfidInput
-														) || isUpdating
-													}
-													className={`px-4 py-2 text-sm font-medium text-white rounded-md ${
-														validateRFID(
-															rfidInput
-														) && !isUpdating
-															? "bg-purple-600 hover:bg-purple-700"
-															: "bg-purple-300 cursor-not-allowed"
-													}`}
-												>
-													{isUpdating
-														? "Updating..."
-														: "Update RFID"}
-												</button>
-											</div>
-										</div>
-									</div>
-								</div>
-							</div>
-						</div>
+							{filterVerified ? 'Show all' : 'Show checked-in only'}
+						</button>
 					</div>
+
+					{ticketsQ.isLoading && (
+						<div className="space-y-2">
+							{Array.from({ length: 5 }).map((_, i) => (
+								<Skeleton key={i} className="h-14 rounded-[var(--radius)]" />
+							))}
+						</div>
+					)}
+
+					{!ticketsQ.isLoading && filteredTickets.length === 0 && (
+						<EmptyState title="No tickets yet" description="" art="tickets" />
+					)}
+
+					{!ticketsQ.isLoading && filteredTickets.length > 0 && (
+						<div className="space-y-2">
+							{filteredTickets.map((ticket) => (
+								<TicketRow key={ticket._id} ticket={ticket} onEditRfid={openRfidModal} />
+							))}
+						</div>
+					)}
+				</section>
+
+				<aside className="lg:sticky lg:top-24 self-start space-y-4">
+					<QRScanner
+						eventId={event._id}
+						onScanSuccess={() => qc.invalidateQueries({ queryKey: ['tickets', eventId] })}
+					/>
+					<div className="bg-paper-dim/60 rounded-[var(--radius-lg)] p-5 border border-line/60">
+						<div className="font-sans text-sm font-medium text-muted mb-3">How to use</div>
+						<ol className="font-sans text-sm text-ink/85 space-y-2 list-decimal list-inside">
+							<li>Press start, allow camera access.</li>
+							<li>Aim the camera at the attendee's QR code.</li>
+							<li>Wait for the green confirmation.</li>
+						</ol>
+					</div>
+				</aside>
+			</div>
+
+			<Modal
+				open={!!rfidModalTicket}
+				onClose={() => setRfidModalTicket(null)}
+				title="Assign RFID"
+				size="sm"
+			>
+				<p className="font-sans text-sm text-muted mb-5">
+					Format: <span className="font-mono text-ink">SS 5S E9 55</span> (uppercase + spaces)
+				</p>
+				<Input
+					label="RFID tag"
+					value={rfidInput}
+					onChange={(e) => setRfidInput(e.target.value.toUpperCase())}
+					placeholder="SS 5S E9 55"
+					error={rfidInput && !validateRFID(rfidInput) ? 'Wrong format' : null}
+				/>
+				<div className="flex justify-end gap-3 mt-6">
+					<Button variant="secondary" onClick={() => setRfidModalTicket(null)}>
+						Cancel
+					</Button>
+					<Button
+						variant="primary"
+						onClick={handleRfidSave}
+						disabled={rfidUpdating || !validateRFID(rfidInput)}
+					>
+						{rfidUpdating ? 'Saving…' : 'Save RFID'}
+					</Button>
 				</div>
-			)}
+			</Modal>
+		</div>
+	);
+}
 
-			<div className="max-w-7xl mx-auto">
-				<Link
-					to={`/organizer/${eventId}`}
-					className="inline-flex items-center space-x-2 text-purple-600 hover:text-purple-700 mb-6"
+function EventHeader({ event, status }) {
+	return (
+		<div className="grid lg:grid-cols-[minmax(0,1fr)_minmax(0,420px)] gap-8 items-start">
+			<div>
+				<h1
+					className="font-display font-medium leading-[1.02] tracking-tight"
+					style={{ fontSize: 'clamp(2.5rem, 6vw, 4.5rem)' }}
 				>
-					<StepBack className="h-5 w-5" />
-					<span>Back to Event</span>
-				</Link>
-
-				{event ? (
-					<div className="grid lg:grid-cols-2 gap-6">
-						{/* Event Details Card */}
-						<div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-							<div className="relative h-48">
-								<img
-									src={getCloudinaryImageUrl(event.image)}
-									alt={event.title}
-									className="w-full h-full object-cover"
-								/>
-								<div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-								<div className="absolute bottom-4 left-4 right-4">
-									<h1 className="text-2xl font-bold text-white mb-2">
-										{event.title}
-									</h1>
-									<span
-										className={`inline-flex px-3 py-1 rounded-full text-sm font-medium ${getStatusTagColor()}`}
-									>
-										{isSoldOut
-											? "Sold Out"
-											: getEventStatus()}
-									</span>
-								</div>
-							</div>
-
-							<div className="p-6">
-								<p className="text-gray-600 mb-6">
-									{event.description}
-								</p>
-								<p className="text-gray-600 text-sm mb-6">
-									EventId: {eventId}
-								</p>
-								<div className="grid grid-cols-2 gap-4">
-									<div className="flex items-center space-x-2 text-gray-600">
-										<Calendar className="h-5 w-5 text-purple-500" />
-										<span>
-											{dayjs(event.date).format(
-												"MMMM D, YYYY"
-											)}
-										</span>
-									</div>
-									<div className="flex items-center space-x-2 text-gray-600">
-										<MapPin className="h-5 w-5 text-purple-500" />
-										<span>{event.location}</span>
-									</div>
-									<div className="flex items-center space-x-2 text-gray-600">
-										<Clock className="h-5 w-5 text-purple-500" />
-										<span>
-											{dayjs(event.startTime).format(
-												"h:mm A"
-											)}
-										</span>
-									</div>
-									<div className="flex items-center space-x-2 text-gray-600">
-										<Clock className="h-5 w-5 text-purple-500" />
-										<span>
-											{dayjs(event.endTime).format(
-												"h:mm A"
-											)}
-										</span>
-									</div>
-									<div className="flex items-center space-x-2 text-gray-600">
-										<Clock className="h-5 w-5 text-purple-500" />
-										<span>
-											{dayjs(event.endTime).format(
-												"h:mm A"
-											)}
-										</span>
-									</div>
-									
-									<div className="flex items-center space-x-2 text-gray-600">
-										<Users className="h-5 w-5 text-purple-500" />
-										<span>
-											{event.ticketsSold} /{" "}
-											{event.capacity} tickets sold
-										</span>
-									</div>
-								</div>
-							</div>
-						</div>
-
-						{/* Ticket Verification Section */}
-						<div className="space-y-6">
-							<div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-								<div className="flex items-center justify-between mb-6">
-									<h2 className="text-xl font-bold text-gray-900">
-										Verify Tickets
-									</h2>
-									<div className="flex items-center space-x-2">
-										<input
-											type="checkbox"
-											id="verifiedFilter"
-											checked={filterVerified}
-											onChange={() =>
-												setFilterVerified(
-													(prev) => !prev
-												)
-											}
-											className="rounded text-purple-600 focus:ring-purple-500"
-										/>
-										<label
-											htmlFor="verifiedFilter"
-											className="text-sm text-gray-600"
-										>
-											Show verified only
-										</label>
-									</div>
-								</div>
-
-								<form
-									onSubmit={handleVerifyTicket}
-									className="mb-6"
-								>
-									<div className="relative">
-										<Search className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
-										<input
-											type="text"
-											placeholder="Enter Ticket ID"
-											value={ticketId}
-											onChange={(e) =>
-												setTicketId(e.target.value)
-											}
-											className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-										/>
-										<button
-											type="submit"
-											className="absolute right-2 top-2 px-4 py-1 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors"
-										>
-											Verify
-										</button>
-									</div>
-								</form>
-
-								<QRScanner
-									eventId={event?._id}
-									onScanSuccess={fetchTickets}
-								/>
-							</div>
-
-							{/* Tickets List */}
-							<div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-								<h3 className="text-lg font-bold text-gray-900 mb-4">
-									Recent Tickets
-								</h3>
-								<div className="space-y-3">
-									{filteredTickets.length > 0 ? (
-										filteredTickets
-											.slice(0, 5)
-											.map((ticket) => (
-												<div
-													key={ticket._id}
-													className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
-												>
-													<div className="flex items-center space-x-3">
-														<Tag className="h-5 w-5 text-purple-500" />
-														<div>
-															<span className="text-sm font-medium text-gray-600 block">
-																{ticket._id}
-															</span>
-															{ticket.rfid && (
-																<span className="text-xs text-gray-500 block">
-																	RFID:{" "}
-																	{
-																		ticket.rfid
-																	}
-																</span>
-															)}
-														</div>
-													</div>
-													<div className="flex items-center space-x-2">
-														{ticket.checkedIn ? (
-															<CheckCircle2 className="h-5 w-5 text-green-500" />
-														) : (
-															<XCircle className="h-5 w-5 text-red-500" />
-														)}
-														<PenBoxIcon
-															className="h-5 w-5 text-gray-500 cursor-pointer hover:text-purple-600"
-															onClick={() =>
-																openRfidModal(
-																	ticket
-																)
-															}
-														/>
-													</div>
-												</div>
-											))
-									) : (
-										<p className="text-center text-gray-500 py-4">
-											No tickets available
-										</p>
-									)}
-								</div>
-							</div>
-						</div>
-					</div>
-				) : (
-					<div className="flex items-center justify-center h-64">
-						<div className="animate-pulse flex space-x-4">
-							<div className="rounded-full bg-gray-200 h-12 w-12"></div>
-							<div className="space-y-4">
-								<div className="h-4 bg-gray-200 rounded w-32"></div>
-								<div className="h-4 bg-gray-200 rounded w-24"></div>
-							</div>
-						</div>
+					{event.title}.
+				</h1>
+				<div className="grid grid-cols-2 gap-x-8 gap-y-4 mt-7 max-w-md">
+					<DetailMini icon={Calendar} value={dayjs(event.date).format('MMM D, YYYY')} />
+					<DetailMini icon={MapPin} value={event.location} />
+					<DetailMini icon={Clock} value={`${dayjs(event.startTime).format('HH:mm')} → ${dayjs(event.endTime).format('HH:mm')}`} />
+					<DetailMini icon={Users} value={`${event.ticketsSold || 0}/${event.capacity}`} />
+				</div>
+			</div>
+			<div className="space-y-3">
+				{event.image && (
+					<div className="rounded-[var(--radius-lg)] overflow-hidden border border-line/60">
+						<img src={cloudinaryThumb(event.image, 800, 360)} alt="" className="w-full h-44 object-cover" />
 					</div>
 				)}
+				<div className="flex flex-wrap gap-2">
+					{status === 'live' && <Stamp label="Live now" variant="live" dot />}
+					{status === 'upcoming' && <Stamp label="Upcoming" variant="info" />}
+					{status === 'ended' && <Stamp label="Ended" variant="warn" />}
+				</div>
 			</div>
 		</div>
 	);
-};
+}
 
-export default TicketCheckInPage;
+function DetailMini({ icon: Icon, value }) {
+	return (
+		<div className="flex items-center gap-2.5 font-sans text-sm text-ink/80">
+			<Icon className="size-4 text-accent shrink-0" strokeWidth={1.75} />
+			<span className="truncate">{value}</span>
+		</div>
+	);
+}
+
+function Stat({ label, value, suffix }) {
+	return (
+		<div>
+			<div
+				className="font-display font-medium tabular text-ink leading-none tracking-tight"
+				style={{ fontSize: 'clamp(2rem, 4vw, 3.25rem)' }}
+			>
+				<NumberTicker value={value} suffix={suffix || ''} />
+			</div>
+			<div className="mt-3 font-sans text-sm text-muted">{label}</div>
+		</div>
+	);
+}
+
+function TicketRow({ ticket, onEditRfid }) {
+	return (
+		<div className="grid grid-cols-[1fr_auto] items-center gap-4 py-3 px-4 bg-paper-card rounded-[var(--radius)] border border-line/60 hover:border-line">
+			<div className="min-w-0">
+				<div className="font-mono text-sm text-ink truncate">
+					{String(ticket._id).slice(-12).toUpperCase()}
+				</div>
+				<div className="font-sans text-xs text-muted">
+					RFID · {ticket.rfid || '—'}
+				</div>
+			</div>
+			<div className="flex items-center gap-3">
+				{ticket.checkedIn ? (
+					<span className="inline-flex items-center gap-1.5 font-sans text-sm text-accent-deep">
+						<CheckCircle2 className="size-4" /> In
+					</span>
+				) : (
+					<span className="inline-flex items-center gap-1.5 font-sans text-sm text-muted">
+						<XCircle className="size-4" /> Out
+					</span>
+				)}
+				<button
+					onClick={() => onEditRfid(ticket)}
+					aria-label="Edit RFID"
+					className="size-9 grid place-items-center rounded-full hover:bg-paper-dim text-muted hover:text-ink transition-colors"
+				>
+					<Edit3 className="size-3.5" />
+				</button>
+			</div>
+		</div>
+	);
+}

@@ -1,402 +1,364 @@
-import { useEffect, useState, useContext, useCallback, useMemo } from "react";
-import { useParams, Link, useNavigate } from "react-router-dom";
-import axios from "axios";
-import { AuthContext } from "../context/AuthContext";
-import categories from "../categories.json";
-import dayjs from "dayjs";
-import timezone from "dayjs/plugin/timezone";
-import utc from "dayjs/plugin/utc";
-import { toast, ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import { useState, useEffect, useMemo, useCallback, useContext } from 'react';
+import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import axios from 'axios';
+import dayjs from 'dayjs';
+import utc from 'dayjs/plugin/utc';
+import timezone from 'dayjs/plugin/timezone';
+import { toast } from 'react-toastify';
+import { Calendar, MapPin, Users, ScanLine, Edit3, Trash2, ArrowLeft } from 'lucide-react';
+import { AuthContext } from '../context/AuthContext';
+import categories from '../categories.json';
+import { Button } from '../components/ui/Button';
+import { Stamp } from '../components/ui/Stamp';
+import { Modal } from '../components/ui/Modal';
+import { Input, Textarea } from '../components/ui/Input';
+import { Skeleton } from '../components/ui/Skeleton';
+import { EmptyState } from '../components/ui/EmptyState';
+import { NumberTicker } from '../components/ui/NumberTicker';
+import { cloudinaryThumb } from '../lib/cloudinary';
 
-const API_URL = import.meta.env.VITE_API_URL + "/api";
-
-// Extend dayjs with UTC and timezone plugins
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
-const CLOUDINARY_UPLOAD_PRESET = "festify";
-const CLOUDINARY_CLOUD_NAME = "dmgyx29ou";
+const API_URL = import.meta.env.VITE_API_URL + '/api';
+const CLOUDINARY_CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
+const CLOUDINARY_UPLOAD_PRESET = 'festify';
 
-const getCloudinaryImageUrl = (publicId) =>
-	`https://res.cloudinary.com/${CLOUDINARY_CLOUD_NAME}/image/upload/${publicId}`;
+const fetchEvent = (id, token) =>
+	axios
+		.get(`${API_URL}/events/${id}`, { headers: { Authorization: `Bearer ${token}` } })
+		.then((r) => r.data);
 
-const EventDetail = () => {
-	const { user } = useContext(AuthContext);
+export default function EventDetails() {
 	const { eventId } = useParams();
 	const navigate = useNavigate();
+	const queryClient = useQueryClient();
+	const { user } = useContext(AuthContext);
 
-	const [event, setEvent] = useState(null);
-	const [loading, setLoading] = useState(true);
-	const [error, setError] = useState(null);
-	const [isEditing, setIsEditing] = useState(false);
-	const [editEvent, setEditEvent] = useState(null);
+	const { data: event, isLoading, isError } = useQuery({
+		queryKey: ['event', eventId],
+		queryFn: () => fetchEvent(eventId, user?.token),
+		enabled: !!eventId && !!user?.token,
+	});
+
+	const [editOpen, setEditOpen] = useState(false);
+	const [deleteOpen, setDeleteOpen] = useState(false);
+	const [edit, setEdit] = useState(null);
 	const [imagePreview, setImagePreview] = useState(null);
-	const [isUploadingImage, setIsUploadingImage] = useState(false);
-
-	const now = dayjs().utc();
-
-	// Memoize event status calculations
-	const eventStatus = useMemo(() => {
-		if (!event) return null;
-
-		const start = dayjs(event.startTime);
-		const end = dayjs(event.endTime);
-
-		return {
-			isSoldOut: event.ticketsSold >= event.capacity,
-			isUpcoming: now.isBefore(start),
-			isLive: now.isAfter(start) && now.isBefore(end),
-			isExpired: now.isAfter(end)
-		};
-	}, [event, now]);
-
-	// Memoize the fetch event details function
-	const fetchEventDetails = useCallback(async () => {
-		if (!user) {
-			setError("You must be logged in to view this event.");
-			setLoading(false);
-			return;
-		}
-
-		try {
-			setLoading(true);
-			const { data } = await axios.get(
-				`${API_URL}/events/${eventId}`,
-				{
-					headers: { Authorization: `Bearer ${user.token}` },
-				}
-			);
-
-			setEvent(data);
-			setEditEvent({
-				...data,
-				date: dayjs(data.date).format("YYYY-MM-DD"),
-				startTime: dayjs(data.startTime).format("HH:mm"),
-				endTime: dayjs(data.endTime).format("HH:mm"),
-			});
-
-			if (data.image) {
-				setImagePreview(getCloudinaryImageUrl(data.image));
-			}
-		} catch (err) {
-			setError(err.response?.data?.message || "An error occurred");
-		} finally {
-			setLoading(false);
-		}
-	}, [eventId, user]);
+	const [uploading, setUploading] = useState(false);
+	const [saving, setSaving] = useState(false);
+	const [deleting, setDeleting] = useState(false);
 
 	useEffect(() => {
-		fetchEventDetails();
-	}, [fetchEventDetails]);
+		if (event && !edit) {
+			setEdit({
+				...event,
+				date: dayjs(event.date).format('YYYY-MM-DD'),
+				startTime: dayjs(event.startTime).format('HH:mm'),
+				endTime: dayjs(event.endTime).format('HH:mm'),
+			});
+			if (event.image) setImagePreview(cloudinaryThumb(event.image, 600, 360));
+		}
+	}, [event, edit]);
 
-	// Memoize the handle change function
+	const status = useMemo(() => {
+		if (!event) return null;
+		const now = dayjs();
+		const start = dayjs(event.startTime);
+		const end = dayjs(event.endTime);
+		const soldOut = event.ticketsSold >= event.capacity;
+		if (now.isBefore(start)) return soldOut ? 'sold-out' : 'upcoming';
+		if (now.isAfter(end)) return 'ended';
+		return 'live';
+	}, [event]);
+
 	const handleChange = useCallback((e) => {
 		const { name, value } = e.target;
-		setEditEvent((prev) => ({ ...prev, [name]: value }));
+		setEdit((p) => ({ ...p, [name]: value }));
 	}, []);
 
-	// Memoize the image upload handler
 	const handleImageChange = useCallback(async (e) => {
 		const file = e.target.files[0];
 		if (!file) return;
-
-		const formData = new FormData();
-		formData.append("file", file);
-		formData.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
-
+		setUploading(true);
 		try {
-			setIsUploadingImage(true);
-			const uploadRes = await axios.post(
+			const fd = new FormData();
+			fd.append('file', file);
+			fd.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+			const res = await axios.post(
 				`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`,
-				formData
+				fd
 			);
-
-			setImagePreview(getCloudinaryImageUrl(uploadRes.data.public_id));
-			setEditEvent((prev) => ({
-				...prev,
-				image: uploadRes.data.public_id,
-			}));
-		} catch (err) {
-			toast.error("Image upload failed. Please try again.");
+			setImagePreview(cloudinaryThumb(res.data.public_id, 600, 360));
+			setEdit((p) => ({ ...p, image: res.data.public_id }));
+		} catch {
+			toast.error('Image upload failed.');
 		} finally {
-			setIsUploadingImage(false);
+			setUploading(false);
 		}
 	}, []);
 
-	// Memoize the save handler
 	const handleSave = useCallback(async () => {
-		if (new Date(editEvent.startTime) >= new Date(editEvent.endTime)) {
-			setError("End time must be after start time.");
+		if (new Date(`${edit.date}T${edit.startTime}`) >= new Date(`${edit.date}T${edit.endTime}`)) {
+			toast.error('End time must come after start.');
 			return;
 		}
-
-		if (
-			!editEvent.title ||
-			!editEvent.description ||
-			!editEvent.category ||
-			!editEvent.location ||
-			!editEvent.date ||
-			!editEvent.startTime ||
-			!editEvent.endTime ||
-			!editEvent.capacity
-		) {
-			setError("Please fill in all required fields.");
-			return;
-		}
-
-		const startTimeInUTC = dayjs(`${editEvent.date}T${editEvent.startTime}`)
-			.utc()
-			.format();
-		const endTimeInUTC = dayjs(`${editEvent.date}T${editEvent.endTime}`)
-			.utc()
-			.format();
-
-		const updatedEvent = {
-			...editEvent,
-			startTime: startTimeInUTC,
-			endTime: endTimeInUTC,
-		};
-
+		setSaving(true);
 		try {
-			const { data } = await axios.put(
+			const startUtc = dayjs(`${edit.date}T${edit.startTime}`).utc().format();
+			const endUtc = dayjs(`${edit.date}T${edit.endTime}`).utc().format();
+			await axios.put(
 				`${API_URL}/events/${eventId}`,
-				updatedEvent,
+				{ ...edit, startTime: startUtc, endTime: endUtc },
 				{
 					headers: {
 						Authorization: `Bearer ${user.token}`,
-						"Content-Type": "application/json",
+						'Content-Type': 'application/json',
 					},
 				}
 			);
-
-			setEvent(data);
-			setIsEditing(false);
-			toast.success("Event updated successfully.");
+			await queryClient.invalidateQueries({ queryKey: ['event', eventId] });
+			toast.success('Event saved.');
+			setEditOpen(false);
 		} catch (err) {
-			toast.error(err.response?.data?.message || "Failed to update event.");
+			toast.error(err.response?.data?.message || 'Save failed.');
+		} finally {
+			setSaving(false);
 		}
-	}, [editEvent, eventId, user?.token]);
+	}, [edit, eventId, user?.token, queryClient]);
 
-	// Memoize the delete handler
 	const handleDelete = useCallback(async () => {
-		if (!window.confirm("Are you sure you want to delete this event?")) return;
-		
+		setDeleting(true);
 		try {
 			await axios.delete(`${API_URL}/events/${eventId}`, {
 				headers: { Authorization: `Bearer ${user.token}` },
 			});
-
-			toast.success("Event deleted successfully.");
-			navigate("/user-profile");
+			toast.success('Event deleted.');
+			navigate('/user-profile');
 		} catch (err) {
-			toast.error(err.response?.data?.message || "Failed to delete event.");
+			toast.error(err.response?.data?.message || 'Could not delete.');
+		} finally {
+			setDeleting(false);
 		}
 	}, [eventId, user?.token, navigate]);
 
-	if (loading) {
+	if (isLoading || !edit) {
 		return (
-			<div className="flex justify-center items-center min-h-screen">
-				<div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500"></div>
+			<div className="max-w-[1280px] mx-auto px-5 sm:px-8 lg:px-12 py-12">
+				<Skeleton variant="image" className="aspect-[16/8] mb-8" />
+				<Skeleton lines={5} />
 			</div>
 		);
 	}
 
-	if (error) {
-		return <div className="text-center text-red-500">Error: {error}</div>;
+	if (isError || !event) {
+		return (
+			<EmptyState
+				title="Event not found"
+				description="It may have been removed."
+				art="search"
+				action={
+					<Link to="/user-profile">
+						<Button variant="primary">Back to profile</Button>
+					</Link>
+				}
+			/>
+		);
 	}
 
-	if (!event) {
-		return <div className="text-center text-gray-500">Event not found.</div>;
-	}
+	const ticketsLeft = Math.max(0, event.capacity - event.ticketsSold);
 
 	return (
-		<div className="max-w-4xl mx-auto py-10 px-5 bg-gray-100 rounded-lg shadow-lg my-10">
-			<ToastContainer />
-			<div className="flex gap-5 mb-4">
-				<Link to="/user-profile" className="btn-primary">
-					Return to Event Panel
-				</Link>
-				<Link to={`/events/checkin/${eventId}`} className="btn-primary">
-					Check-in Panel
-				</Link>
+		<div className="max-w-[1280px] mx-auto px-5 sm:px-8 lg:px-12 py-12 sm:py-16">
+			<Link
+				to="/user-profile"
+				className="inline-flex items-center gap-2 font-sans text-sm font-medium text-muted hover:text-ink mb-6 transition-colors"
+			>
+				<ArrowLeft className="size-4" /> Back to profile
+			</Link>
+
+			<div className="font-sans text-sm font-medium text-accent-deep uppercase tracking-wider mb-3">
+				Manage event
 			</div>
 
-			<img
-				src={imagePreview || getCloudinaryImageUrl(event.image)}
-				alt={event.title}
-				className="w-full h-64 object-cover rounded-lg mb-4"
-				loading="lazy"
-			/>
-
-			<div className="space-y-2">
-				<div className="my-4 flex gap-4">
-					{eventStatus.isSoldOut && (
-						<span className="inline-block bg-red-200 text-red-800 px-3 py-1 rounded-lg text-sm font-semibold">
-							🎟️ Sold Out
-						</span>
-					)}
-					{eventStatus.isUpcoming && !eventStatus.isSoldOut && (
-						<span className="inline-block bg-blue-200 text-blue-800 px-3 py-1 rounded-lg text-sm font-semibold">
-							⏳ Upcoming
-						</span>
-					)}
-					{eventStatus.isLive && (
-						<span className="inline-block bg-green-200 text-green-800 px-3 py-1 rounded-lg text-sm font-semibold animate-pulse">
-							🟢 Live Now
-						</span>
-					)}
-					{eventStatus.isExpired && (
-						<span className="inline-block bg-gray-300 text-gray-700 px-3 py-1 rounded-lg text-sm font-semibold">
-							📅 Event Ended
-						</span>
-					)}
-				</div>
-				<p>
-					<strong>Title:</strong> {event.title}
-				</p>
-				<p>
-					<strong>Description:</strong> {event.description}
-				</p>
-				<p>
-					<strong>Category:</strong> {event.category}
-				</p>
-				<p>
-					<strong>Location:</strong> {event.location}
-				</p>
-				<p>
-					<strong>Capacity:</strong> {event.capacity}
-				</p>
-				{event?.startTime && (
-					<p>
-						<strong>Start Time (IST):</strong>{" "}
-						{dayjs(event.startTime)
-							.tz("Asia/Kolkata")
-							.format("h:mm A")}
-					</p>
-				)}
-				{event?.endTime && (
-					<p>
-						<strong>End Time (IST):</strong>{" "}
-						{dayjs(event.endTime)
-							.tz("Asia/Kolkata")
-							.format("h:mm A")}
-					</p>
-				)}
-			</div>
-
-			<div className="flex gap-5 mt-4">
-				{!eventStatus.isExpired && (
-					<button
-						onClick={() => setIsEditing(true)}
-						className="btn-primary"
+			<div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 mb-10 pb-8 border-b border-line">
+				<div>
+					<h1
+						className="font-display font-medium leading-[1.02] tracking-tight"
+						style={{ fontSize: 'clamp(2.5rem, 6vw, 4.5rem)' }}
 					>
-						Edit Event
-					</button>
-				)}
-				<button
-					onClick={handleDelete}
-					className="bg-red-500 text-white font-semibold px-4 py-2 rounded-lg"
-				>
-					Delete Event
-				</button>
+						{event.title}.
+					</h1>
+					<p className="font-sans text-base text-muted mt-3">
+						{event.category} · {dayjs(event.date).format('MMM D, YYYY')}
+					</p>
+				</div>
+				<div className="flex flex-wrap gap-2">
+					{status === 'live' && <Stamp label="Live now" variant="live" dot size="lg" />}
+					{status === 'upcoming' && <Stamp label="Upcoming" variant="info" size="lg" />}
+					{status === 'sold-out' && <Stamp label="Sold out" variant="warn" size="lg" />}
+					{status === 'ended' && <Stamp label="Ended" variant="warn" size="lg" />}
+				</div>
 			</div>
 
-			{isEditing && (
-				<div className="fixed inset-0 flex justify-center items-center bg-gray-100 bg-opacity-50">
-					<div className="bg-white p-6 rounded-lg shadow-xl max-w-lg">
-						<h2 className="text-xl font-semibold mb-4">
-							Edit Event
-						</h2>
-						<input
-							name="title"
-							value={editEvent.title}
+			{event.image && (
+				<div className="rounded-[var(--radius-lg)] overflow-hidden mb-10 border border-line/60">
+					<img src={cloudinaryThumb(event.image, 1280, 540)} alt={event.title} className="w-full h-72 object-cover" />
+				</div>
+			)}
+
+			{/* Stats */}
+			<div className="grid grid-cols-2 sm:grid-cols-4 gap-6 sm:gap-8 mb-10 pb-10 border-b border-line">
+				<Stat label="Tickets sold" value={event.ticketsSold || 0} hint={`/ ${event.capacity}`} />
+				<Stat label="Tickets left" value={ticketsLeft} />
+				<Stat
+					label="Fill rate"
+					value={Math.round(((event.ticketsSold || 0) / Math.max(1, event.capacity)) * 100)}
+					suffix="%"
+				/>
+				<Stat label="Days to go" value={Math.max(0, dayjs(event.startTime).diff(dayjs(), 'day'))} />
+			</div>
+
+			<div className="grid sm:grid-cols-2 gap-x-10 gap-y-5 mb-10">
+				<DetailRow icon={Calendar} label="Date" value={dayjs(event.date).format('dddd, MMMM D, YYYY')} />
+				<DetailRow
+					icon={Calendar}
+					label="Doors"
+					value={`${dayjs(event.startTime).format('HH:mm')} → ${dayjs(event.endTime).format('HH:mm')}`}
+				/>
+				<DetailRow icon={MapPin} label="Location" value={event.location} />
+				<DetailRow icon={Users} label="Capacity" value={`${event.ticketsSold || 0} / ${event.capacity}`} />
+			</div>
+
+			<p className="font-sans text-base text-ink/85 leading-[1.65] max-w-3xl whitespace-pre-line border-t border-line pt-8">
+				{event.description}
+			</p>
+
+			<div className="flex flex-wrap gap-3 mt-10">
+				<Link to={`/events/checkin/${eventId}`}>
+					<Button variant="accent">
+						<ScanLine className="size-4" /> Open check-in
+					</Button>
+				</Link>
+				<Button variant="secondary" onClick={() => setEditOpen(true)}>
+					<Edit3 className="size-4" /> Edit
+				</Button>
+				<Button variant="ghost" onClick={() => setDeleteOpen(true)}>
+					<Trash2 className="size-4 text-stamp" /> Delete
+				</Button>
+			</div>
+
+			{/* Edit modal */}
+			<Modal open={editOpen} onClose={() => setEditOpen(false)} title="Edit event" size="lg">
+				<div className="space-y-5">
+					<Input label="Title" name="title" value={edit.title} onChange={handleChange} />
+					<Textarea
+						label="Description"
+						name="description"
+						value={edit.description}
+						onChange={handleChange}
+						rows={4}
+					/>
+					<div className="grid sm:grid-cols-3 gap-4">
+						<Input label="Date" type="date" name="date" value={edit.date} onChange={handleChange} />
+						<Input label="Start" type="time" name="startTime" value={edit.startTime} onChange={handleChange} />
+						<Input label="End" type="time" name="endTime" value={edit.endTime} onChange={handleChange} />
+					</div>
+					<div className="grid sm:grid-cols-2 gap-4">
+						<Input label="Location" name="location" value={edit.location} onChange={handleChange} />
+						<Input
+							label="Capacity"
+							type="number"
+							name="capacity"
+							value={edit.capacity}
 							onChange={handleChange}
-							placeholder="Title"
-							className="input-field"
 						/>
-						<textarea
-							name="description"
-							value={editEvent.description}
-							onChange={handleChange}
-							placeholder="Description"
-							className="input-field"
-						/>
+					</div>
+					<div>
+						<label className="block font-sans text-sm font-medium text-ink mb-2">
+							Category
+						</label>
 						<select
 							name="category"
-							value={editEvent.category}
+							value={edit.category}
 							onChange={handleChange}
-							className="input-field"
+							className="w-full bg-paper-card border border-line rounded-[var(--radius)] px-4 py-3 font-sans text-base text-ink focus:outline-none focus:ring-2 focus:ring-ink/15 focus:border-ink"
 						>
 							<option value="General">General</option>
-							{categories.map((cat) => (
-								<option key={cat.category} value={cat.category}>
-									{cat.name}
+							{categories.map((c) => (
+								<option key={c.category} value={c.category}>
+									{c.name}
 								</option>
 							))}
 						</select>
-						<input
-							type="date"
-							name="date"
-							value={editEvent.date}
-							onChange={handleChange}
-							className="input-field"
-						/>
-						<input
-							type="time"
-							name="startTime"
-							value={editEvent.startTime}
-							onChange={handleChange}
-							className="input-field"
-						/>
-						<input
-							type="time"
-							name="endTime"
-							value={editEvent.endTime}
-							onChange={handleChange}
-							className="input-field"
-						/>
-						<input
-							name="location"
-							value={editEvent.location}
-							onChange={handleChange}
-							placeholder="Location"
-							className="input-field"
-						/>
-						<input
-							name="capacity"
-							value={editEvent.capacity}
-							onChange={handleChange}
-							placeholder="Capacity"
-							className="input-field"
-						/>
-						<input
-							type="file"
-							onChange={handleImageChange}
-							className="input-field"
-						/>
-						<div className="flex justify-end gap-4 mt-4">
-							<button
-								onClick={() => setIsEditing(false)}
-								className="btn-secondary"
-							>
-								Cancel
-							</button>
-							<button
-								onClick={handleSave}
-								disabled={isUploadingImage}
-								className="btn-primary"
-							>
-								{isUploadingImage
-									? "Saving..."
-									: "Save Changes"}
-							</button>
-						</div>
+					</div>
+					<div>
+						<label className="block font-sans text-sm font-medium text-ink mb-2">
+							Cover image
+						</label>
+						{imagePreview && (
+							<img src={imagePreview} alt="" className="w-full h-40 object-cover rounded-[var(--radius)] mb-2 border border-line" />
+						)}
+						<input type="file" accept="image/*" onChange={handleImageChange} className="font-sans text-sm" />
+					</div>
+					<div className="flex justify-end gap-3 pt-2">
+						<Button variant="secondary" onClick={() => setEditOpen(false)}>
+							Cancel
+						</Button>
+						<Button variant="primary" onClick={handleSave} disabled={saving || uploading}>
+							{saving ? 'Saving…' : uploading ? 'Uploading…' : 'Save changes'}
+						</Button>
 					</div>
 				</div>
-			)}
+			</Modal>
+
+			{/* Delete modal */}
+			<Modal open={deleteOpen} onClose={() => setDeleteOpen(false)} title="Delete event?" size="sm">
+				<p className="font-sans text-base text-ink mb-1">
+					Delete <span className="font-medium">{event.title}</span>?
+				</p>
+				<p className="font-sans text-sm text-muted mb-7">
+					Tickets will be cancelled. This cannot be undone.
+				</p>
+				<div className="flex justify-end gap-3">
+					<Button variant="secondary" onClick={() => setDeleteOpen(false)}>
+						Keep
+					</Button>
+					<Button variant="stamp" onClick={handleDelete} disabled={deleting}>
+						{deleting ? 'Deleting…' : 'Delete'}
+					</Button>
+				</div>
+			</Modal>
 		</div>
 	);
-};
+}
 
-export default EventDetail;
+function Stat({ label, value, suffix, hint }) {
+	return (
+		<div>
+			<div
+				className="font-display font-medium tabular text-ink leading-none tracking-tight"
+				style={{ fontSize: 'clamp(2rem, 4vw, 3.25rem)' }}
+			>
+				<NumberTicker value={value} suffix={suffix || ''} />
+			</div>
+			<div className="mt-3 font-sans text-sm text-muted">
+				{label}
+				{hint && <span className="ml-1 text-muted-soft">{hint}</span>}
+			</div>
+		</div>
+	);
+}
+
+function DetailRow({ icon: Icon, label, value }) {
+	return (
+		<div className="flex items-start gap-3">
+			<Icon className="size-4 mt-1 text-accent" strokeWidth={1.75} />
+			<div>
+				<div className="font-sans text-sm font-medium text-muted mb-0.5">{label}</div>
+				<div className="font-sans text-base text-ink">{value}</div>
+			</div>
+		</div>
+	);
+}

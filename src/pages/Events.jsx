@@ -1,202 +1,163 @@
-import { fetchEvents } from "../api/events";
-import { useEffect, useState } from "react";
-import { useSearchParams } from "react-router-dom";
-import EventCard from "../components/EventCard";
-import Categories from "../components/Categories";
+import { useMemo } from 'react';
+import { useSearchParams, Link } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import { Search } from 'lucide-react';
+import { fetchEvents } from '../api/events';
+import EventCard from '../components/EventCard';
+import Categories from '../components/Categories';
+import { Skeleton } from '../components/ui/Skeleton';
+import { EmptyState } from '../components/ui/EmptyState';
+import { Button } from '../components/ui/Button';
+import { cn } from '../lib/cn';
+
+const STATUS_OPTIONS = [
+	{ value: 'all', label: 'All' },
+	{ value: 'live', label: 'Live now' },
+	{ value: 'upcoming', label: 'Upcoming' },
+	{ value: 'expired', label: 'Past' },
+];
+
+const getStatus = (event) => {
+	const now = Date.now();
+	const start = event?.startTime ? new Date(event.startTime).getTime() : null;
+	const end = event?.endTime ? new Date(event.endTime).getTime() : null;
+	if (!start || !end) return 'upcoming';
+	if (now < start) return 'upcoming';
+	if (now >= start && now <= end) return 'live';
+	return 'expired';
+};
 
 export default function Events() {
-	const [events, setEvents] = useState([]);
-	const [filteredEvents, setFilteredEvents] = useState([]);
-	const [visibleEvents, setVisibleEvents] = useState(6);
-	const [loading, setLoading] = useState(true);
 	const [searchParams, setSearchParams] = useSearchParams();
-	const [selectedCategory, setSelectedCategory] = useState("");
-	const [selectedStatus, setSelectedStatus] = useState("all"); // Track event status filter
+	const category = searchParams.get('category') || '';
+	const status = searchParams.get('status') || 'all';
+	const query = searchParams.get('q') || '';
 
-	useEffect(() => {
-		const loadEvents = async () => {
-			setLoading(true);
-			try {
-				const token = localStorage.getItem("token");
-				const data = await fetchEvents(token);
-				setEvents(Array.isArray(data) ? data : []);
-			} catch (error) {
-				console.error("Error fetching events:", error);
-			} finally {
-				setLoading(false);
-			}
-		};
+	const { data, isLoading, isError } = useQuery({
+		queryKey: ['events', 'list'],
+		queryFn: () => fetchEvents(),
+	});
 
-		loadEvents();
-	}, []);
+	const events = useMemo(() => {
+		const list = Array.isArray(data) ? data : [];
+		const q = query.trim().toLowerCase();
 
-	useEffect(() => {
-		const categoryFromParams = searchParams.get("category") || "";
-		const statusFromParams = searchParams.get("status") || "all";
-		setSelectedCategory(categoryFromParams);
-		setSelectedStatus(statusFromParams);
-	}, [searchParams]);
+		return list
+			.filter((e) => {
+				if (category && e.category !== category) return false;
+				if (status !== 'all' && getStatus(e) !== status) return false;
+				if (q) {
+					const hay = `${e.title || ''} ${e.location || ''}`.toLowerCase();
+					if (!hay.includes(q)) return false;
+				}
+				return true;
+			})
+			.sort((a, b) => new Date(a.startTime || a.date) - new Date(b.startTime || b.date));
+	}, [data, category, status, query]);
 
-	const getEventStatus = (event) => {
-		const now = new Date();
-		const startTime = new Date(event.startTime);
-		const endTime = new Date(event.endTime);
-
-		// Convert to IST (UTC+5:30)
-		const istOffset = 5.5 * 60 * 60 * 1000; // 5.5 hours in milliseconds
-		const nowIST = new Date(now.getTime() + istOffset);
-		const startTimeIST = new Date(startTime.getTime() + istOffset);
-		const endTimeIST = new Date(endTime.getTime() + istOffset);
-
-		if (nowIST < startTimeIST) {
-			return "upcoming";
-		} else if (nowIST > endTimeIST) {
-			return "expired";
-		} else {
-			return "live";
-		}
-	};
-
-	useEffect(() => {
-		const query = searchParams.get("q")?.toLowerCase() || "";
-		const location = searchParams.get("location")?.toLowerCase() || "";
-		const date = searchParams.get("date") || "";
-
-		const filtered = events.filter((event) => {
-			const matchesQuery =
-				!query || event.title.toLowerCase().includes(query);
-			const matchesLocation =
-				!location || event.location.toLowerCase().includes(location);
-			const matchesDate = !date || event.date.startsWith(date);
-			const matchesCategory =
-				!selectedCategory || event.category === selectedCategory;
-
-			// Apply status filter
-			const eventStatus = getEventStatus(event);
-			const matchesStatus =
-				selectedStatus === "all" || eventStatus === selectedStatus;
-
-			return (
-				matchesQuery &&
-				matchesLocation &&
-				matchesDate &&
-				matchesCategory &&
-				matchesStatus
-			);
-		});
-
-		// Sort events based on date and time
-		const sortedFiltered = [...filtered].sort((a, b) => {
-			const aStart = new Date(a.startTime);
-			const bStart = new Date(b.startTime);
-			return aStart - bStart;
-		});
-
-		setFilteredEvents(sortedFiltered);
-	}, [events, searchParams, selectedCategory, selectedStatus]);
-
-	const handleShowMore = () => {
-		setVisibleEvents((prev) => prev + 6);
-	};
-
-	const handleCategorySelect = (category) => {
-		setSearchParams((prevParams) => {
-			const newParams = new URLSearchParams(prevParams);
-			if (category) {
-				newParams.set("category", category);
-			} else {
-				newParams.delete("category");
-			}
-			return newParams;
+	const updateParam = (key, value) => {
+		setSearchParams((prev) => {
+			const next = new URLSearchParams(prev);
+			if (!value || value === 'all') next.delete(key);
+			else next.set(key, value);
+			return next;
 		});
 	};
 
-	const handleStatusSelect = (status) => {
-		setSearchParams((prevParams) => {
-			const newParams = new URLSearchParams(prevParams);
-			if (status !== "all") {
-				newParams.set("status", status);
-			} else {
-				newParams.delete("status");
-			}
-			return newParams;
-		});
-	};
+	const heading = category
+		? `${category} events`
+		: status !== 'all'
+		? `${STATUS_OPTIONS.find((s) => s.value === status)?.label || 'Events'}`
+		: 'All events';
 
 	return (
-		<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 hidden-section">
-			<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 hidden-section">
-				<Categories
-					selectedCategory={selectedCategory}
-					onSelectCategory={handleCategorySelect}
-				/>
-			</div>
-			<div className="flex flex-row justify-between">
-				<h1 className="text-3xl font-bold text-gray-900 mb-8">
-					{selectedCategory
-						? `${selectedCategory} Events${
-								selectedStatus !== "all"
-									? ` - ${
-											selectedStatus
-												.charAt(0)
-												.toUpperCase() +
-											selectedStatus.slice(1)
-									  }`
-									: ""
-						  }`
-						: selectedStatus === "all"
-						? "All Events"
-						: `${
-								selectedStatus.charAt(0).toUpperCase() +
-								selectedStatus.slice(1)
-						  } Events`}
-				</h1>
-				{/* Status Filter */}
-				<div className="flex items-center gap-2 h-full">
-					<span className="text-gray-700">Status:</span>
-					<select
-						value={selectedStatus}
-						onChange={(e) => handleStatusSelect(e.target.value)}
-						className="border border-gray-300 rounded-md px-3 py-1.5 bg-white text-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+		<div className="max-w-[1280px] mx-auto px-5 sm:px-8 lg:px-12 py-12 sm:py-16">
+			<div className="mb-10 sm:mb-14">
+				<div className="font-sans text-sm font-medium text-accent-deep uppercase tracking-wider mb-3">
+					Directory
+				</div>
+				<div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-5">
+					<h1
+						className="font-display font-medium leading-[1.02] tracking-tight"
+						style={{ fontSize: 'clamp(2.5rem, 6vw, 4.5rem)' }}
 					>
-						<option value="all">All Events</option>
-						<option value="upcoming">Upcoming</option>
-						<option value="live">Live</option>
-						<option value="expired">Expired</option>
-					</select>
+						{heading}.
+					</h1>
+					<div className="relative w-full sm:w-80">
+						<Search className="size-4 absolute left-4 top-1/2 -translate-y-1/2 text-muted" />
+						<input
+							type="search"
+							value={query}
+							onChange={(e) => updateParam('q', e.target.value)}
+							placeholder="Search title or location"
+							className="w-full pl-11 pr-4 py-3 bg-paper-card border border-line rounded-full font-sans text-[15px] placeholder:text-muted-soft focus:outline-none focus:ring-2 focus:ring-ink/15 focus:border-ink"
+						/>
+					</div>
 				</div>
 			</div>
-			{loading ? (
-				<div className="flex justify-center items-center h-32">
-					<div className="w-10 h-10 border-4 border-gray-300 border-t-blue-500 rounded-full animate-spin"></div>
-				</div>
-			) : filteredEvents.length > 0 ? (
-				<>
-					<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-						{filteredEvents.slice(0, visibleEvents).map((event) => (
-							<EventCard
-								key={event._id}
-								event={event}
-								status={getEventStatus(event)} // Pass status to EventCard
-							/>
-						))}
-					</div>
 
-					{visibleEvents < filteredEvents.length && (
-						<div className="flex justify-center mt-6">
+			<div className="space-y-4 mb-10">
+				<div className="flex items-center gap-2 flex-wrap">
+					<span className="font-sans text-sm font-medium text-muted mr-1">When</span>
+					{STATUS_OPTIONS.map((opt) => {
+						const active = status === opt.value;
+						return (
 							<button
-								onClick={handleShowMore}
-								className="btn-secondary"
+								key={opt.value}
+								onClick={() => updateParam('status', opt.value)}
+								className={cn(
+									'px-4 py-2 rounded-full font-sans text-sm font-medium transition-colors border',
+									active
+										? 'bg-ink text-paper border-ink'
+										: 'bg-paper-card text-ink border-line hover:border-ink hover:bg-paper-dim'
+								)}
 							>
-								Show More
+								{opt.label}
 							</button>
+						);
+					})}
+				</div>
+				<Categories />
+			</div>
+
+			{isLoading && (
+				<div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-7">
+					{Array.from({ length: 6 }).map((_, i) => (
+						<div key={i} className="space-y-4">
+							<Skeleton variant="image" />
+							<Skeleton lines={2} />
 						</div>
-					)}
-				</>
-			) : (
-				<p className="text-xl font-light text-gray-900 mb-8">
-					No events found
-				</p>
+					))}
+				</div>
+			)}
+
+			{!isLoading && isError && (
+				<EmptyState
+					title="Couldn't load events"
+					description="Try refreshing in a moment."
+					art="search"
+				/>
+			)}
+
+			{!isLoading && !isError && events.length === 0 && (
+				<EmptyState
+					title="Nothing matches"
+					description="Try clearing filters or hosting an event yourself."
+					art="search"
+					action={
+						<Link to="/events/create-event">
+							<Button variant="primary">Host an event</Button>
+						</Link>
+					}
+				/>
+			)}
+
+			{!isLoading && !isError && events.length > 0 && (
+				<div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-7">
+					{events.map((event, i) => (
+						<EventCard key={event._id} event={event} index={i} />
+					))}
+				</div>
 			)}
 		</div>
 	);

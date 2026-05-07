@@ -1,98 +1,70 @@
-import { useSearchParams, useNavigate } from "react-router-dom";
-import PropTypes from "prop-types";
-import categories from "../categories.json";
-import * as LucideIcons from "lucide-react";
-import { useState } from "react";
+import { useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import PropTypes from 'prop-types';
+import categories from '../categories.json';
+import { cn } from '../lib/cn';
 
 export default function Categories({ isHomepage }) {
-	const [isShowMore, setIsShowMore] = useState(false);
 	const [searchParams, setSearchParams] = useSearchParams();
 	const navigate = useNavigate();
+	const [showAll, setShowAll] = useState(false);
+	const selected = searchParams.get('category') || '';
 
-	// Get current selected category from URL params
-	const selectedCategory = searchParams.get("category") || "";
+	const list = showAll ? categories : categories.slice(0, 10);
 
-	// Map categories with corresponding Lucide icons
-	const categoriesWithIcons = categories.map((category) => ({
-		...category,
-		icon: LucideIcons[category.icon] || LucideIcons.HelpCircle, // Fallback icon
-	}));
-
-	// Dynamically determine which categories to show
-	const displayedCategories = isShowMore
-		? categoriesWithIcons
-		: categoriesWithIcons.slice(0, 8);
-
-	// ✅ Handle category selection
-	const handleCategorySelect = (category) => {
+	const handleSelect = (cat) => {
 		if (isHomepage) {
-			// Redirect to Events page with the selected category
-			navigate(`/events?category=${category}`, { replace: true });
-		} else {
-			// Stay on the Events page and update URL params
-			setSearchParams((prevParams) => {
-				const newParams = new URLSearchParams(prevParams);
-				if (category === selectedCategory) {
-					newParams.delete("category"); // Clear category if clicked again
-				} else {
-					newParams.set("category", category);
-				}
-				return newParams;
-			});
-
-			// ✅ Force reload by navigating to the same URL again
-			navigate(`/events?category=${category}`, { replace: true });
+			navigate(`/events?category=${cat}`);
+			return;
 		}
+		setSearchParams((prev) => {
+			const next = new URLSearchParams(prev);
+			if (next.get('category') === cat) next.delete('category');
+			else next.set('category', cat);
+			return next;
+		});
 	};
 
+	const chipClass = (active) =>
+		cn(
+			'px-4 py-2 rounded-full font-sans text-sm font-medium transition-colors border',
+			active
+				? 'bg-ink text-paper border-ink'
+				: 'bg-paper-card text-ink border-line hover:border-ink hover:bg-paper-dim'
+		);
+
 	return (
-		<section className="pt-4 pb-8 hidden-section relative">
-			<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
-				<h2 className="section-title text-center text-xl">
-					Browse by Category
-				</h2>
-
-				<div className="grid grid-cols-2 md:grid-cols-4 gap-6 gap-x-0 pt-8">
-					{displayedCategories.map((category) => {
-						const Icon = category.icon;
-						const isActive = selectedCategory === category.category;
-
-						return (
-							<button
-								key={category.name}
-								onClick={() =>
-									handleCategorySelect(category.category)
-								}
-								className={`flex flex-col items-center p-5 rounded-xl transition-all duration-200 
-									transform hover:-translate-y-1 hover:shadow-lg hidden-section ${
-										isActive
-											? "bg-gray-100 text-white"
-											: "hover:bg-gray-50"
-									}`}
-							>
-								<div
-									className={`p-4 rounded-xl ${category.color} mb-4 transition-colors duration-200 
-										hidden-section-hover:scale-110 transform`}
-								>
-									<Icon className="w-5 h-5" />
-								</div>
-								<span className="text-gray-900 font-medium hidden-section-hover:text-purple-600 transition-colors duration-200">
-									{category.name}
-								</span>
-							</button>
-						);
-					})}
-				</div>
-
-				{/* Show More Button */}
-				<div className="p-4 w-full flex justify-center">
+		<section>
+			<div className="flex flex-wrap gap-2">
+				<button
+					onClick={() => {
+						setSearchParams((prev) => {
+							const next = new URLSearchParams(prev);
+							next.delete('category');
+							return next;
+						});
+					}}
+					className={chipClass(!selected)}
+				>
+					All
+				</button>
+				{list.map((c) => (
 					<button
-						className="btn-secondary w-[50%] cursor-pointer"
-						onClick={() => setIsShowMore(!isShowMore)}
+						key={c.name}
+						onClick={() => handleSelect(c.category)}
+						className={chipClass(selected === c.category)}
 					>
-						{isShowMore ? "Show Less" : "Show More"}
+						{c.name}
 					</button>
-				</div>
+				))}
+				{categories.length > 10 && (
+					<button
+						onClick={() => setShowAll((v) => !v)}
+						className="px-4 py-2 rounded-full font-sans text-sm font-medium border border-dashed border-muted text-muted hover:text-ink hover:border-ink"
+					>
+						{showAll ? 'Less' : `+ ${categories.length - 10} more`}
+					</button>
+				)}
 			</div>
 		</section>
 	);

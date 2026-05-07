@@ -1,287 +1,280 @@
-import { useEffect, useState, useContext } from "react";
-import { useNavigate } from "react-router-dom";
-import { fetchUsers, fetchEvents, deleteEvent } from "../api/admin";
-import { toast } from "react-toastify";
-import { AuthContext } from "../context/AuthContext";
-import { X, Search, Filter, Calendar, User, Tag, Trash2, Shield } from "lucide-react";
+import { useState, useEffect, useContext, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
+import { toast } from 'react-toastify';
+import { Search, Trash2 } from 'lucide-react';
+import { fetchUsers, fetchEvents, deleteEvent } from '../api/admin';
+import { AuthContext } from '../context/AuthContext';
+import { Button } from '../components/ui/Button';
+import { Stamp } from '../components/ui/Stamp';
+import { Modal } from '../components/ui/Modal';
+import { Skeleton } from '../components/ui/Skeleton';
+import { EmptyState } from '../components/ui/EmptyState';
+import { NumberTicker } from '../components/ui/NumberTicker';
+import { cn } from '../lib/cn';
 
-const AdminDashboard = () => {
-	const [users, setUsers] = useState([]);
-	const [events, setEvents] = useState([]);
-	const [loading, setLoading] = useState(true);
-	const [showDeleteModal, setShowDeleteModal] = useState(false);
-	const [eventToDelete, setEventToDelete] = useState(null);
-	const [searchTerm, setSearchTerm] = useState("");
-	const [roleFilter, setRoleFilter] = useState("all");
+export default function AdminDashboard() {
 	const navigate = useNavigate();
 	const { user } = useContext(AuthContext);
+	const qc = useQueryClient();
 
-	// ✅ Redirect non-admin users
+	const [search, setSearch] = useState('');
+	const [roleFilter, setRoleFilter] = useState('all');
+	const [tab, setTab] = useState('users');
+	const [eventToDelete, setEventToDelete] = useState(null);
+
 	useEffect(() => {
-		if (!user || user.role !== "admin") {
-			toast.error("Access denied. Admin privileges required.");
-			navigate("/");
+		if (!user || user.role !== 'admin') {
+			toast.error('Admin only.');
+			navigate('/');
 		}
 	}, [user, navigate]);
 
-	// ✅ Fetch all users and events
-	useEffect(() => {
-		const fetchAdminData = async () => {
-			if (!user?.token) {
-				toast.error("Authentication required");
-				navigate("/login");
-				return;
-			}
-
-			try {
-				setLoading(true);
-				const [usersData, eventsData] = await Promise.all([
-					fetchUsers(user.token),
-					fetchEvents(user.token)
-				]);
-				setUsers(usersData);
-				setEvents(eventsData);
-			} catch (err) {
-				if (err.response?.status === 401) {
-					toast.error("Session expired. Please login again.");
-					navigate("/login");
-				} else {
-					toast.error("Failed to fetch admin data");
-				}
-			} finally {
-				setLoading(false);
-			}
-		};
-
-		fetchAdminData();
-	}, [user, navigate]);
-
-	// ✅ Handle delete confirmation
-	const handleDeleteClick = (event) => {
-		setEventToDelete(event);
-		setShowDeleteModal(true);
-	};
-
-	// ✅ Handle event delete
-	const handleDelete = async () => {
-		if (!user?.token) {
-			toast.error("Authentication required");
-			navigate("/login");
-			return;
-		}
-
-		try {
-			await deleteEvent(eventToDelete._id);
-			setEvents((prevEvents) =>
-				prevEvents.filter((event) => event._id !== eventToDelete._id)
-			);
-			toast.success("Event deleted successfully");
-			setShowDeleteModal(false);
-			setEventToDelete(null);
-		} catch (err) {
-			if (err.response?.status === 401) {
-				toast.error("Session expired. Please login again.");
-				navigate("/login");
-			} else {
-				toast.error("Failed to delete event");
-			}
-		}
-	};
-
-	// ✅ Filter users based on search and role
-	const filteredUsers = users.filter((u) => {
-		const matchesSearch = u.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-			u.email.toLowerCase().includes(searchTerm.toLowerCase());
-		const matchesRole = roleFilter === "all" || u.role === roleFilter;
-		return matchesSearch && matchesRole;
+	const usersQ = useQuery({
+		queryKey: ['admin', 'users'],
+		queryFn: () => fetchUsers(user.token),
+		enabled: !!user?.token && user?.role === 'admin',
 	});
 
-	if (loading) {
-		return (
-			<div className="flex justify-center items-center min-h-screen">
-				<div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500"></div>
-			</div>
+	const eventsQ = useQuery({
+		queryKey: ['admin', 'events'],
+		queryFn: () => fetchEvents(user.token),
+		enabled: !!user?.token && user?.role === 'admin',
+	});
+
+	const deleteMutation = useMutation({
+		mutationFn: (id) => deleteEvent(id),
+		onSuccess: () => {
+			toast.success('Event deleted.');
+			setEventToDelete(null);
+			qc.invalidateQueries({ queryKey: ['admin', 'events'] });
+		},
+		onError: () => toast.error('Could not delete event.'),
+	});
+
+	const filteredUsers = useMemo(() => {
+		const list = usersQ.data || [];
+		const q = search.trim().toLowerCase();
+		return list.filter((u) => {
+			const matchSearch = !q || u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q);
+			const matchRole = roleFilter === 'all' || u.role === roleFilter;
+			return matchSearch && matchRole;
+		});
+	}, [usersQ.data, search, roleFilter]);
+
+	const filteredEvents = useMemo(() => {
+		const list = eventsQ.data || [];
+		const q = search.trim().toLowerCase();
+		if (!q) return list;
+		return list.filter(
+			(e) =>
+				e.title.toLowerCase().includes(q) ||
+				(e.organizerName || '').toLowerCase().includes(q) ||
+				(e.category || '').toLowerCase().includes(q)
 		);
-	}
+	}, [eventsQ.data, search]);
+
+	if (!user || user.role !== 'admin') return null;
 
 	return (
-		<div className="p-6 max-w-7xl mx-auto">
-			<div className="flex items-center justify-between mb-8">
-				<h1 className="text-3xl font-bold text-gray-800">Admin Dashboard</h1>
-				<div className="flex items-center space-x-4">
+		<div className="max-w-[1280px] mx-auto px-5 sm:px-8 lg:px-12 py-12 sm:py-16">
+			<div className="font-sans text-sm font-medium text-accent-deep uppercase tracking-wider mb-3">
+				Admin
+			</div>
+			<h1
+				className="font-display font-medium leading-[1.02] tracking-tight mb-10"
+				style={{ fontSize: 'clamp(2.5rem, 6vw, 4.5rem)' }}
+			>
+				Back office.
+			</h1>
+
+			{/* Top stats */}
+			<div className="grid grid-cols-3 gap-6 sm:gap-8 py-10 mb-10 border-y border-line">
+				<Stat label="Users" value={(usersQ.data || []).length} />
+				<Stat label="Events" value={(eventsQ.data || []).length} />
+				<Stat
+					label="Admins"
+					value={(usersQ.data || []).filter((u) => u.role === 'admin').length}
+				/>
+			</div>
+
+			<div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-8">
+				<div className="flex items-center gap-2 flex-wrap">
+					{['users', 'events'].map((id) => {
+						const active = tab === id;
+						return (
+							<button
+								key={id}
+								onClick={() => setTab(id)}
+								className={cn(
+									'px-5 py-2.5 rounded-full font-sans text-[15px] font-medium border transition-colors flex items-center gap-2 capitalize',
+									active
+										? 'bg-ink text-paper border-ink'
+										: 'bg-paper-card text-ink border-line hover:border-ink hover:bg-paper-dim'
+								)}
+							>
+								{id}
+								<span className={cn('text-sm', active ? 'text-paper/60' : 'text-muted')}>
+									{id === 'users' ? (usersQ.data || []).length : (eventsQ.data || []).length}
+								</span>
+							</button>
+						);
+					})}
+				</div>
+
+				<div className="flex items-center gap-3 flex-wrap">
 					<div className="relative">
-						<Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+						<Search className="size-4 absolute left-4 top-1/2 -translate-y-1/2 text-muted" />
 						<input
-							type="text"
-							placeholder="Search users..."
-							value={searchTerm}
-							onChange={(e) => setSearchTerm(e.target.value)}
-							className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+							type="search"
+							value={search}
+							onChange={(e) => setSearch(e.target.value)}
+							placeholder="Search…"
+							className="pl-11 pr-4 py-2.5 bg-paper-card border border-line rounded-full font-sans text-sm placeholder:text-muted-soft focus:outline-none focus:ring-2 focus:ring-ink/15 focus:border-ink w-60"
 						/>
 					</div>
-					<div className="flex items-center space-x-2">
-						<Filter className="text-gray-400 h-5 w-5" />
+					{tab === 'users' && (
 						<select
 							value={roleFilter}
 							onChange={(e) => setRoleFilter(e.target.value)}
-							className="border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+							className="px-4 py-2.5 bg-paper-card border border-line rounded-full font-sans text-sm focus:outline-none focus:ring-2 focus:ring-ink/15 focus:border-ink"
 						>
-							<option value="all">All Roles</option>
+							<option value="all">All roles</option>
 							<option value="admin">Admin</option>
+							<option value="organizer">Organizer</option>
 							<option value="user">User</option>
 						</select>
-					</div>
+					)}
 				</div>
 			</div>
 
-			{/* 👥 USERS */}
-			<section className="mb-10 bg-white rounded-xl shadow-sm border border-gray-100">
-				<div className="p-6 border-b border-gray-100">
-					<h2 className="text-xl font-semibold text-gray-800 flex items-center">
-						<Shield className="h-5 w-5 mr-2 text-purple-500" />
-						User Management
-					</h2>
-				</div>
-				<div className="overflow-x-auto">
-					<table className="w-full">
-						<thead className="bg-gray-50">
-							<tr>
-								<th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-								<th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-								<th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
-							</tr>
-						</thead>
-						<tbody className="divide-y divide-gray-100">
+			{tab === 'users' && (
+				<section>
+					{usersQ.isLoading && <SkeletonRows />}
+					{!usersQ.isLoading && filteredUsers.length === 0 && (
+						<EmptyState title="No users match" art="search" />
+					)}
+					{!usersQ.isLoading && filteredUsers.length > 0 && (
+						<div className="bg-paper-card rounded-[var(--radius-lg)] border border-line/60 overflow-hidden">
+							<div className="grid grid-cols-[1fr_1fr_140px] gap-4 px-5 py-3 bg-paper-dim font-sans text-sm font-medium text-muted">
+								<span>Name</span>
+								<span>Email</span>
+								<span>Role</span>
+							</div>
 							{filteredUsers.map((u) => (
-								<tr key={u._id} className="hover:bg-gray-50">
-									<td className="px-6 py-4 whitespace-nowrap">
-										<div className="flex items-center">
-											<div className="h-8 w-8 rounded-full bg-purple-100 flex items-center justify-center">
-												<User className="h-4 w-4 text-purple-600" />
-											</div>
-											<span className="ml-3 text-sm font-medium text-gray-900">{u.name}</span>
-										</div>
-									</td>
-									<td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{u.email}</td>
-									<td className="px-6 py-4 whitespace-nowrap">
-										<span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-											u.role === 'admin' 
-												? 'bg-purple-100 text-purple-800' 
-												: 'bg-green-100 text-green-800'
-										}`}>
-											{u.role}
-										</span>
-									</td>
-								</tr>
+								<div
+									key={u._id}
+									className="grid grid-cols-[1fr_1fr_140px] gap-4 px-5 py-4 border-t border-line hover:bg-paper-dim/40"
+								>
+									<span className="font-sans text-base text-ink truncate">{u.name}</span>
+									<span className="font-sans text-sm text-muted truncate">{u.email}</span>
+									<Stamp
+										label={u.role.charAt(0).toUpperCase() + u.role.slice(1)}
+										variant={u.role === 'admin' ? 'dark' : 'success'}
+										size="sm"
+										className="self-center justify-self-start"
+									/>
+								</div>
 							))}
-						</tbody>
-					</table>
-				</div>
-			</section>
-
-			{/* 📅 EVENTS */}
-			<section className="bg-white rounded-xl shadow-sm border border-gray-100">
-				<div className="p-6 border-b border-gray-100">
-					<h2 className="text-xl font-semibold text-gray-800 flex items-center">
-						<Calendar className="h-5 w-5 mr-2 text-purple-500" />
-						Event Management
-					</h2>
-				</div>
-				<div className="overflow-x-auto">
-					<table className="w-full">
-						<thead className="bg-gray-50">
-							<tr>
-								<th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Event Details</th>
-								<th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
-								<th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-								<th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Creator</th>
-								<th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-							</tr>
-						</thead>
-						<tbody className="divide-y divide-gray-100">
-							{events.map((e) => (
-								<tr key={e._id} className="hover:bg-gray-50">
-									<td className="px-6 py-4">
-										<div className="text-sm font-medium text-gray-900">{e.title}</div>
-										<div className="text-sm text-gray-500 line-clamp-2">{e.description}</div>
-									</td>
-									<td className="px-6 py-4 whitespace-nowrap">
-										<span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
-											<Tag className="h-3 w-3 mr-1" />
-											{e.category}
-										</span>
-									</td>
-									<td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-										{new Date(e.date).toLocaleDateString()}
-									</td>
-									<td className="px-6 py-4 whitespace-nowrap">
-										<div className="flex items-center">
-											<div className="h-8 w-8 rounded-full bg-purple-100 flex items-center justify-center">
-												<User className="h-4 w-4 text-purple-600" />
-											</div>
-											<div className="ml-3">
-												<div className="text-sm font-medium text-gray-900">{e.organizerName}</div>
-												<div className="text-xs text-gray-500">{e.organizerId}</div>
-											</div>
-										</div>
-									</td>
-									<td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-										<button
-											onClick={() => handleDeleteClick(e)}
-											className="text-red-600 hover:text-red-900 flex items-center"
-										>
-											<Trash2 className="h-4 w-4 mr-1" />
-											Delete
-										</button>
-									</td>
-								</tr>
-							))}
-						</tbody>
-					</table>
-				</div>
-			</section>
-
-			{/* Delete Confirmation Modal */}
-			{showDeleteModal && (
-				<div className="fixed inset-0 backdrop-blur-sm bg-black/30 flex items-center justify-center z-50">
-					<div className="bg-white/95 backdrop-blur-md rounded-lg p-6 max-w-md w-full mx-4 shadow-xl border border-gray-100">
-						<div className="flex justify-between items-center mb-4">
-							<h3 className="text-lg font-semibold">Confirm Delete</h3>
-							<button
-								onClick={() => {
-									setShowDeleteModal(false);
-									setEventToDelete(null);
-								}}
-								className="text-gray-500 hover:text-gray-700 transition-colors"
-							>
-								<X className="h-5 w-5" />
-							</button>
 						</div>
-						<p className="text-gray-600 mb-6">
-							Are you sure you want to delete the event "{eventToDelete?.title}"? This action cannot be undone.
-						</p>
-						<div className="flex justify-end space-x-4">
-							<button
-								onClick={() => {
-									setShowDeleteModal(false);
-									setEventToDelete(null);
-								}}
-								className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
-							>
-								Cancel
-							</button>
-							<button
-								onClick={handleDelete}
-								className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
-							>
-								Delete
-							</button>
-						</div>
-					</div>
-				</div>
+					)}
+				</section>
 			)}
+
+			{tab === 'events' && (
+				<section>
+					{eventsQ.isLoading && <SkeletonRows />}
+					{!eventsQ.isLoading && filteredEvents.length === 0 && (
+						<EmptyState title="No events match" art="search" />
+					)}
+					{!eventsQ.isLoading && filteredEvents.length > 0 && (
+						<div className="bg-paper-card rounded-[var(--radius-lg)] border border-line/60 overflow-hidden">
+							<div className="grid grid-cols-[1fr_140px_140px_140px_60px] gap-3 px-5 py-3 bg-paper-dim font-sans text-sm font-medium text-muted">
+								<span>Title</span>
+								<span>Category</span>
+								<span>Date</span>
+								<span>Host</span>
+								<span></span>
+							</div>
+							{filteredEvents.map((e) => (
+								<div
+									key={e._id}
+									className="grid grid-cols-[1fr_140px_140px_140px_60px] gap-3 px-5 py-4 border-t border-line items-center hover:bg-paper-dim/40"
+								>
+									<span className="font-sans text-base text-ink truncate">{e.title}</span>
+									<span className="font-sans text-sm text-muted truncate">{e.category}</span>
+									<span className="font-sans text-sm text-muted">
+										{new Date(e.date).toLocaleDateString('en-IN', {
+											month: 'short',
+											day: 'numeric',
+										})}
+									</span>
+									<span className="font-sans text-sm text-muted truncate">
+										{e.organizerName || '—'}
+									</span>
+									<button
+										onClick={() => setEventToDelete(e)}
+										aria-label="Delete event"
+										className="size-9 grid place-items-center rounded-full text-muted hover:bg-stamp/10 hover:text-stamp transition-colors"
+									>
+										<Trash2 className="size-3.5" />
+									</button>
+								</div>
+							))}
+						</div>
+					)}
+				</section>
+			)}
+
+			<Modal
+				open={!!eventToDelete}
+				onClose={() => setEventToDelete(null)}
+				title="Delete event?"
+				size="sm"
+			>
+				<p className="font-sans text-base text-ink mb-1">
+					Delete <span className="font-medium">{eventToDelete?.title}</span>?
+				</p>
+				<p className="font-sans text-sm text-muted mb-7">
+					Tickets will be cancelled. This cannot be undone.
+				</p>
+				<div className="flex justify-end gap-3">
+					<Button variant="secondary" onClick={() => setEventToDelete(null)}>
+						Keep
+					</Button>
+					<Button
+						variant="stamp"
+						onClick={() => deleteMutation.mutate(eventToDelete._id)}
+						disabled={deleteMutation.isPending}
+					>
+						{deleteMutation.isPending ? 'Deleting…' : 'Delete'}
+					</Button>
+				</div>
+			</Modal>
 		</div>
 	);
-};
+}
 
-export default AdminDashboard;
+function Stat({ label, value }) {
+	return (
+		<div>
+			<div
+				className="font-display font-medium tabular text-ink leading-none tracking-tight"
+				style={{ fontSize: 'clamp(2rem, 4vw, 3.25rem)' }}
+			>
+				<NumberTicker value={value} />
+			</div>
+			<div className="mt-3 font-sans text-sm text-muted">{label}</div>
+		</div>
+	);
+}
+
+function SkeletonRows() {
+	return (
+		<div className="space-y-2">
+			{Array.from({ length: 5 }).map((_, i) => (
+				<Skeleton key={i} className="h-14 rounded-[var(--radius)]" />
+			))}
+		</div>
+	);
+}
