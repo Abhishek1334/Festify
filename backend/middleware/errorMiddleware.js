@@ -1,22 +1,26 @@
-import process from "process";
+import process from 'process';
+import { error as logError } from '../utils/logger.js';
 
 const errorHandler = (err, req, res, next) => {
-	console.error(`Error: ${err.message}`);
+	logError(err.message, err.stack);
 
 	const statusCode =
 		res.statusCode && res.statusCode !== 200 ? res.statusCode : 500;
+	const isDev = process.env.NODE_ENV !== 'production';
 
-	res.status(statusCode).json({
+	const body = {
 		success: false,
-		message: err.message || "Internal Server Error",
-		stack: process.env.NODE_ENV === "production" ? null : err.stack,
-	});
+		message: err.message || 'Internal Server Error',
+	};
+	if (isDev) body.stack = err.stack;
+
+	res.status(statusCode).json(body);
 };
 
 const notFoundHandler = (req, res, next) => {
 	const error = new Error(`Not Found - ${req.originalUrl}`);
 	res.status(404);
-	next(error); // Pass to errorHandler
+	next(error);
 };
 
 export { errorHandler, notFoundHandler };

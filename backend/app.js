@@ -14,9 +14,9 @@ import { errorHandler, notFoundHandler } from './middleware/errorMiddleware.js';
 import { error as logError } from './utils/logger.js';
 
 cloudinary.v2.config({
-	cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-	api_key: process.env.CLOUDINARY_API_KEY,
-	api_secret: process.env.CLOUDINARY_API_SECRET,
+	cloud_name: (process.env.CLOUDINARY_CLOUD_NAME || '').trim(),
+	api_key: (process.env.CLOUDINARY_API_KEY || '').trim(),
+	api_secret: (process.env.CLOUDINARY_API_SECRET || '').trim(),
 });
 
 const app = express();

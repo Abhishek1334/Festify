@@ -1,4 +1,4 @@
-const CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
+const CLOUD_NAME = (import.meta.env.VITE_CLOUDINARY_CLOUD_NAME || '').trim();
 
 export const getCloudinaryUrl = (publicIdOrUrl, transforms = '') => {
 	if (!publicIdOrUrl) return '';

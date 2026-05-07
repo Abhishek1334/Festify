@@ -5,7 +5,6 @@ import 'react-toastify/dist/ReactToastify.css';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import ScrollToTop from './components/ScrollToTop';
-import BackendDelayNotification from './components/BackendDelayNotification';
 import { ErrorBoundary } from './components/ErrorBoundary';
 
 import Homepage from './pages/Homepage';
@@ -25,7 +24,6 @@ export default function App() {
 	return (
 		<ErrorBoundary>
 			<div className="min-h-screen flex flex-col bg-paper text-ink">
-				<BackendDelayNotification />
 				<Navbar />
 				<ScrollToTop />
 				<main className="flex-grow">
