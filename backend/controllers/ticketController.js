@@ -96,8 +96,8 @@ export const cancelTicket = async (req, res) => {
 
 		await Ticket.findByIdAndDelete(ticketId);
 		// Decrement ticketsSold
-		await Event.findByIdAndUpdate(ticket.event, {
-			$inc: { ticketsSold: -1 }, // ✅ fixed
+		await Event.findByIdAndUpdate(ticket.eventId, {
+			$inc: { ticketsSold: -1 },
 		});
 
 		return res
@@ -263,29 +263,21 @@ export const verifyTicket = async (req, res) => {
 			});
 		}
 
-		// Check if ticket is already verified - add debugging
-		console.log("Ticket check-in status:", ticket.checkedIn);
-		
 		if (ticket.checkedIn === true) {
-			console.log("Sending 'already verified' response");
 			return res.status(200).json({
-				message: "ALREADY_VERIFIED",  // Use a consistent key that's easier to match
-				status: "already_verified",   // Add an additional field for clarity
+				message: "ALREADY_VERIFIED",
+				status: "already_verified",
 				ticket,
 			});
 		}
 
-		// ✅ Mark as checked in
 		ticket.checkedIn = true;
 		ticket.checkedInAt = now;
 		await ticket.save();
-		
-		console.log("Ticket verified successfully");
-		
-		// This response is only sent for newly verified tickets
+
 		res.status(200).json({
-			message: "VERIFIED_SUCCESS",  // Use a consistent key
-			status: "success",            // Add an additional field
+			message: "VERIFIED_SUCCESS",
+			status: "success",
 			ticket,
 		});
 	} catch (error) {

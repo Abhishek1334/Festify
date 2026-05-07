@@ -22,9 +22,6 @@ router
 // ✅ Get events created by the logged-in user
 router.get("/my-events", protect, getUserEvents);
 
-// ✅ Get events for a specific user (if different from `/my-events`, otherwise remove)
-router.get("/user", protect, getUserEvents);
-
 // ✅ Get, update, and delete event by ID
 router
 	.route("/:id")

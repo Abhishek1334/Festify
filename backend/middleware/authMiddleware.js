@@ -1,43 +1,32 @@
-import jwt from "jsonwebtoken";
-import User from "../models/userModel.js";
-import process from "process";
+import jwt from 'jsonwebtoken';
+import process from 'process';
+import User from '../models/userModel.js';
+
+const extractToken = (req) => {
+	if (req.cookies?.token) return req.cookies.token;
+	const auth = req.headers.authorization;
+	if (auth && auth.startsWith('Bearer ')) return auth.split(' ')[1];
+	return null;
+};
 
 export const protect = async (req, res, next) => {
-	let token;
-	
-	if (
-		req.headers.authorization &&
-		req.headers.authorization.startsWith("Bearer")
-	) {
-		try {
-			token = req.headers.authorization.split(" ")[1];
-			const decoded = jwt.verify(token, process.env.JWT_SECRET);
+	const token = extractToken(req);
+	if (!token) {
+		return res.status(401).json({ message: 'Unauthorized: no token' });
+	}
 
-
-			req.user = await User.findById(decoded.id).select("-password");
-
-			if (!req.user) {
-				console.error("❌ ERROR: User not found in DB!");
-				return res.status(401).json({ message: "User not found" });
-			}
-
-			next();
-		} catch (error) {
-			console.error("❌ ERROR in Auth Middleware:", error);
-
-			// Token expired error handling
-			if (error.name === "TokenExpiredError") {
-				return res.status(401).json({ message: "Token has expired" });
-			}
-			// Handle other JWT errors (invalid token, etc.)
-			return res
-				.status(401)
-				.json({ message: "Unauthorized: Invalid token" });
+	try {
+		const decoded = jwt.verify(token, process.env.JWT_SECRET);
+		const user = await User.findById(decoded.id).select('-password');
+		if (!user) {
+			return res.status(401).json({ message: 'User not found' });
 		}
-	} else {
-		console.error("❌ ERROR: No token provided!");
-		return res
-			.status(401)
-			.json({ message: "Unauthorized: No token provided" });
+		req.user = user;
+		next();
+	} catch (error) {
+		if (error.name === 'TokenExpiredError') {
+			return res.status(401).json({ message: 'Token expired' });
+		}
+		return res.status(401).json({ message: 'Unauthorized: invalid token' });
 	}
 };
