@@ -45,7 +45,8 @@ export default function CreateEvents() {
 		fd.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
 		const res = await axios.post(
 			`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`,
-			fd
+			fd,
+			{ withCredentials: false }
 		);
 		return res.data.public_id;
 	};

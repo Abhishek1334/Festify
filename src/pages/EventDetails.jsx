@@ -88,7 +88,8 @@ export default function EventDetails() {
 			fd.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
 			const res = await axios.post(
 				`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`,
-				fd
+				fd,
+				{ withCredentials: false }
 			);
 			setImagePreview(cloudinaryThumb(res.data.public_id, 600, 360));
 			setEdit((p) => ({ ...p, image: res.data.public_id }));
