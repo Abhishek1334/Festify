@@ -123,7 +123,7 @@ Same origin keeps the cookie story simple and removes the cross-origin preflight
 ## Local setup
 
 ```bash
-git clone https://github.com/Abhishek1334/Festify.git
+git clone https://github.com/AbhishekRajoria/Festify.git
 cd Festify
 npm install
 cd backend && npm install && cd ..
@@ -214,8 +214,8 @@ All routes live under `/api/*`. Auth-required routes accept either the `token` c
 
 It's a working full-stack app and a sample of the kind of frontend work I take on commissions for. It's deliberately scoped — no payments, no real-time updates, no mobile app. The depth is in the design system, the cookie auth, and the serverless deploy story, not feature breadth.
 
-If you found a bug or want to talk about a landing-page or product UI commission: [open an issue](https://github.com/Abhishek1334/Festify/issues) or reach me via [my GitHub](https://github.com/Abhishek1334).
+If you found a bug or want to talk about a landing-page or product UI commission: [open an issue](https://github.com/AbhishekRajoria/Festify/issues) or reach me via [my GitHub](https://github.com/AbhishekRajoria).
 
 ---
 
-Built by [Abhishek Rajoria](https://github.com/Abhishek1334) · Made in India 🇮🇳
+Built by [Abhishek Rajoria](https://github.com/AbhishekRajoria) · Made in India 🇮🇳
