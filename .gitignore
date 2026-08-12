@@ -100,3 +100,6 @@ ENV/
 *.zip
 backend.zip
 src.zip
+
+# Seed/test account credentials
+SEED_ACCOUNTS.txt
