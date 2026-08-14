@@ -78,13 +78,13 @@
   "main": "eslint.config.js",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Abhishek1334/Festify.git"
+    "url": "git+https://github.com/AbhishekRajoria/Festify.git"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/Abhishek1334/Festify/issues"
+    "url": "https://github.com/AbhishekRajoria/Festify/issues"
   },
-  "homepage": "https://github.com/Abhishek1334/Festify#readme"
+  "homepage": "https://github.com/AbhishekRajoria/Festify#readme"
 }

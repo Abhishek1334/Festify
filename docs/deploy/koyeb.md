@@ -19,7 +19,7 @@ This repo already has the deploy artifacts ready: `backend/Dockerfile`, `backend
 ## Step 1 — Sign up + connect GitHub
 
 1. Go to https://app.koyeb.com → Sign up (GitHub login is fastest).
-2. Once in, **Apps → Create App → GitHub → select `Abhishek1334/Festify`**.
+2. Once in, **Apps → Create App → GitHub → select `AbhishekRajoria/Festify`**.
 
 ## Step 2 — Configure the service
 

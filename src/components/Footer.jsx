@@ -17,7 +17,7 @@ export default function Footer() {
 						</p>
 						<div className="flex gap-2">
 							<a
-								href="https://github.com/Abhishek1334/Festify"
+								href="https://github.com/AbhishekRajoria/Festify"
 								target="_blank"
 								rel="noreferrer"
 								aria-label="GitHub"
@@ -89,7 +89,7 @@ export default function Footer() {
 						<p className="font-sans text-sm text-paper/65 leading-relaxed">
 							Crafted by{' '}
 							<a
-								href="https://github.com/Abhishek1334"
+								href="https://github.com/AbhishekRajoria"
 								target="_blank"
 								rel="noreferrer"
 								className="text-accent hover:text-paper transition-colors"
